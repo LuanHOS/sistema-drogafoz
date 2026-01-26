@@ -4,7 +4,8 @@
 
 {% block branding %}
 <h1 id="site-name">
-    <a href="{% url 'admin:index' %}">
+    {# Lógica Inteligente: Se for Login -> Home. Se for Interno -> Admin #}
+    <a href="{% if 'login' in request.path %}{% url 'home' %}{% else %}{% url 'admin:index' %}{% endif %}">
         DROGA<span style="color: #C51625;">FOZ</span> ENCOMENDAS
     </a>
 </h1>
@@ -12,6 +13,26 @@
 
 {% block extrastyle %}
 <style>
+    /* --- 0. FORÇAR MODO CLARO (LIGHT MODE) --- */
+    /* Isso impede que o navegador deixe o fundo preto automaticamente */
+    :root {
+        color-scheme: light !important;
+        supported-color-schemes: light !important;
+    }
+    
+    /* Garante que inputs e fundos sejam brancos */
+    body, html {
+        background-color: #ffffff !important;
+        color: #333333 !important;
+    }
+    
+    /* Corrige inputs que ficam escuros no Chrome */
+    input, select, textarea {
+        background-color: #ffffff !important;
+        color: #333333 !important;
+        border: 1px solid #ccc !important;
+    }
+
     /* --- 1. REMOVE TODOS OS SUBLINHADOS (GLOBAL E ESPECÍFICO) --- */
     a, a:visited, a:hover, a:active { text-decoration: none !important; }
     
@@ -33,7 +54,7 @@
 
     /* --- 3. CORES DO CABEÇALHO --- */
     #header { background: #123C65; color: #fff; } 
-    #header .theme-toggle { display: none !important; }
+    #header .theme-toggle { display: none !important; } /* Esconde o botão de lua/sol do Django */
     .show-counts { display: none !important; }
     
     #site-name a { color: white !important; font-weight: 900 !important; text-transform: uppercase; letter-spacing: 1px; }
@@ -47,7 +68,7 @@
     #content { padding-top: 15px !important; }
     #content h1 { margin-bottom: 5px !important; margin-top: 0 !important; font-size: 18px !important; }
     
-    /* ALTERAÇÃO AQUI: Garante que o texto de título/subtitulo no #content quebre linha */
+    /* Garante que o texto de título/subtitulo no #content quebre linha */
     #content {
         width: 100%;
         box-sizing: border-box;
@@ -95,6 +116,16 @@
     .object-tools a.addlink::after { content: "+"; margin-left: 10px; font-size: 18px; line-height: 14px; font-weight: bold; position: relative; top: -1px; }
     .object-tools a.addlink:hover { background-color: #1e7e34 !important; transform: scale(1.05); }
 
+    /* Botão Exportar (Azul Identidade) */
+    .object-tools a.exportlink { 
+        background-color: #123C65 !important; color: white !important; 
+        border-radius: 5px; font-size: 14px !important; text-transform: uppercase; 
+        font-weight: bold; padding: 8px 20px !important; min-width: 150px; 
+        display: inline-flex !important; align-items: center; justify-content: center; 
+        text-align: center; background-image: none !important; height: auto; 
+    }
+    .object-tools a.exportlink:hover { background-color: #0e2d4b !important; transform: scale(1.05); }
+
     /* --- 8. BOTÕES DO FORMULÁRIO (Padronizados) --- */
     .submit-row { display: flex !important; align-items: center; background: #f8f9fa; padding: 15px; border-top: 1px solid #ddd; width: 100%; box-sizing: border-box; gap: 15px; justify-content: flex-end; }
     .submit-row input[type=submit], a.deletelink, .btn-cancel { height: 40px !important; padding: 0 25px !important; font-size: 11px !important; font-weight: bold !important; text-transform: uppercase !important; border-radius: 4px !important; border: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-sizing: border-box !important; cursor: pointer !important; line-height: 1 !important; min-width: 100px; margin: 0 !important; }
@@ -115,7 +146,6 @@
 
     /* --- 9. AJUSTES DA TABELA (Quebra de Linha na Descrição) --- */
     #result_list .field-descricao {
-        /* ALTERAÇÃO AQUI: Propriedades para forçar a quebra do WWWW */
         white-space: pre-wrap !important; 
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
@@ -136,7 +166,7 @@
         background: #0e2d4b !important; 
     }
 
-    /* --- 11. ESTILO DO LINK DE EXPORTAR (NOVO) --- */
+    /* --- 11. ESTILO DO LINK DE EXPORTAR --- */
     a.exportlink {
         color: #123C65; /* Azul Identidade */
         font-weight: bold;

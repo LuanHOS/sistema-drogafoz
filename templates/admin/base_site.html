@@ -2,6 +2,21 @@
 
 {% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
+{# --- 1. SCRIPT PARA FORÇAR MODO CLARO (NOVO) --- #}
+{% block extrahead %}
+    {{ block.super }}
+    <script>
+        // Este script roda antes da página aparecer para o usuário
+        // Ele força o Django a usar o tema CLARO (Light) e salva essa preferência
+        try {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+        } catch (e) {
+            console.error("Erro ao forçar tema claro:", e);
+        }
+    </script>
+{% endblock %}
+
 {% block branding %}
 <h1 id="site-name">
     {# Lógica Inteligente: Se for Login -> Home. Se for Interno -> Admin #}
@@ -13,20 +28,17 @@
 
 {% block extrastyle %}
 <style>
-    /* --- 0. FORÇAR MODO CLARO (LIGHT MODE) --- */
-    /* Isso impede que o navegador deixe o fundo preto automaticamente */
+    /* --- 0. GARANTIAS VISUAIS DE MODO CLARO --- */
     :root {
         color-scheme: light !important;
-        supported-color-schemes: light !important;
     }
     
-    /* Garante que inputs e fundos sejam brancos */
     body, html {
         background-color: #ffffff !important;
         color: #333333 !important;
     }
     
-    /* Corrige inputs que ficam escuros no Chrome */
+    /* Força inputs brancos */
     input, select, textarea {
         background-color: #ffffff !important;
         color: #333333 !important;
@@ -54,7 +66,8 @@
 
     /* --- 3. CORES DO CABEÇALHO --- */
     #header { background: #123C65; color: #fff; } 
-    #header .theme-toggle { display: none !important; } /* Esconde o botão de lua/sol do Django */
+    
+    /* ALTERAÇÃO: Removi a linha que escondia o botão de tema (.theme-toggle) */
     .show-counts { display: none !important; }
     
     #site-name a { color: white !important; font-weight: 900 !important; text-transform: uppercase; letter-spacing: 1px; }
@@ -144,7 +157,7 @@
     
     .submit-row input[name="_addanother"], .submit-row input[name="_continue"] { display: none !important; }
 
-    /* --- 9. AJUSTES DA TABELA (Quebra de Linha na Descrição) --- */
+    /* --- 9. AJUSTES DA TABELA --- */
     #result_list .field-descricao {
         white-space: pre-wrap !important; 
         word-wrap: break-word !important;
@@ -153,7 +166,7 @@
         max-width: 350px; min-width: 200px;
     }
 
-    /* --- 10. CABEÇALHO AZUL (SEM CONTORNO) --- */
+    /* --- 10. CABEÇALHO AZUL --- */
     #result_list thead th {
         background: #123C65 !important; 
         color: #ffffff !important;      
@@ -162,27 +175,19 @@
 
     #result_list thead th a { color: #ffffff !important; }
     
-    #result_list thead th.sorted {
-        background: #0e2d4b !important; 
-    }
+    #result_list thead th.sorted { background: #0e2d4b !important; }
 
     /* --- 11. ESTILO DO LINK DE EXPORTAR --- */
     a.exportlink {
-        color: #123C65; /* Azul Identidade */
+        color: #123C65;
         font-weight: bold;
         text-transform: uppercase;
         font-size: 11px;
         white-space: nowrap;
         opacity: 0.9;
     }
-    a.exportlink:hover {
-        text-decoration: underline !important;
-        opacity: 1;
-    }
-    a.exportlink::before {
-        content: "📥 ";
-        font-size: 12px;
-    }
+    a.exportlink:hover { text-decoration: underline !important; opacity: 1; }
+    a.exportlink::before { content: "📥 "; font-size: 12px; }
 
     @media (max-width: 767px) {
         .submit-row { flex-direction: column; gap: 10px; }
@@ -191,7 +196,6 @@
         .btn-voltar-container { margin-left: 10px !important; }
         #result_list .field-descricao { max-width: 200px; }
         
-        /* Ajuste para botões de topo no mobile */
         .object-tools { flex-direction: column; gap: 10px; }
         .object-tools li { margin: 0 !important; width: 100%; }
         .object-tools a.addlink, .object-tools a.exportlink { width: 100%; box-sizing: border-box; }

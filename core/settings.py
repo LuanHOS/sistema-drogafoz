@@ -15,6 +15,14 @@ DEBUG = 'RENDER' not in os.environ
 # Permite que o site seja acessado pelo seu domínio e pelo endereço do Render
 ALLOWED_HOSTS = ['*']
 
+# --- SEGURANÇA DE DOMÍNIOS (CSRF) --- <--- ÚNICA ALTERAÇÃO FEITA AQUI
+# Isso permite que o login funcione no seu domínio novo e no endereço do Render
+CSRF_TRUSTED_ORIGINS = [
+    'https://sistema-drogafoz.onrender.com',    # Endereço original (confirme se é este mesmo)
+    'https://drogafozencomendas.com.br',        # Novo domínio
+    'https://www.drogafozencomendas.com.br',    # Novo domínio com www
+]
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -27,7 +35,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # <--- NOVO: Serve arquivos estáticos na nuvem
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Serve arquivos estáticos na nuvem
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -62,7 +70,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'),
-        conn_max_age=0
+        conn_max_age=0 # Mantido em 0 para evitar erro 500 no Neon
     )
 }
 

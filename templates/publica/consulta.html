@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Encomendas - Drogafoz</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        /* Cabeçalho */
+        header { background-color: #123C65; width: 100%; padding: 20px 0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        header h1 { color: white; margin: 0; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; font-size: 24px; }
+        header span { color: #C51625; }
+        header a { text-decoration: none; }
+
+        /* Container Principal */
+        .container { width: 90%; max-width: 600px; margin-top: 40px; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+
+        /* Busca */
+        .search-box { text-align: center; margin-bottom: 30px; }
+        .search-box h2 { color: #333; margin-bottom: 10px; font-size: 20px; }
+        .search-box p { color: #666; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
+        
+        .input-group { display: flex; justify-content: center; }
+        .search-box input[type="text"] { width: 70%; padding: 12px; border: 2px solid #ddd; border-radius: 5px 0 0 5px; font-size: 16px; outline: none; text-align: center; letter-spacing: 1px; }
+        .search-box input[type="text"]:focus { border-color: #123C65; }
+        .search-box button { padding: 12px 25px; background-color: #28a745; color: white; border: none; border-radius: 0 5px 5px 0; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        .search-box button:hover { background-color: #218838; }
+
+        /* Tabela de Resultados */
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; border: 1px solid #eee; }
+        th { background-color: #123C65; color: white; padding: 12px; text-align: center; font-size: 14px; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid #eee; color: #555; font-size: 15px; text-align: center; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        
+        .badge { background: #123C65; color: white; padding: 5px 10px; border-radius: 15px; font-size: 14px; font-weight: bold; }
+        
+        /* Mensagem de Ajuda (WhatsApp) */
+        .help-box { margin-top: 40px; padding: 20px; background: #e9ecef; border-radius: 8px; text-align: center; border-left: 5px solid #25D366; }
+        .help-box h3 { margin: 0 0 10px; font-size: 16px; color: #333; }
+        .help-box p { font-size: 13px; color: #555; margin-bottom: 15px; }
+        .btn-whatsapp { background-color: #25D366; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; display: inline-block; transition: 0.3s; }
+        .btn-whatsapp:hover { background-color: #1ebd59; }
+
+        .empty-msg { text-align: center; color: #C51625; margin-top: 20px; font-weight: bold; }
+
+        @media (max-width: 600px) {
+            .input-group { flex-direction: column; gap: 10px; }
+            .search-box input[type="text"] { width: 100%; border-radius: 5px; box-sizing: border-box;}
+            .search-box button { width: 100%; border-radius: 5px; }
+            th, td { font-size: 12px; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="{% url 'home' %}">
+            <h1>Droga<span>foz</span> Encomendas</h1>
+        </a>
+    </header>
+
+    <div class="container">
+        <div class="search-box">
+            <h2>Consulte suas Encomendas</h2>
+            <p>Para sua segurança, informe seu <strong>CPF ou RG</strong> (Documento de Identidade) abaixo para verificar se existem pacotes aguardando retirada em seu nome.</p>
+            
+            <form method="get" class="input-group">
+                <input type="text" name="q" placeholder="Digite seu CPF ou RG" value="{{ query|default:'' }}" required>
+                <button type="submit">Consultar</button>
+            </form>
+        </div>
+
+        {% if query %}
+            {% if resultados %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Encomendas</th>
+                            <th>Chegada (Mais Antiga)</th>
+                            <th>Chegada (Mais Recente)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in resultados %}
+                        <tr>
+                            <td><span class="badge">{{ cliente.qtd_encomendas }}</span></td>
+                            <td>{{ cliente.primeira_chegada|date:"d/m/Y H:i" }}</td>
+                            <td>{{ cliente.ultima_chegada|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-msg">
+                    <p>Nenhuma encomenda encontrada para o documento informado.</p>
+                    <p style="font-size: 12px; color: #666; font-weight: normal;">Verifique se digitou corretamente ou tente outro documento (CPF ou RG).</p>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <div class="help-box">
+            <h3>Não encontrou ou não tem documento cadastrado?</h3>
+            <p>Caso você não tenha cadastrado seu CPF/RG no sistema ou não esteja conseguindo acessar a lista, entre em contato conosco para atualizar seu cadastro.</p>
+            
+            <a href="https://wa.me/5545999422240?text=Olá, gostaria de verificar uma encomenda e atualizar meu cadastro de documento." target="_blank" class="btn-whatsapp">
+                📱 Falar no WhatsApp (+55 45 99942-22240)
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

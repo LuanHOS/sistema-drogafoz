@@ -1,0 +1,170 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        DROGA<span style="color: #C51625;">FOZ</span> ENCOMENDAS
+    </a>
+</h1>
+{% endblock %}
+
+{% block extrastyle %}
+<style>
+    /* --- 1. REMOVE TODOS OS SUBLINHADOS (GLOBAL E ESPECÍFICO) --- */
+    a, a:visited, a:hover, a:active { text-decoration: none !important; }
+    
+    #result_list a, #result_list a:hover, #changelist-filter a, #changelist-filter a:hover,
+    .module caption a, .sortoptions a, th.sortable a {
+        text-decoration: none !important; border-bottom: none !important;
+    }
+
+    /* --- 2. ESTILO DOS FILTROS LATERAIS --- */
+    #changelist-filter li.selected a {
+        color: #123C65 !important; 
+        font-weight: bold !important;
+    }
+    
+    #changelist-filter a:hover {
+        color: #123C65 !important; 
+        background: rgba(18, 60, 101, 0.05); 
+    }
+
+    /* --- 3. CORES DO CABEÇALHO --- */
+    #header { background: #123C65; color: #fff; } 
+    #header .theme-toggle { display: none !important; }
+    .show-counts { display: none !important; }
+    
+    #site-name a { color: white !important; font-weight: 900 !important; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* --- 4. CORPO E LISTAS --- */
+    body { background-color: #ffffff; }
+    tr.selected { background-color: #e0e0e0 !important; }
+    .module h2, .module caption, .inline-group h2 { background: #123C65; } 
+
+    /* --- 5. AJUSTES DE ESPAÇAMENTO --- */
+    #content { padding-top: 15px !important; }
+    #content h1 { margin-bottom: 5px !important; margin-top: 0 !important; font-size: 18px !important; }
+    
+    /* ALTERAÇÃO AQUI: Garante que o texto de título/subtitulo no #content quebre linha */
+    #content {
+        width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+
+    #toolbar { margin-top: 5px !important; margin-bottom: 10px !important; border-top: none !important; background: #f8f9fa; padding: 10px; border-radius: 4px; }
+
+    /* --- 6. BOTÃO VOLTAR --- */
+    .btn-voltar-topo { background: #666; color: white !important; padding: 6px 12px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 5px; text-transform: uppercase; font-size: 11px; line-height: normal; }
+    .btn-voltar-topo:hover { background: #444; }
+    .btn-voltar-container { margin-left: 40px !important; padding-left: 0 !important; margin-top: 15px; }
+    div.breadcrumbs { display: none !important; }
+
+    /* --- 7. BOTÃO ADICIONAR & EXPORTAR (FORÇADO À ESQUERDA) --- */
+    .object-tools { 
+        float: none !important;
+        position: static !important;
+        display: flex !important;
+        justify-content: flex-start !important;
+        margin-top: 10px !important;
+        margin-bottom: 15px !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        width: 100% !important;
+        background: transparent !important;
+    }
+    
+    .object-tools li {
+        float: none !important; display: block !important;
+        margin-left: 0 !important; margin-right: 15px !important;
+        list-style-type: none !important;
+    }
+    
+    /* Botão Adicionar (Verde) */
+    .object-tools a.addlink { 
+        background-color: #28a745 !important; color: white !important; 
+        border-radius: 5px; font-size: 14px !important; text-transform: uppercase; 
+        font-weight: bold; padding: 8px 20px !important; min-width: 180px; 
+        display: inline-flex !important; align-items: center; justify-content: center; 
+        text-align: center; background-image: none !important; height: auto; 
+    }
+    .object-tools a.addlink::after { content: "+"; margin-left: 10px; font-size: 18px; line-height: 14px; font-weight: bold; position: relative; top: -1px; }
+    .object-tools a.addlink:hover { background-color: #1e7e34 !important; transform: scale(1.05); }
+
+    /* --- 8. BOTÕES DO FORMULÁRIO (Padronizados) --- */
+    .submit-row { display: flex !important; align-items: center; background: #f8f9fa; padding: 15px; border-top: 1px solid #ddd; width: 100%; box-sizing: border-box; gap: 15px; justify-content: flex-end; }
+    .submit-row input[type=submit], a.deletelink, .btn-cancel { height: 40px !important; padding: 0 25px !important; font-size: 11px !important; font-weight: bold !important; text-transform: uppercase !important; border-radius: 4px !important; border: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-sizing: border-box !important; cursor: pointer !important; line-height: 1 !important; min-width: 100px; margin: 0 !important; }
+    
+    .submit-row p.deletelink-box { order: 1 !important; margin: 0 !important; margin-right: auto !important; display: block !important; }
+    
+    a.deletelink { background: #C51625 !important; color: #ffffff !important; } 
+    a.deletelink:hover { background: #a0121e !important; } 
+    
+    .btn-cancel { order: 2 !important; background: #888 !important; color: white !important; margin-left: auto !important; }
+    .btn-cancel:hover { background: #666 !important; }
+    .submit-row p.deletelink-box ~ .btn-cancel { margin-left: 0 !important; }
+    
+    .submit-row input[type=submit] { order: 3 !important; background: #28a745 !important; color: white !important; }
+    .submit-row input[type=submit]:hover { background: #218838 !important; }
+    
+    .submit-row input[name="_addanother"], .submit-row input[name="_continue"] { display: none !important; }
+
+    /* --- 9. AJUSTES DA TABELA (Quebra de Linha na Descrição) --- */
+    #result_list .field-descricao {
+        /* ALTERAÇÃO AQUI: Propriedades para forçar a quebra do WWWW */
+        white-space: pre-wrap !important; 
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+        max-width: 350px; min-width: 200px;
+    }
+
+    /* --- 10. CABEÇALHO AZUL (SEM CONTORNO) --- */
+    #result_list thead th {
+        background: #123C65 !important; 
+        color: #ffffff !important;      
+        border: none !important;        
+    }
+
+    #result_list thead th a { color: #ffffff !important; }
+    
+    #result_list thead th.sorted {
+        background: #0e2d4b !important; 
+    }
+
+    /* --- 11. ESTILO DO LINK DE EXPORTAR (NOVO) --- */
+    a.exportlink {
+        color: #123C65; /* Azul Identidade */
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 11px;
+        white-space: nowrap;
+        opacity: 0.9;
+    }
+    a.exportlink:hover {
+        text-decoration: underline !important;
+        opacity: 1;
+    }
+    a.exportlink::before {
+        content: "📥 ";
+        font-size: 12px;
+    }
+
+    @media (max-width: 767px) {
+        .submit-row { flex-direction: column; gap: 10px; }
+        .submit-row p.deletelink-box { margin-right: 0 !important; width: 100%; }
+        .submit-row input[type=submit], a.deletelink, .btn-cancel { width: 100%; margin-left: 0 !important; }
+        .btn-voltar-container { margin-left: 10px !important; }
+        #result_list .field-descricao { max-width: 200px; }
+        
+        /* Ajuste para botões de topo no mobile */
+        .object-tools { flex-direction: column; gap: 10px; }
+        .object-tools li { margin: 0 !important; width: 100%; }
+        .object-tools a.addlink, .object-tools a.exportlink { width: 100%; box-sizing: border-box; }
+    }
+</style>
+{% endblock %}

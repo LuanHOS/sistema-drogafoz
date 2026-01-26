@@ -1,0 +1,117 @@
+{% load i18n %}
+
+<div class="actions">
+    {# --- LÓGICA PERSONALIZADA PARA ENCOMENDAS --- #}
+    {% if cl.opts.model_name == 'encomenda' %}
+        
+        <div class="custom-actions-wrapper">
+            <input type="hidden" name="action" value="marcar_entregue">
+            <input type="hidden" name="select_across" value="0" class="select-across">
+            
+            {% if actions_selection_counter %}
+                <span class="action-counter" data-actions-icnt="{{ cl.result_list|length }}">{{ selection_note }}</span>
+                {% if cl.result_count != cl.result_list|length %}
+                    <span class="all" style="display: none;">{{ selection_note_all }}</span>
+                    <span class="question" style="display: none;">
+                        <a href="#" title="{% translate "Click here to select the objects across all pages" %}">{% blocktranslate with cl.result_count as total_count %}Select all {{ total_count }} {{ module_name }}{% endblocktranslate %}</a>
+                    </span>
+                    <span class="clear" style="display: none;"><a href="#">{% translate "Clear selection" %}</a></span>
+                {% endif %}
+            {% endif %}
+
+            <button type="submit" class="btn-acao-entregar" id="btn-entregar" title="Executar Ação">
+                Marcar Selecionados como "Entregue ao Cliente"
+            </button>
+        </div>
+
+        <style>
+            .custom-actions-wrapper {
+                display: flex; justify-content: flex-end; align-items: center;
+                width: 100%; box-sizing: border-box; gap: 15px;
+            }
+
+            /* Botão Verde */
+            .btn-acao-entregar {
+                background-color: #28a745 !important; /* Verde */
+                color: white !important; border: none !important;
+                padding: 10px 20px !important; border-radius: 4px !important;
+                font-weight: bold !important; text-transform: uppercase !important;
+                cursor: pointer !important; font-size: 11px !important;
+                transition: all 0.3s;
+            }
+            .btn-acao-entregar:hover { background-color: #1e7e34 !important; }
+            
+            /* Estado Desabilitado */
+            .btn-acao-entregar:disabled {
+                background-color: #cccccc !important;
+                cursor: not-allowed !important;
+                opacity: 0.7;
+            }
+
+            .action-counter { color: #666; font-size: 12px; display: inline-block; }
+            .actions { background: transparent !important; border: none !important; padding: 10px 0 !important; }
+        </style>
+
+        {# --- SCRIPT DE VERIFICAÇÃO INTELIGENTE --- #}
+        <script>
+            (function($) {
+                $(document).ready(function() {
+                    const btn = $('#btn-entregar');
+                    
+                    function verificarStatus() {
+                        let temEntregue = false;
+                        
+                        // Percorre todos os checkboxes marcados na tabela
+                        $('input.action-select:checked').each(function() {
+                            const row = $(this).closest('tr');
+                            // Verifica se o texto "Entregue ao Cliente" existe na linha selecionada
+                            // Usamos .text() para pegar todo o conteúdo da linha
+                            if (row.text().includes('Entregue ao Cliente')) {
+                                temEntregue = true;
+                            }
+                        });
+
+                        if (temEntregue) {
+                            btn.prop('disabled', true);
+                            btn.text('⚠ Seleção contém itens já entregues');
+                            btn.attr('title', 'Desmarque os itens já entregues para prosseguir');
+                        } else {
+                            btn.prop('disabled', false);
+                            btn.text('Marcar Selecionados como "Entregue ao Cliente"');
+                            btn.attr('title', 'Executar Ação');
+                        }
+                    }
+
+                    // Ouve mudanças nos checkboxes individuais e no "selecionar tudo"
+                    $('input.action-select, #action-toggle').on('change', function() {
+                        // Pequeno delay para garantir que o "selecionar tudo" propagou
+                        setTimeout(verificarStatus, 50);
+                    });
+                });
+            })(django.jQuery);
+        </script>
+
+    {% else %}
+        {# MANTÉM O PADRÃO PARA OUTROS APPS #}
+        {% block actions %}
+            {% block actions-form %}
+                {% for field in action_form %}{% if field.label %}<label>{{ field.label }} {% endif %}{{ field }}{% if field.label %}</label>{% endif %}{% endfor %}
+            {% endblock %}
+            {% block actions-submit %}
+                <button type="submit" class="button" title="{% translate "Run the selected action" %}" name="index" value="0">{% translate "Go" %}</button>
+            {% endblock %}
+            {% block actions-counter %}
+                {% if actions_selection_counter %}
+                    <span class="action-counter" data-actions-icnt="{{ cl.result_list|length }}">{{ selection_note }}</span>
+                    {% if cl.result_count != cl.result_list|length %}
+                    <span class="all" style="display: none;">{{ selection_note_all }}</span>
+                    <span class="question" style="display: none;">
+                        <a href="#" title="{% translate "Click here to select the objects across all pages" %}">{% blocktranslate with cl.result_count as total_count %}Select all {{ total_count }} {{ module_name }}{% endblocktranslate %}</a>
+                    </span>
+                    <span class="clear" style="display: none;"><a href="#">{% translate "Clear selection" %}</a></span>
+                    {% endif %}
+                {% endif %}
+            {% endblock %}
+        {% endblock %}
+    {% endif %}
+</div>

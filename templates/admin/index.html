@@ -1,0 +1,106 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static dashboard_stats log %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+{% get_stats as stats %}
+
+<div class="dashboard-wrapper">
+    
+    <div class="dash-column col-apps">
+        {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+    </div>
+
+    <div class="dash-column col-actions">
+        <div class="module" id="recent-actions-module">
+            <h2>{% translate 'Recent actions' %}</h2>
+            <h3>{% translate 'My actions' %}</h3>
+            {% get_admin_log 10 as admin_log for_user user %}
+            {% if not admin_log %}
+                <p>{% translate 'None available' %}</p>
+            {% else %}
+                <ul class="actionlist">
+                {% for entry in admin_log %}
+                    <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+                        {% if entry.is_deletion or not entry.get_admin_url %}
+                            {{ entry.object_repr }}
+                        {% else %}
+                            <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                        {% endif %}
+                        <br>
+                        {% if entry.content_type %}
+                            <span class="mini quiet">{% filter capfirst %}{{ entry.content_type.name }}{% endfilter %}</span>
+                        {% else %}
+                            <span class="mini quiet">{% translate 'Unknown content' %}</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="dash-column col-stats">
+        
+        <div class="big-stat-card card-profit">
+            <h2>LUCRO DESTE MÊS</h2>
+            <div class="stat-value">R$ {{ stats.lucro|floatformat:2 }}</div>
+        </div>
+
+        <div class="big-stat-card card-stock">
+            <h2>NO ARMAZÉM AGORA</h2>
+            <div class="stat-value">{{ stats.estoque }}</div>
+            <div class="stat-sub">Encomendas Pendentes</div>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+    .dashboard-wrapper { display: flex; gap: 20px; align-items: flex-start; width: 100%; }
+    .col-apps { flex: 2; min-width: 300px; }
+    .col-actions { flex: 1; min-width: 250px; max-width: 300px; }
+    .col-stats { flex: 2; display: flex; flex-direction: column; gap: 20px; }
+
+    .big-stat-card {
+        padding: 40px 30px; border-radius: 8px; text-align: center;
+        color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .big-stat-card:hover { transform: translateY(-5px); }
+
+    .big-stat-card h2 {
+        margin: 0; padding: 0; font-size: 18px; text-transform: uppercase;
+        letter-spacing: 2px; opacity: 0.9; color: white !important; background: none !important;
+    }
+
+    .stat-value { font-size: 60px; font-weight: 900; margin: 15px 0; line-height: 1; }
+    .stat-sub { font-size: 14px; text-transform: uppercase; opacity: 0.8; }
+
+    /* Cores Específicas */
+    .card-profit {
+        background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        border-bottom: 8px solid #1e7e34;
+    }
+
+    /* CORRIGIDO: Gradiente com o NOVO AZUL */
+    .card-stock {
+        background: linear-gradient(135deg, #123C65 0%, #091e32 100%);
+        border-bottom: 8px solid #091e32;
+    }
+
+    .col-actions .module { margin-top: 0; background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ddd; }
+
+    @media (max-width: 1024px) {
+        .dashboard-wrapper { flex-direction: column; }
+        .col-apps, .col-actions, .col-stats { width: 100%; max-width: none; }
+    }
+</style>
+{% endblock %}

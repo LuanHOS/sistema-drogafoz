@@ -1,0 +1,32 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{# --- 1. Script de Navegação (Mantido) --- #}
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        #result_list tbody tr td:not(.action-checkbox), #result_list tbody tr th { cursor: pointer; }
+        #result_list tbody tr:hover td:not(.action-checkbox), #result_list tbody tr:hover th { background-color: #f0f4ff !important; }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const rows = document.querySelectorAll('#result_list tbody tr');
+            rows.forEach(row => {
+                row.addEventListener('click', function(e) {
+                    if (e.target.closest('.action-checkbox') || e.target.closest('a')) return;
+                    const editLink = row.querySelector('th a') || row.querySelector('td a');
+                    if (editLink) window.location.href = editLink.href;
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+{# --- 2. Botão Voltar (Mantido) --- #}
+{% block breadcrumbs %}
+    <div class="btn-voltar-container">
+        <a href="/admin/" class="btn-voltar-topo">← Voltar ao Início</a>
+    </div>
+{% endblock %}
+
+{% block object-tools %}{{ block.super }}{% endblock %}

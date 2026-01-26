@@ -1,0 +1,48 @@
+{% extends "admin/change_form.html" %}
+
+{# 1. Botão Voltar no Topo Esquerdo #}
+{# (Só mostramos se NÃO for popup) #}
+{% block breadcrumbs %}
+    {% if not is_popup %}
+    <div class="btn-voltar-container">
+        <a href="{% if add %}../{% else %}../../{% endif %}" class="btn-voltar-topo">← Voltar para a Lista</a>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        /* Esconde botões extras indesejados */
+        input[name="_addanother"], input[name="_continue"] { display: none !important; }
+    </style>
+{% endblock %}
+
+{# 2. Cria o botão Cancelar (inteligente: fecha popup ou volta pra lista correta) #}
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+    <div class="submit-row-extras" style="display:none;">
+        {% if is_popup %}
+            <a href="#" onclick="window.close(); return false;" class="btn-cancel">Cancelar</a>
+        {% else %}
+            <a href="{% if add %}../{% else %}../../{% endif %}" class="btn-cancel">Cancelar</a>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const submitRow = document.querySelector('.submit-row');
+            const cancelContainer = document.querySelector('.submit-row-extras');
+            
+            if (submitRow && cancelContainer) {
+                const cancelBtn = cancelContainer.querySelector('a');
+                if (cancelBtn) {
+                    // Move o botão Cancelar para dentro da barra principal
+                    submitRow.appendChild(cancelBtn);
+                    // Mostra o botão (tira o display:none do CSS original)
+                    cancelBtn.style.display = 'inline-block';
+                }
+            }
+        });
+    </script>
+{% endblock %}

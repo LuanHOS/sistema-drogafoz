@@ -1,0 +1,69 @@
+{% load i18n %}
+
+<div style="margin-bottom: 20px; background: #f0f4ff; padding: 15px; border-radius: 5px; border: 1px solid #cce5ff;">
+    <h3 style="margin-top: 0; color: #123C65;">Gestão</h3>
+    <a href="/admin/relatorio/" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+        📊 Acessar Painel Financeiro e Ganhos
+    </a>
+</div>
+
+{% if app_list %}
+  {% for app in app_list %}
+    <div class="app-{{ app.app_label }} module">
+      <table style="width: 100%;">
+        <caption>
+          <span class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">
+            {{ app.name }}
+          </span>
+        </caption>
+
+        {% for model in app.models %}
+          <tr class="model-{{ model.object_name|lower }}">
+            {# --- COLUNA 1: NOME DO MODELO --- #}
+            {% if model.admin_url %}
+              <th scope="row" style="width: 40%;">
+                <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                <div style="font-weight: normal; font-size: 12px; color: #666; margin-top: 3px;">
+                    {% if model.object_name == 'Cliente' %}Cadastro e gestão de clientes{% endif %}
+                    {% if model.object_name == 'Encomenda' %}Controle de chegada e saída{% endif %}
+                    {% if model.object_name == 'User' %}Gerenciar acessos{% endif %}
+                    {% if model.object_name == 'Group' %}Permissões de equipe{% endif %}
+                </div>
+              </th>
+            {% else %}
+              <th scope="row">{{ model.name }}</th>
+            {% endif %}
+
+            {# --- COLUNA 2: ADICIONAR --- #}
+            {% if model.add_url %}
+              <td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>
+            {% else %}
+              <td>&nbsp;</td>
+            {% endif %}
+
+            {# --- COLUNA 3: VISUALIZAR --- #}
+            {% if model.admin_url %}
+              {% if model.view_only %}
+                <td><a href="{{ model.admin_url }}" class="viewlink">{% translate 'View' %}</a></td>
+              {% else %}
+                <td><a href="{{ model.admin_url }}" class="changelink">Visualizar</a></td>
+              {% endif %}
+            {% else %}
+              <td>&nbsp;</td>
+            {% endif %}
+
+            {# --- COLUNA 4: EXPORTAR (NOVO) --- #}
+            <td>
+                {% if model.object_name == 'Cliente' or model.object_name == 'Encomenda' %}
+                    <a href="{{ model.admin_url }}exportar-xml/" class="exportlink">Exportar XML</a>
+                {% endif %}
+            </td>
+
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  {% endfor %}
+{% else %}
+  <p>{% translate "You don't have permission to view or edit anything." %}</p>
+{% endif %}

@@ -9,6 +9,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import path
 from django.core import serializers
 from django.contrib import messages
+from django.contrib.admin.models import LogEntry, CHANGE  # <--- NOVO: Para gravar histórico
+from django.contrib.contenttypes.models import ContentType # <--- NOVO: Para identificar o modelo
 from .models import Cliente, Encomenda
 import math
 
@@ -54,6 +56,18 @@ def marcar_entregue(modeladmin, request, queryset):
                 encomenda.status = 'ENTREGUE'
                 encomenda.data_entrega = timezone.now()
                 encomenda.save()
+
+                # --- CORREÇÃO: REGISTRAR NO HISTÓRICO (LOG) ---
+                # Como é uma ação manual, precisamos criar o log na mão
+                LogEntry.objects.log_action(
+                    user_id=request.user.id,
+                    content_type_id=ContentType.objects.get_for_model(encomenda).pk,
+                    object_id=encomenda.pk,
+                    object_repr=str(encomenda),
+                    action_flag=CHANGE,
+                    change_message=f"Marcado como Entregue via Ação em Massa (Valor: R$ {encomenda.valor_cobrado})"
+                )
+
                 count += 1
         
         modeladmin.message_user(request, f"{count} encomenda(s) atualizada(s) e marcada(s) como entregue(s)!", messages.SUCCESS)

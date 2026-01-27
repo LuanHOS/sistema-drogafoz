@@ -59,6 +59,9 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.4);
             transition: all 0.3s; border: 2px solid #218838;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            
+            /* Correção para não vazar a tela no celular */
+            box-sizing: border-box; 
         }
         .btn-big-top:hover { background: #218838; transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.5); }
         .btn-big-top i { margin-right: 10px; }
@@ -112,13 +115,11 @@
             margin-top: 0; font-size: 18px; font-weight: 900;
             border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; margin-bottom: 20px;
             display: flex; align-items: center; gap: 10px;
-            /* Sombra Referência */
             text-shadow: 1px 1px 3px rgba(0,0,0,0.6); 
         }
 
         .rule-col h3 i { color: #C51625; }
 
-        /* Estilo da Lista com Ícones */
         .rule-list { padding-left: 0; list-style: none; margin: 0; }
         .rule-list li { 
             margin-bottom: 18px; font-size: 15px; line-height: 1.5; 
@@ -127,10 +128,8 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
         
-        /* --- ÍCONES DAS LISTAS: AGORA COM A MESMA SOMBRA DO TÍTULO --- */
         .li-icon { 
             color: #C51625; font-size: 18px; margin-top: 3px; min-width: 20px; text-align: center; 
-            /* Sombra idêntica à do título */
             text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
         } 
 
@@ -153,7 +152,6 @@
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* --- ÍCONE DE ALERTA: AGORA COM A MESMA SOMBRA --- */
         .alert-box {
             margin-top: 25px; padding: 15px;
             background: rgba(197, 22, 37, 0.2); 
@@ -163,7 +161,6 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
         .alert-box i {
-            /* Sombra idêntica à do título para o ícone de bloqueio */
             text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
         }
 
@@ -184,6 +181,13 @@
             .address-box { flex-direction: column; text-align: center; gap: 20px; }
             .address-text { text-align: center; }
             h1 { font-size: 36px; }
+            
+            /* Ajuste Fino para o Botão no Celular */
+            .btn-big-top {
+                font-size: 16px; /* Letra menor */
+                padding: 15px;   /* Menos espaço interno */
+                width: 95%;      /* Margem segura nas laterais */
+            }
         }
     </style>
 </head>
@@ -196,7 +200,7 @@
         <div class="subtitle">SERVIÇO DE RECEBIMENTO DE ENCOMENDAS</div>
 
         <a href="{% url 'consulta_publica' %}" class="btn-big-top">
-            <i class="fas fa-box-open"></i> CLIQUE AQUI PARA CONSULTAR SUA ENCOMENDA
+            <i class="fas fa-box-open"></i> CONSULTAR MINHA ENCOMENDA
         </a>
 
         <div class="address-box">
@@ -239,6 +243,12 @@
                 </div>
 
                 <ul class="rule-list">
+                    <li>
+                        <i class="fas fa-trash-alt li-icon"></i>
+                        <div style="font-weight: bold; color: #ffcccc;">
+                            Encomendas devem ser retiradas em até 120 dias ou serão descartadas.
+                        </div>
+                    </li>
                     <li>
                         <i class="fas fa-map-pin li-icon"></i>
                         <div>Use nosso endereço comercial (acima) para a entrega.</div>

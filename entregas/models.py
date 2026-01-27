@@ -2,24 +2,43 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 
+# --- VALIDADOR DE CPF (Lógica Matemática) ---
+def validar_cpf_algoritmo(value):
+    # 1. Limpeza básica
+    value = str(value)
+    if not value.isdigit():
+        raise ValidationError('O CPF deve conter apenas números.')
+    
+    if len(value) != 11:
+        raise ValidationError('O CPF deve ter 11 dígitos.')
+    
+    # 2. Verifica se todos os números são iguais (ex: 111.111.111-11)
+    if value == value[0] * len(value):
+        raise ValidationError('CPF inválido.')
+
+    # 3. Cálculo matemático dos dígitos verificadores
+    for i in range(9, 11):
+        val = sum((int(value[num]) * ((i + 1) - num) for num in range(0, i)))
+        digit = ((val * 10) % 11) % 10
+        if digit != int(value[i]):
+            raise ValidationError('CPF inválido (Dígitos verificadores não conferem).')
+
 class Cliente(models.Model):
-    # Regra de Validação: Aceita apenas dígitos de 0 a 9
+    # Regra: Aceita apenas dígitos de 0 a 9
     apenas_numeros = RegexValidator(r'^\d+$', 'Este campo deve conter apenas números (sem pontos ou traços).')
 
-    # Apenas o Nome continua obrigatório na definição do campo
     nome = models.CharField(max_length=200)
     
-    # CPF: unique=True já garante que o banco não aceite CPFs iguais
+    # CPF: Agora com validador matemático + apenas números
     cpf = models.CharField(
         max_length=14, 
         unique=True, 
         blank=True, 
         null=True, 
-        validators=[apenas_numeros],
+        validators=[apenas_numeros, validar_cpf_algoritmo], # <--- Adicionado o validador aqui
         error_messages={'unique': 'Já existe um cliente cadastrado com este CPF.'}
     )
     
-    # RG: Validaremos a unicidade manualmente no método clean()
     rg = models.CharField(
         max_length=20, 
         blank=True, 
@@ -34,34 +53,24 @@ class Cliente(models.Model):
     data_cadastro = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        # 1. Validação de RG Único
-        # (Se o RG foi preenchido, verifica se já existe outro cliente com ele)
         if self.rg:
             if Cliente.objects.filter(rg=self.rg).exclude(pk=self.pk).exists():
                 raise ValidationError({'rg': 'Já existe um cliente cadastrado com este RG.'})
 
-        # 2. Validação de Homônimos sem Documento (Regra do "Apenas Nome")
-        # Se NÃO tem CPF e NÃO tem RG...
         if not self.cpf and not self.rg:
-            # ...verifica se já existe alguém com esse nome exato (ignorando maiúsculas/minúsculas)
             if Cliente.objects.filter(nome__iexact=self.nome).exclude(pk=self.pk).exists():
                 raise ValidationError(
                     'Já existe um cliente com este Nome no sistema. '
-                    'Para cadastrar um homônimo (pessoa com mesmo nome), '
-                    'é OBRIGATÓRIO informar o CPF ou o RG para diferenciá-los.'
+                    'Para cadastrar um homônimo, informe CPF ou RG.'
                 )
 
     def save(self, *args, **kwargs):
-        # Garante que campos vazios sejam salvos como NULL no banco
-        # Isso evita erro de "duplicidade de campo vazio"
         if not self.cpf: self.cpf = None
         if not self.rg: self.rg = None
         super().save(*args, **kwargs)
 
     def __str__(self):
-        if self.cpf:
-            return f"{self.nome} ({self.cpf})"
-        return self.nome
+        return f"{self.nome} ({self.cpf})" if self.cpf else self.nome
     
     class Meta:
         ordering = ['nome']
@@ -75,14 +84,22 @@ class Encomenda(models.Model):
     ]
 
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    
-    # ALTERAÇÃO AQUI: Mudado de TextField para CharField com max_length=200
     descricao = models.CharField(max_length=200, verbose_name="Descrição da Encomenda") 
     
     data_chegada = models.DateTimeField(verbose_name="Data de Chegada")
     data_entrega = models.DateTimeField(verbose_name="Data de Entrega", blank=True, null=True)
-    valor_cobrado = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    # ALTERAÇÃO: Valor padrão agora é 10.00
+    valor_cobrado = models.DecimalField(max_digits=10, decimal_places=2, default=10.00)
+    
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
+
+    def save(self, *args, **kwargs):
+        # ALTERAÇÃO: Se o status for PENDENTE (Swap), zera a data de entrega
+        if self.status == 'PENDENTE':
+            self.data_entrega = None
+            
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.descricao} - {self.cliente.nome}"

@@ -24,8 +24,15 @@
         .search-box p { color: #666; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
         
         .input-group { display: flex; justify-content: center; }
-        .search-box input[type="text"] { width: 70%; padding: 12px; border: 2px solid #ddd; border-radius: 5px 0 0 5px; font-size: 16px; outline: none; text-align: center; letter-spacing: 1px; }
+        
+        /* Input estilizado */
+        .search-box input[type="text"] { 
+            width: 70%; padding: 12px; border: 2px solid #ddd; 
+            border-radius: 5px 0 0 5px; font-size: 16px; outline: none; 
+            text-align: center; letter-spacing: 1px; 
+        }
         .search-box input[type="text"]:focus { border-color: #123C65; }
+        
         .search-box button { padding: 12px 25px; background-color: #28a745; color: white; border: none; border-radius: 0 5px 5px 0; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
         .search-box button:hover { background-color: #218838; }
 
@@ -65,10 +72,18 @@
     <div class="container">
         <div class="search-box">
             <h2>Consulte suas Encomendas</h2>
-            <p>Para sua segurança, informe seu <strong>CPF ou RG</strong> (Documento de Identidade) abaixo para verificar se existem pacotes aguardando retirada em seu nome.</p>
+            <p>Para sua segurança, informe seu <strong>CPF ou RG</strong> (apenas números) abaixo para verificar se existem pacotes aguardando retirada.</p>
             
             <form method="get" class="input-group">
-                <input type="text" name="q" placeholder="Digite seu CPF ou RG" value="{{ query|default:'' }}" required>
+                <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="Digite seu CPF ou RG (Apenas números)" 
+                    value="{{ query|default:'' }}" 
+                    required
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    maxlength="14"
+                >
                 <button type="submit">Consultar</button>
             </form>
         </div>
@@ -103,7 +118,7 @@
 
         <div class="help-box">
             <h3>Não encontrou ou não tem documento cadastrado?</h3>
-            <p>Caso você não tenha cadastrado seu CPF/RG no sistema ou não esteja conseguindo acessar a lista, entre em contato conosco para atualizar seu cadastro.</p>
+            <p>Caso você não tenha cadastrado seu CPF/RG no sistema ou não esteja conseguindo acessar a lista, entre em contato conosco.</p>
             
             <a href="https://wa.me/5545999422240?text=Olá, gostaria de verificar uma encomenda e atualizar meu cadastro de documento." target="_blank" class="btn-whatsapp">
                 📱 Falar no WhatsApp (+55 45 99942-2240)

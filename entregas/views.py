@@ -11,24 +11,34 @@ def relatorio_entregas(request):
     data_final = request.GET.get('data_final', timezone.now().strftime('%Y-%m-%d'))
     data_inicial = request.GET.get('data_inicial', (timezone.now() - timedelta(days=30)).strftime('%Y-%m-%d'))
 
-    # Filtra as encomendas baseadas na data de chegada
-    encomendas = Encomenda.objects.filter(
+    # --- CORREÇÃO DE LÓGICA ---
+    
+    # 1. FINANCEIRO (O que realmente entrou de dinheiro)
+    # Filtra pela DATA DE ENTREGA. Se entregou hoje, o dinheiro conta hoje, não importa quando chegou.
+    encomendas_entregues = Encomenda.objects.filter(
+        status='ENTREGUE',
+        data_entrega__date__range=[data_inicial, data_final]
+    )
+
+    # 2. OPERACIONAL (Movimento da loja)
+    # Filtra pela DATA DE CHEGADA. Para saber quantas caixas o entregador deixou na loja nesse período.
+    encomendas_chegadas = Encomenda.objects.filter(
         data_chegada__date__range=[data_inicial, data_final]
     )
 
-    # 1. Métricas de Valor (Dinheiro)
-    # Total já recebido (Encomendas Entregues)
-    total_ganhos = encomendas.filter(status='ENTREGUE').aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
-    
-    # NOVO: Total a receber (Encomendas paradas no estoque)
-    ganhos_pendentes = encomendas.filter(status='PENDENTE').aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
+    # --- CÁLCULOS ---
 
-    # 2. Métricas de Quantidade
-    total_encomendas = encomendas.count()
-    total_entregues = encomendas.filter(status='ENTREGUE').count()
-    total_pendentes = encomendas.filter(status='PENDENTE').count()
+    # Total Ganhos (Baseado em quem pagou/retirou no período)
+    total_ganhos = encomendas_entregues.aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
+    total_entregues = encomendas_entregues.count()
 
-    # NOVO: Cálculo do Ticket Médio (Valor médio por pacote entregue)
+    # Pendentes / Volume (Baseado no que chegou na loja no período)
+    # Ganhos Pendentes = Dinheiro potencial das caixas que chegaram neste período e ainda estão lá
+    ganhos_pendentes = encomendas_chegadas.filter(status='PENDENTE').aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
+    total_pendentes = encomendas_chegadas.filter(status='PENDENTE').count()
+    total_encomendas = encomendas_chegadas.count() # Volume total que entrou na loja
+
+    # Ticket Médio (Média de valor por retirada realizada)
     if total_entregues > 0:
         ticket_medio = total_ganhos / total_entregues
     else:
@@ -36,8 +46,8 @@ def relatorio_entregas(request):
 
     context = {
         'total_ganhos': total_ganhos,
-        'ganhos_pendentes': ganhos_pendentes, # Novo dado
-        'ticket_medio': ticket_medio,         # Novo dado
+        'ganhos_pendentes': ganhos_pendentes,
+        'ticket_medio': ticket_medio,
         'total_encomendas': total_encomendas,
         'total_entregues': total_entregues,
         'total_pendentes': total_pendentes,

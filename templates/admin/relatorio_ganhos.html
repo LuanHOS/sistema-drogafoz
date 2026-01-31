@@ -1,127 +1,132 @@
 {% extends "admin/base_site.html" %}
+{% load i18n static %}
 
-{% block breadcrumbs %}
-<div class="btn-voltar-container">
-    <a href="/admin/" class="btn-voltar-topo">← Voltar ao Início</a>
-</div>
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        .dashboard-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        
+        /* Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #ccc; }
+        .stat-card h3 { margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; color: #666; }
+        .stat-card .value { font-size: 28px; font-weight: bold; color: #333; }
+        .stat-card .sub { font-size: 12px; color: #888; margin-top: 5px; }
+
+        /* Cores Específicas */
+        .card-green { border-left-color: #28a745; }
+        .card-green .value { color: #28a745; }
+        
+        .card-blue { border-left-color: #123C65; }
+        .card-blue .value { color: #123C65; }
+
+        .card-orange { border-left-color: #fd7e14; }
+        .card-orange .value { color: #fd7e14; }
+
+        .card-red { border-left-color: #C51625; }
+        .card-red .value { color: #C51625; }
+
+        /* Filtro */
+        .filter-bar { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .filter-form { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 12px; font-weight: bold; color: #555; }
+        .btn-filtrar { background: #123C65; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-filtrar:hover { background: #0d2b4a; }
+        
+        .section-title { margin-top: 40px; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; color: #333; }
+        
+        .checkbox-container { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; }
+        .checkbox-container input { width: 18px; height: 18px; cursor: pointer; }
+        .checkbox-container label { cursor: pointer; font-size: 14px; }
+    </style>
 {% endblock %}
 
 {% block content %}
-<style>
-    /* Estilo dos Cards */
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Um pouco mais largo */
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-    .card {
-        background: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        text-align: center;
-        border-left: 5px solid #ccc;
-        transition: transform 0.2s;
-    }
-    .card:hover { transform: translateY(-3px); }
+<div class="dashboard-container">
     
-    .card h3 { margin: 0; font-size: 13px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; }
-    .card p { font-size: 28px; font-weight: 900; margin: 10px 0 5px; color: #333; }
-    .card span { font-size: 11px; color: #999; }
+    <h1>Relatório de Gestão</h1>
     
-    /* Cores específicas */
-    .card.money { border-left-color: #28a745; } /* Recebido */
-    .card.money p { color: #28a745; }
-    
-    .card.future { border-left-color: #ffc107; } /* A Receber */
-    .card.future p { color: #d39e00; }
+    <div class="filter-bar">
+        <form method="get" class="filter-form">
+            <div class="form-group">
+                <label>Data Inicial:</label>
+                <input type="date" name="data_inicial" value="{{ data_inicial }}" class="form-control" {% if ignorar_periodo %}disabled{% endif %} id="dt_ini">
+            </div>
+            <div class="form-group">
+                <label>Data Final:</label>
+                <input type="date" name="data_final" value="{{ data_final }}" class="form-control" {% if ignorar_periodo %}disabled{% endif %} id="dt_fim">
+            </div>
+            
+            <div class="form-group" style="margin-left: 10px;">
+                <label>&nbsp;</label> <div class="checkbox-container">
+                    <input type="checkbox" name="ignorar_periodo" id="chk_ignorar" {% if ignorar_periodo %}checked{% endif %} onchange="toggleDates()">
+                    <label for="chk_ignorar">Mostrar Todo o Histórico</label>
+                </div>
+            </div>
 
-    .card.pending { border-left-color: #C51625; } /* Pendente (Vermelho Identidade) */
-    .card.pending p { color: #C51625; }
-
-    .card.done { border-left-color: #123C65; } /* Entregue (Azul Identidade) */
-    .card.done p { color: #123C65; }
-
-    /* Estilo do Filtro */
-    .filter-form {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 25px;
-        display: flex;
-        gap: 15px;
-        align-items: flex-end;
-        border: 1px solid #e9ecef;
-    }
-    .form-group label { display: block; font-size: 12px; margin-bottom: 5px; font-weight: bold; color: #555; }
-    .form-group input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-    
-    /* BOTÃO AZUL IDENTIDADE */
-    .btn-filter { 
-        background: #123C65; 
-        color: white; 
-        border: none; 
-        padding: 10px 20px; 
-        cursor: pointer; 
-        border-radius: 4px; 
-        font-weight: bold;
-        text-transform: uppercase;
-        font-size: 12px;
-        transition: background 0.3s;
-    }
-    .btn-filter:hover { background: #0d2b4a; }
-</style>
-
-<h1 style="margin-bottom: 20px; color: #333;">Painel de Gestão Financeira</h1>
-
-<form method="get" class="filter-form">
-    <div class="form-group">
-        <label>Data Inicial:</label>
-        <input type="date" name="data_inicial" value="{{ data_inicial }}" required>
-    </div>
-    <div class="form-group">
-        <label>Data Final:</label>
-        <input type="date" name="data_final" value="{{ data_final }}" required>
-    </div>
-    <button type="submit" class="btn-filter">🔍 Filtrar Relatório</button>
-</form>
-
-<div class="dashboard-grid">
-    <div class="card money">
-        <h3>Receita Realizada</h3>
-        <p>R$ {{ total_ganhos|floatformat:2 }}</p>
-        <span>Dinheiro já no caixa</span>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn-filtrar">Atualizar Relatório</button>
+            </div>
+        </form>
     </div>
 
-    <div class="card future">
-        <h3>Receita Pendente</h3>
-        <p>R$ {{ ganhos_pendentes|floatformat:2 }}</p>
-        <span>Dinheiro parado no estoque</span>
+    <h2 class="section-title">📊 Desempenho do Período <small style="font-size: 0.6em; color: #666; font-weight: normal;">({{ periodo_label }})</small></h2>
+    <div class="stats-grid">
+        <div class="stat-card card-green">
+            <h3>Faturamento (Entregues)</h3>
+            <div class="value">R$ {{ faturamento_periodo|floatformat:2 }}</div>
+            <div class="sub">{{ qtd_entregues_periodo }} encomendas baixadas</div>
+        </div>
+
+        <div class="stat-card card-blue">
+            <h3>Ticket Médio</h3>
+            <div class="value">R$ {{ ticket_medio|floatformat:2 }}</div>
+            <div class="sub">Média por cliente neste período</div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Novas Encomendas</h3>
+            <div class="value">{{ qtd_chegadas_periodo }}</div>
+            <div class="sub">Caixas recebidas na loja</div>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>Ticket Médio</h3>
-        <p>R$ {{ ticket_medio|floatformat:2 }}</p>
-        <span>Média por encomenda</span>
+    <h2 class="section-title">📦 Status Atual do Estoque <small style="font-size: 0.6em; color: #666; font-weight: normal;">(Independente da data selecionada)</small></h2>
+    <div class="stats-grid">
+        <div class="stat-card card-orange">
+            <h3>Pendentes no Estoque</h3>
+            <div class="value">{{ estoque_atual_qtd }}</div>
+            <div class="sub">Caixas aguardando retirada hoje</div>
+        </div>
+
+        <div class="stat-card card-red">
+            <h3>Potencial a Receber</h3>
+            <div class="value">R$ {{ estoque_atual_valor|floatformat:2 }}</div>
+            <div class="sub">Valor Base acumulado nas prateleiras</div>
+        </div>
     </div>
 
-    <div class="card pending">
-        <h3>Estoque Atual</h3>
-        <p>{{ total_pendentes }}</p>
-        <span>Pacotes aguardando retirada</span>
-    </div>
-
-    <div class="card done">
-        <h3>Entregas Realizadas</h3>
-        <p>{{ total_entregues }}</p>
-        <span>Pacotes finalizados</span>
-    </div>
-
-    <div class="card">
-        <h3>Volume Total</h3>
-        <p>{{ total_encomendas }}</p>
-        <span>Movimentação total do período</span>
-    </div>
 </div>
+
+<script>
+    function toggleDates() {
+        var chk = document.getElementById('chk_ignorar');
+        var dtIni = document.getElementById('dt_ini');
+        var dtFim = document.getElementById('dt_fim');
+        
+        if (chk.checked) {
+            dtIni.disabled = true;
+            dtFim.disabled = true;
+        } else {
+            dtIni.disabled = false;
+            dtFim.disabled = false;
+        }
+    }
+    // Roda ao carregar para garantir estado correto
+    document.addEventListener("DOMContentLoaded", function() {
+        toggleDates();
+    });
+</script>
 {% endblock %}

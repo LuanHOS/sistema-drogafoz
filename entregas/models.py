@@ -68,29 +68,25 @@ class Encomenda(models.Model):
     data_chegada = models.DateTimeField(verbose_name="Data de Chegada")
     data_entrega = models.DateTimeField(verbose_name="Data de Entrega", blank=True, null=True)
     
+    # Mantém o valor base com padrão 10,00
     valor_base = models.DecimalField(max_digits=10, decimal_places=2, default=10.00, verbose_name="Valor Base (Tabela)")
+    
     valor_calculado = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Valor Calculado (Sistema)")
-    valor_cobrado = models.DecimalField(max_digits=10, decimal_places=2, default=10.00, verbose_name="Valor Final Cobrado")
+    
+    # ALTERAÇÃO AQUI: Agora aceita ficar vazio (sem default=10)
+    valor_cobrado = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Valor Final Cobrado")
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
 
     def save(self, *args, **kwargs):
-        # 1. Se estiver PENDENTE, limpa os dados de entrega para evitar sujeira
         if self.status == 'PENDENTE':
             self.data_entrega = None
             self.valor_calculado = None 
         
-        # 2. CÁLCULO AUTOMÁTICO
-        # Se tiver data de entrega (foi entregue) e tiver valor base, o sistema calcula.
         elif self.data_entrega and self.valor_base:
-            # Conta quantos dias ficou na loja
             dias_estoque = (self.data_entrega - self.data_chegada).days
             if dias_estoque < 0: dias_estoque = 0
-            
-            # Aplica a regra (10 dias = 1x, 11-20 dias = 2x, etc...)
             multiplicador = max(1, dias_estoque // 10)
-            
-            # Grava o resultado matemático
             self.valor_calculado = self.valor_base * multiplicador
 
         super().save(*args, **kwargs)

@@ -9,18 +9,16 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import path
 from django.core import serializers
 from django.contrib import messages
-from django.contrib.admin.models import LogEntry, CHANGE  # <--- NOVO: Para gravar histórico
-from django.contrib.contenttypes.models import ContentType # <--- NOVO: Para identificar o modelo
+from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.contenttypes.models import ContentType
 from .models import Cliente, Encomenda
 import math
 
-# --- Configurações Gerais ---
 admin.site.site_header = "DROGAFOZ ENCOMENDAS"
 admin.site.site_title = "Drogafoz Admin"
 admin.site.index_title = "Administração do Sistema"
 admin.site.enable_nav_sidebar = False 
 
-# --- PERSONALIZAÇÃO DE USUÁRIOS ---
 admin.site.unregister(Group)
 admin.site.unregister(User)
 
@@ -42,37 +40,49 @@ class CustomUserAdmin(UserAdmin):
             return False
         return super().has_delete_permission(request, obj)
 
-# --- AÇÃO COM CONFIRMAÇÃO E CÁLCULO DE VALORES ---
+# --- AÇÃO COM CÁLCULO DOS 3 VALORES ---
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
     if 'post' in request.POST:
         count = 0
+        agora = timezone.now()
+        
         for encomenda in queryset:
             input_name = f'valor_{encomenda.id}'
-            novo_valor = request.POST.get(input_name)
+            novo_valor_cobrado = request.POST.get(input_name)
 
-            if novo_valor:
-                encomenda.valor_cobrado = novo_valor.replace(',', '.')
+            if novo_valor_cobrado:
+                # 1. Lógica do Cálculo (Reproduzida aqui para salvar no banco)
+                dias_estoque = (agora - encomenda.data_chegada).days
+                if dias_estoque < 0: dias_estoque = 0
+                multiplicador = max(1, dias_estoque // 10)
+                
+                # 2. Definição dos Valores
+                valor_calculado_sistema = float(encomenda.valor_base) * multiplicador
+                valor_final_cobrado = novo_valor_cobrado.replace(',', '.')
+
+                # 3. Atualização
+                encomenda.valor_calculado = valor_calculado_sistema
+                encomenda.valor_cobrado = valor_final_cobrado
                 encomenda.status = 'ENTREGUE'
-                encomenda.data_entrega = timezone.now()
+                encomenda.data_entrega = agora
                 encomenda.save()
 
-                # --- CORREÇÃO: REGISTRAR NO HISTÓRICO (LOG) ---
-                # Como é uma ação manual, precisamos criar o log na mão
                 LogEntry.objects.log_action(
                     user_id=request.user.id,
                     content_type_id=ContentType.objects.get_for_model(encomenda).pk,
                     object_id=encomenda.pk,
                     object_repr=str(encomenda),
                     action_flag=CHANGE,
-                    change_message=f"Marcado como Entregue via Ação em Massa (Valor: R$ {encomenda.valor_cobrado})"
+                    change_message=f"Entregue. Base: {encomenda.valor_base} | Calc: {valor_calculado_sistema} | Cobrado: {valor_final_cobrado}"
                 )
 
                 count += 1
         
-        modeladmin.message_user(request, f"{count} encomenda(s) atualizada(s) e marcada(s) como entregue(s)!", messages.SUCCESS)
+        modeladmin.message_user(request, f"{count} encomenda(s) atualizada(s)!", messages.SUCCESS)
         return HttpResponseRedirect(request.get_full_path())
 
+    # --- LÓGICA DE EXIBIÇÃO DA TELA DE CONFIRMAÇÃO ---
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
     encomendas_ordenadas = queryset.select_related('cliente').order_by('cliente__nome')
     
@@ -90,14 +100,14 @@ def marcar_entregue(modeladmin, request, queryset):
         
         dias_estoque = (agora - enc.data_chegada).days
         if dias_estoque < 0: dias_estoque = 0
-        
         multiplicador = max(1, dias_estoque // 10)
 
-        valor_original = float(enc.valor_cobrado)
-        valor_sugerido = valor_original * multiplicador
+        # Usa o Valor Base para calcular o sugerido
+        valor_base_float = float(enc.valor_base)
+        valor_sugerido = valor_base_float * multiplicador
 
         enc.dias_estoque = dias_estoque
-        enc.valor_sugerido = valor_sugerido
+        enc.valor_sugerido = valor_sugerido # Isso vai aparecer preenchido no input
         enc.multiplicador = multiplicador
         enc.alerta_prazo = multiplicador > 1
 
@@ -115,17 +125,12 @@ def marcar_entregue(modeladmin, request, queryset):
     
     return render(request, 'admin/confirmar_entrega.html', context)
 
-# --- Filtros ---
 class StatusFilter(admin.SimpleListFilter):
     title = _('Filtrar por Status')
     parameter_name = 'status'
 
     def lookups(self, request, model_admin):
-        return (
-            ('PENDENTE', 'Aguardando Retirada'),
-            ('ENTREGUE', 'Entregue ao Cliente'),
-            ('TODOS', 'Todas'),
-        )
+        return (('PENDENTE', 'Aguardando Retirada'), ('ENTREGUE', 'Entregue ao Cliente'), ('TODOS', 'Todas'),)
 
     def choices(self, changelist):
         total_pendente = Encomenda.objects.filter(status='PENDENTE').count()
@@ -143,9 +148,7 @@ class StatusFilter(admin.SimpleListFilter):
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-    # --- ALTERAÇÃO: A linha de ações foi removida ---
     actions = None
-    
     list_display = ('get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
     search_fields = ('nome', 'cpf', 'rg')
     list_per_page = 25
@@ -156,12 +159,9 @@ class ClienteAdmin(admin.ModelAdmin):
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', obj.nome)
         return obj.nome
 
-    # --- Exportação de XML ---
     def get_urls(self):
         urls = super().get_urls()
-        my_urls = [
-            path('exportar-xml/', self.exportar_xml),
-        ]
+        my_urls = [path('exportar-xml/', self.exportar_xml),]
         return my_urls + urls
 
     def exportar_xml(self, request):
@@ -174,11 +174,15 @@ class ClienteAdmin(admin.ModelAdmin):
 @admin.register(Encomenda)
 class EncomendaAdmin(admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
-    list_display = ('get_cliente_nome', 'descricao', 'status', 'data_chegada', 'data_entrega')
+    # Mostramos os 3 valores na lista para facilitar a conferência
+    list_display = ('get_cliente_nome', 'descricao', 'status', 'data_chegada', 'valor_base', 'valor_calculado', 'valor_cobrado')
     list_filter = (StatusFilter,) 
     search_fields = ('cliente__nome',)
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
+    
+    # Permitimos editar tudo, conforme solicitado
+    fields = ('cliente', 'descricao', 'data_chegada', 'data_entrega', 'status', 'valor_base', 'valor_calculado', 'valor_cobrado')
 
     @admin.display(ordering='cliente__nome', description='Cliente')
     def get_cliente_nome(self, obj):
@@ -196,12 +200,9 @@ class EncomendaAdmin(admin.ModelAdmin):
         field.widget.can_delete_related = False  
         return form
 
-    # --- Exportação de XML ---
     def get_urls(self):
         urls = super().get_urls()
-        my_urls = [
-            path('exportar-xml/', self.exportar_xml),
-        ]
+        my_urls = [path('exportar-xml/', self.exportar_xml),]
         return my_urls + urls
 
     def exportar_xml(self, request):

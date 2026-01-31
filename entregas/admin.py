@@ -40,7 +40,7 @@ class CustomUserAdmin(UserAdmin):
             return False
         return super().has_delete_permission(request, obj)
 
-# --- AÇÃO COM CÁLCULO DOS 3 VALORES ---
+# --- AÇÃO COM CÁLCULO (Mantida para fluxo em massa) ---
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
     if 'post' in request.POST:
@@ -52,29 +52,21 @@ def marcar_entregue(modeladmin, request, queryset):
             novo_valor_cobrado = request.POST.get(input_name)
 
             if novo_valor_cobrado:
-                # 1. Lógica do Cálculo (Reproduzida aqui para salvar no banco)
-                dias_estoque = (agora - encomenda.data_chegada).days
-                if dias_estoque < 0: dias_estoque = 0
-                multiplicador = max(1, dias_estoque // 10)
-                
-                # 2. Definição dos Valores
-                valor_calculado_sistema = float(encomenda.valor_base) * multiplicador
-                valor_final_cobrado = novo_valor_cobrado.replace(',', '.')
-
-                # 3. Atualização
-                encomenda.valor_calculado = valor_calculado_sistema
-                encomenda.valor_cobrado = valor_final_cobrado
+                # Apenas definimos os valores manuais e a data
+                # O cálculo automático do valor_calculado acontecerá no .save() do model
+                encomenda.valor_cobrado = novo_valor_cobrado.replace(',', '.')
                 encomenda.status = 'ENTREGUE'
                 encomenda.data_entrega = agora
-                encomenda.save()
+                encomenda.save() # <--- O cálculo roda aqui agora
 
+                # Log manual
                 LogEntry.objects.log_action(
                     user_id=request.user.id,
                     content_type_id=ContentType.objects.get_for_model(encomenda).pk,
                     object_id=encomenda.pk,
                     object_repr=str(encomenda),
                     action_flag=CHANGE,
-                    change_message=f"Entregue. Base: {encomenda.valor_base} | Calc: {valor_calculado_sistema} | Cobrado: {valor_final_cobrado}"
+                    change_message=f"Entregue via Baixa em Massa. Cobrado: {encomenda.valor_cobrado}"
                 )
 
                 count += 1
@@ -102,12 +94,11 @@ def marcar_entregue(modeladmin, request, queryset):
         if dias_estoque < 0: dias_estoque = 0
         multiplicador = max(1, dias_estoque // 10)
 
-        # Usa o Valor Base para calcular o sugerido
         valor_base_float = float(enc.valor_base)
         valor_sugerido = valor_base_float * multiplicador
 
         enc.dias_estoque = dias_estoque
-        enc.valor_sugerido = valor_sugerido # Isso vai aparecer preenchido no input
+        enc.valor_sugerido = valor_sugerido
         enc.multiplicador = multiplicador
         enc.alerta_prazo = multiplicador > 1
 
@@ -174,15 +165,30 @@ class ClienteAdmin(admin.ModelAdmin):
 @admin.register(Encomenda)
 class EncomendaAdmin(admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
-    # Mostramos os 3 valores na lista para facilitar a conferência
-    list_display = ('get_cliente_nome', 'descricao', 'status', 'data_chegada', 'valor_base', 'valor_calculado', 'valor_cobrado')
+    
+    # 1. LISTA PERSONALIZADA (ORDEM E DATA LIMPA)
+    list_display = ('get_cliente_nome', 'descricao', 'status', 'get_data_chegada_fmt', 'get_data_saida_fmt', 'valor_base', 'valor_calculado', 'valor_cobrado')
+    
     list_filter = (StatusFilter,) 
     search_fields = ('cliente__nome',)
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     
-    # Permitimos editar tudo, conforme solicitado
-    fields = ('cliente', 'descricao', 'data_chegada', 'data_entrega', 'status', 'valor_base', 'valor_calculado', 'valor_cobrado')
+    # 2. EDIÇÃO: VALOR CALCULADO BLOQUEADO (READONLY)
+    # Você não pode editar o calculado, ele é fruto da matemática
+    readonly_fields = ('valor_calculado',)
+    fields = ('cliente', 'descricao', 'status', 'data_chegada', 'data_entrega', 'valor_base', 'valor_calculado', 'valor_cobrado')
+
+    # --- FORMATADORES DE DATA ---
+    @admin.display(description='Data Chegada', ordering='data_chegada')
+    def get_data_chegada_fmt(self, obj):
+        return obj.data_chegada.strftime('%d/%m/%Y')
+
+    @admin.display(description='Data Saída', ordering='data_entrega')
+    def get_data_saida_fmt(self, obj):
+        if obj.data_entrega:
+            return obj.data_entrega.strftime('%d/%m/%Y')
+        return "-"
 
     @admin.display(ordering='cliente__nome', description='Cliente')
     def get_cliente_nome(self, obj):

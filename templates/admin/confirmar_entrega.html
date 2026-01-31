@@ -48,8 +48,9 @@
                                     {# O linebreaksbr lida com 'Enters', o CSS lida com 'WWWW' #}
                                     📦 {{ item.descricao|linebreaksbr }}
                                     
+                                    {# CORREÇÃO AQUI: Agora aponta para item.valor_base #}
                                     <span class="valor-original">
-                                        (Base: R$ {{ item.valor_cobrado|floatformat:2 }})
+                                        (Base: R$ {{ item.valor_base|floatformat:2 }})
                                     </span>
 
                                     {% if item.status == 'ENTREGUE' %}

@@ -116,7 +116,9 @@
     <div class="content-row">
         <div class="panel">
             <h4>📈 Evolução do Faturamento (Últimos 6 Meses)</h4>
-            <canvas id="revenueChart" style="height: 250px; width: 100%;"></canvas>
+            <div style="position: relative; height: 250px; width: 100%;">
+                <canvas id="revenueChart"></canvas>
+            </div>
         </div>
 
         <div class="panel">
@@ -207,7 +209,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: false, // Isso exige que o pai tenha altura fixa!
                 scales: {
                     y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
                     x: { grid: { display: false } }

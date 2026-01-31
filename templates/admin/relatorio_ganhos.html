@@ -3,130 +3,218 @@
 
 {% block extrastyle %}
     {{ block.super }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .dashboard-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .dashboard-container { padding: 20px; max-width: 1200px; margin: 0 auto; font-family: 'Segoe UI', sans-serif; }
         
-        /* Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #ccc; }
-        .stat-card h3 { margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; color: #666; }
-        .stat-card .value { font-size: 28px; font-weight: bold; color: #333; }
-        .stat-card .sub { font-size: 12px; color: #888; margin-top: 5px; }
-
-        /* Cores Específicas */
-        .card-green { border-left-color: #28a745; }
-        .card-green .value { color: #28a745; }
-        
-        .card-blue { border-left-color: #123C65; }
-        .card-blue .value { color: #123C65; }
-
-        .card-orange { border-left-color: #fd7e14; }
-        .card-orange .value { color: #fd7e14; }
-
-        .card-red { border-left-color: #C51625; }
-        .card-red .value { color: #C51625; }
-
-        /* Filtro */
-        .filter-bar { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* FILTRO */
+        .filter-bar { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #123C65; }
         .filter-form { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-size: 12px; font-weight: bold; color: #555; }
-        .btn-filtrar { background: #123C65; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-filtrar:hover { background: #0d2b4a; }
+        .form-group label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; }
+        .form-control { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-filtrar { background: #123C65; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         
-        .section-title { margin-top: 40px; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; color: #333; }
+        /* SEÇÕES */
+        .section-header { margin-top: 30px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .section-header h2 { margin: 0; font-size: 18px; color: #333; font-weight: 600; }
+        .section-header small { color: #888; font-weight: normal; font-size: 13px; margin-left: 10px; }
+
+        /* GRID CARDS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+        .stat-card h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 24px; font-weight: 700; color: #333; margin-bottom: 5px; }
+        .stat-card .sub { font-size: 12px; color: #666; }
+        .stat-card .icon { position: absolute; right: 15px; top: 20px; font-size: 24px; opacity: 0.1; }
+
+        /* CORES */
+        .border-green { border-bottom: 3px solid #28a745; }
+        .text-green { color: #28a745 !important; }
         
-        .checkbox-container { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; }
-        .checkbox-container input { width: 18px; height: 18px; cursor: pointer; }
-        .checkbox-container label { cursor: pointer; font-size: 14px; }
+        .border-red { border-bottom: 3px solid #dc3545; }
+        .text-red { color: #dc3545 !important; }
+
+        .border-blue { border-bottom: 3px solid #17a2b8; }
+        .text-blue { color: #17a2b8 !important; }
+
+        .border-orange { border-bottom: 3px solid #fd7e14; }
+        .text-orange { color: #fd7e14 !important; }
+
+        /* TABELAS E GRÁFICOS */
+        .content-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
+        .panel { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .panel h4 { margin-top: 0; color: #444; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+
+        .mini-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .mini-table th { text-align: left; color: #888; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .mini-table td { padding: 10px 0; border-bottom: 1px solid #f9f9f9; color: #333; }
+        .mini-table tr:last-child td { border-bottom: none; }
+
+        .badge-alert { background: #ffeeba; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge-crit { background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .content-row { grid-template-columns: 1fr; }
+        }
     </style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
     
-    <h1>Relatório de Gestão</h1>
-    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Dashboard de Gestão</h1>
+        <span style="font-size: 12px; color: #888;">Última atualização: {% now "d/m/Y H:i" %}</span>
+    </div>
+
     <div class="filter-bar">
         <form method="get" class="filter-form">
             <div class="form-group">
-                <label>Data Inicial:</label>
-                <input type="date" name="data_inicial" value="{{ data_inicial }}" class="form-control" {% if ignorar_periodo %}disabled{% endif %} id="dt_ini">
+                <label>Início</label>
+                <input type="date" name="data_inicial" value="{{ data_inicial }}" class="form-control" id="dt_ini" {% if ignorar_periodo %}disabled{% endif %}>
             </div>
             <div class="form-group">
-                <label>Data Final:</label>
-                <input type="date" name="data_final" value="{{ data_final }}" class="form-control" {% if ignorar_periodo %}disabled{% endif %} id="dt_fim">
+                <label>Fim</label>
+                <input type="date" name="data_final" value="{{ data_final }}" class="form-control" id="dt_fim" {% if ignorar_periodo %}disabled{% endif %}>
             </div>
-            
-            <div class="form-group" style="margin-left: 10px;">
-                <label>&nbsp;</label> <div class="checkbox-container">
-                    <input type="checkbox" name="ignorar_periodo" id="chk_ignorar" {% if ignorar_periodo %}checked{% endif %} onchange="toggleDates()">
-                    <label for="chk_ignorar">Mostrar Todo o Histórico</label>
-                </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
+                <input type="checkbox" name="ignorar_periodo" id="chk_ignorar" {% if ignorar_periodo %}checked{% endif %} onchange="toggleDates()">
+                <label for="chk_ignorar" style="cursor: pointer; margin: 0; color: #333;">Ver Todo Histórico</label>
             </div>
-
             <div class="form-group">
-                <label>&nbsp;</label>
-                <button type="submit" class="btn-filtrar">Atualizar Relatório</button>
+                <button type="submit" class="btn-filtrar">Atualizar</button>
             </div>
         </form>
     </div>
 
-    <h2 class="section-title">📊 Desempenho do Período <small style="font-size: 0.6em; color: #666; font-weight: normal;">({{ periodo_label }})</small></h2>
+    <div class="section-header">
+        <h2>💰 Financeiro e Performance <small>({{ periodo_label }})</small></h2>
+    </div>
     <div class="stats-grid">
-        <div class="stat-card card-green">
-            <h3>Faturamento (Entregues)</h3>
-            <div class="value">R$ {{ faturamento_periodo|floatformat:2 }}</div>
-            <div class="sub">{{ qtd_entregues_periodo }} encomendas baixadas</div>
+        <div class="stat-card border-green">
+            <h3>Faturamento Real</h3>
+            <div class="value text-green">R$ {{ faturamento_real|floatformat:2 }}</div>
+            <div class="sub">{{ qtd_entregues }} encomendas baixadas</div>
         </div>
-
-        <div class="stat-card card-blue">
+        <div class="stat-card border-orange">
+            <h3>Descontos Concedidos</h3>
+            <div class="value text-orange">R$ {{ descontos_dados|floatformat:2 }}</div>
+            <div class="sub">Diferença entre o calculado e o cobrado</div>
+        </div>
+        <div class="stat-card border-blue">
             <h3>Ticket Médio</h3>
-            <div class="value">R$ {{ ticket_medio|floatformat:2 }}</div>
-            <div class="sub">Média por cliente neste período</div>
+            <div class="value text-blue">R$ {{ ticket_medio|floatformat:2 }}</div>
+            <div class="sub">Média por cliente</div>
         </div>
-
         <div class="stat-card">
-            <h3>Novas Encomendas</h3>
-            <div class="value">{{ qtd_chegadas_periodo }}</div>
-            <div class="sub">Caixas recebidas na loja</div>
+            <h3>Tempo de Retirada</h3>
+            <div class="value">{{ tempo_medio_dias }} Dias</div>
+            <div class="sub">Média de permanência na loja</div>
         </div>
     </div>
 
-    <h2 class="section-title">📦 Status Atual do Estoque <small style="font-size: 0.6em; color: #666; font-weight: normal;">(Independente da data selecionada)</small></h2>
-    <div class="stats-grid">
-        <div class="stat-card card-orange">
-            <h3>Pendentes no Estoque</h3>
-            <div class="value">{{ estoque_atual_qtd }}</div>
-            <div class="sub">Caixas aguardando retirada hoje</div>
+    <div class="content-row">
+        <div class="panel">
+            <h4>📈 Evolução do Faturamento (Últimos 6 Meses)</h4>
+            <canvas id="revenueChart" style="height: 250px; width: 100%;"></canvas>
         </div>
 
-        <div class="stat-card card-red">
-            <h3>Potencial a Receber</h3>
-            <div class="value">R$ {{ estoque_atual_valor|floatformat:2 }}</div>
-            <div class="sub">Valor Base acumulado nas prateleiras</div>
+        <div class="panel">
+            <h4>🏆 Top 5 Clientes (Período)</h4>
+            <table class="mini-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th style="text-align: right;">Gasto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in top_clientes %}
+                    <tr>
+                        <td>{{ c.cliente__nome }} <br> <small style="color:#999">{{ c.qtd }} retiradas</small></td>
+                        <td style="text-align: right; font-weight: bold;">R$ {{ c.total_gasto|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" style="text-align: center;">Sem dados no período</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section-header" style="margin-top: 40px;">
+        <h2>📦 Raio-X do Estoque e Auditoria <small>(Status Atual)</small></h2>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card border-blue">
+            <h3>Ocupação Atual</h3>
+            <div class="value">{{ estoque_qtd }}</div>
+            <div class="sub">Caixas nas prateleiras hoje</div>
+        </div>
+        <div class="stat-card border-green">
+            <h3>Potencial (Base)</h3>
+            <div class="value">R$ {{ estoque_valor_base|floatformat:2 }}</div>
+            <div class="sub">Valor mínimo acumulado</div>
+        </div>
+        <div class="stat-card border-red">
+            <h3>Alertas de Prazo</h3>
+            <div class="value text-red">{{ alertas_criticos }}</div>
+            <div class="sub">
+                <span class="badge-crit">Críticos (+120d)</span> 
+                <span class="badge-alert">{{ alertas_atencao }} Atenção (+30d)</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <h3>Auditoria de Dados</h3>
+            <div class="value">{{ entregas_zeradas }}</div>
+            <div class="sub">
+                Entregas R$ 0,00 (Período) <br>
+                <span style="color: #d63384;">{{ clientes_incompletos }} Clientes s/ contato</span>
+            </div>
         </div>
     </div>
 
 </div>
 
 <script>
+    // Controle do Checkbox de Data
     function toggleDates() {
         var chk = document.getElementById('chk_ignorar');
-        var dtIni = document.getElementById('dt_ini');
-        var dtFim = document.getElementById('dt_fim');
-        
-        if (chk.checked) {
-            dtIni.disabled = true;
-            dtFim.disabled = true;
-        } else {
-            dtIni.disabled = false;
-            dtFim.disabled = false;
-        }
+        document.getElementById('dt_ini').disabled = chk.checked;
+        document.getElementById('dt_fim').disabled = chk.checked;
     }
-    // Roda ao carregar para garantir estado correto
+
+    // Renderização do Gráfico
     document.addEventListener("DOMContentLoaded", function() {
-        toggleDates();
+        toggleDates(); // Inicia estado correto
+
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const labels = JSON.parse('{{ grafico_labels|safe }}');
+        const data = JSON.parse('{{ grafico_dados|safe }}');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Faturamento (R$)',
+                    data: data,
+                    backgroundColor: 'rgba(18, 60, 101, 0.7)',
+                    borderColor: 'rgba(18, 60, 101, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
     });
 </script>
 {% endblock %}

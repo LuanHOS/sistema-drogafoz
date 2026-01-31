@@ -25,7 +25,6 @@
         .stat-card h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }
         .stat-card .value { font-size: 24px; font-weight: 700; color: #333; margin-bottom: 5px; }
         .stat-card .sub { font-size: 12px; color: #666; }
-        .stat-card .icon { position: absolute; right: 15px; top: 20px; font-size: 24px; opacity: 0.1; }
 
         /* CORES */
         .border-green { border-bottom: 3px solid #28a745; }
@@ -42,16 +41,32 @@
 
         /* TABELAS E GRÁFICOS */
         .content-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
-        .panel { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        
+        .panel { 
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            /* TRAVA DE SEGURANÇA PARA O GRID: */
+            min-width: 0; 
+        }
+
         .panel h4 { margin-top: 0; color: #444; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
 
         .mini-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .mini-table th { text-align: left; color: #888; padding: 8px 0; border-bottom: 1px solid #eee; }
         .mini-table td { padding: 10px 0; border-bottom: 1px solid #f9f9f9; color: #333; }
-        .mini-table tr:last-child td { border-bottom: none; }
-
+        
         .badge-alert { background: #ffeeba; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .badge-crit { background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
+        /* CHART WRAPPER - A JAULA DO GRÁFICO */
+        .chart-container-box {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            overflow: hidden; /* Impede vazamento */
+        }
 
         @media (max-width: 768px) {
             .content-row { grid-template-columns: 1fr; }
@@ -116,7 +131,7 @@
     <div class="content-row">
         <div class="panel">
             <h4>📈 Evolução do Faturamento (Últimos 6 Meses)</h4>
-            <div style="position: relative; height: 250px; width: 100%;">
+            <div class="chart-container-box">
                 <canvas id="revenueChart"></canvas>
             </div>
         </div>
@@ -179,16 +194,14 @@
 </div>
 
 <script>
-    // Controle do Checkbox de Data
     function toggleDates() {
         var chk = document.getElementById('chk_ignorar');
         document.getElementById('dt_ini').disabled = chk.checked;
         document.getElementById('dt_fim').disabled = chk.checked;
     }
 
-    // Renderização do Gráfico
     document.addEventListener("DOMContentLoaded", function() {
-        toggleDates(); // Inicia estado correto
+        toggleDates();
 
         const ctx = document.getElementById('revenueChart').getContext('2d');
         const labels = JSON.parse('{{ grafico_labels|safe }}');
@@ -209,7 +222,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // Isso exige que o pai tenha altura fixa!
+                maintainAspectRatio: false, // O pai tem altura fixa, então ok!
                 scales: {
                     y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
                     x: { grid: { display: false } }

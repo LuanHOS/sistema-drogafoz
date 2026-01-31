@@ -40,7 +40,7 @@ class CustomUserAdmin(UserAdmin):
             return False
         return super().has_delete_permission(request, obj)
 
-# --- AÇÃO COM CÁLCULO (Mantida para fluxo em massa) ---
+# --- AÇÃO COM CÁLCULO ---
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
     if 'post' in request.POST:
@@ -52,14 +52,11 @@ def marcar_entregue(modeladmin, request, queryset):
             novo_valor_cobrado = request.POST.get(input_name)
 
             if novo_valor_cobrado:
-                # Apenas definimos os valores manuais e a data
-                # O cálculo automático do valor_calculado acontecerá no .save() do model
                 encomenda.valor_cobrado = novo_valor_cobrado.replace(',', '.')
                 encomenda.status = 'ENTREGUE'
                 encomenda.data_entrega = agora
-                encomenda.save() # <--- O cálculo roda aqui agora
+                encomenda.save()
 
-                # Log manual
                 LogEntry.objects.log_action(
                     user_id=request.user.id,
                     content_type_id=ContentType.objects.get_for_model(encomenda).pk,
@@ -74,7 +71,6 @@ def marcar_entregue(modeladmin, request, queryset):
         modeladmin.message_user(request, f"{count} encomenda(s) atualizada(s)!", messages.SUCCESS)
         return HttpResponseRedirect(request.get_full_path())
 
-    # --- LÓGICA DE EXIBIÇÃO DA TELA DE CONFIRMAÇÃO ---
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
     encomendas_ordenadas = queryset.select_related('cliente').order_by('cliente__nome')
     
@@ -166,23 +162,40 @@ class ClienteAdmin(admin.ModelAdmin):
 class EncomendaAdmin(admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
-    # 1. LISTA PERSONALIZADA (ORDEM E DATA LIMPA)
-    list_display = ('get_cliente_nome', 'descricao', 'status', 'get_data_chegada_fmt', 'get_data_saida_fmt', 'valor_base', 'valor_calculado', 'valor_cobrado')
+    # Adicionei os wrappers fmt para Descrição e Status
+    list_display = ('get_cliente_nome', 'get_descricao_fmt', 'get_status_fmt', 'get_data_chegada_fmt', 'get_data_saida_fmt', 'valor_base', 'valor_calculado', 'valor_cobrado')
     
     list_filter = (StatusFilter,) 
     search_fields = ('cliente__nome',)
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     
-    # 2. EDIÇÃO: VALOR CALCULADO BLOQUEADO (READONLY)
-    # Você não pode editar o calculado, ele é fruto da matemática
     readonly_fields = ('valor_calculado',)
     fields = ('cliente', 'descricao', 'status', 'data_chegada', 'data_entrega', 'valor_base', 'valor_calculado', 'valor_cobrado')
 
-    # --- FORMATADORES DE DATA ---
+    # --- LÓGICA DE COR (ALERTA DE 120 DIAS) ---
+    def _get_colored_text(self, obj, text):
+        # Regra: Se pendente E data de chegada maior que 120 dias
+        if obj.status == 'PENDENTE':
+            dias = (timezone.now() - obj.data_chegada).days
+            if dias > 120:
+                return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', text)
+        return text
+
+    # --- COLUNAS PERSONALIZADAS ---
+
+    @admin.display(ordering='descricao', description='Descrição')
+    def get_descricao_fmt(self, obj):
+        return self._get_colored_text(obj, obj.descricao)
+
+    @admin.display(ordering='status', description='Status')
+    def get_status_fmt(self, obj):
+        return self._get_colored_text(obj, obj.get_status_display())
+
     @admin.display(description='Data Chegada', ordering='data_chegada')
     def get_data_chegada_fmt(self, obj):
-        return obj.data_chegada.strftime('%d/%m/%Y')
+        valor = obj.data_chegada.strftime('%d/%m/%Y')
+        return self._get_colored_text(obj, valor)
 
     @admin.display(description='Data Saída', ordering='data_entrega')
     def get_data_saida_fmt(self, obj):
@@ -193,9 +206,12 @@ class EncomendaAdmin(admin.ModelAdmin):
     @admin.display(ordering='cliente__nome', description='Cliente')
     def get_cliente_nome(self, obj):
         cliente = obj.cliente
+        # Prioridade 1: Dados faltantes do cliente
         if not cliente.cpf or not cliente.telefone:
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', cliente.nome)
-        return cliente.nome
+        
+        # Prioridade 2: Encomenda atrasada (120 dias)
+        return self._get_colored_text(obj, cliente.nome)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

@@ -11,6 +11,7 @@ from django.core import serializers
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection
 from .models import Cliente, Encomenda
 
 admin.site.site_header = "DROGAFOZ ENCOMENDAS"
@@ -24,7 +25,6 @@ admin.site.unregister(User)
 # --- MIXIN PARA BUSCA SEM ACENTO ---
 class BuscaSemAcentoMixin:
     def get_search_results(self, request, queryset, search_term):
-        # Salva os campos originais
         campos_originais = self.search_fields
         # Adiciona o modificador '__unaccent' para ignorar acentos no Postgres
         self.search_fields = [f"{campo}__unaccent" for campo in self.search_fields]
@@ -32,7 +32,6 @@ class BuscaSemAcentoMixin:
         try:
             qs, use_distinct = super().get_search_results(request, queryset, search_term)
         finally:
-            # Restaura os campos originais para não dar erro em outras partes
             self.search_fields = campos_originais
             
         return qs, use_distinct
@@ -40,22 +39,17 @@ class BuscaSemAcentoMixin:
 @admin.register(User)
 class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
     actions = None
-    # Definimos explicitamente onde buscar
     search_fields = ('username', 'first_name', 'last_name', 'email')
-    
     readonly_fields = ('date_joined', 'last_login')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
-        (_('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser'),
-        }),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
 
     def has_delete_permission(self, request, obj=None):
-        if User.objects.count() <= 1:
-            return False
+        if User.objects.count() <= 1: return False
         return super().has_delete_permission(request, obj)
 
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
@@ -82,7 +76,6 @@ def marcar_entregue(modeladmin, request, queryset):
                     action_flag=CHANGE,
                     change_message=f"Entregue via Baixa em Massa. Cobrado: {encomenda.valor_cobrado}"
                 )
-
                 count += 1
         
         modeladmin.message_user(request, f"{count} encomenda(s) atualizada(s)!", messages.SUCCESS)
@@ -97,11 +90,7 @@ def marcar_entregue(modeladmin, request, queryset):
     for enc in encomendas_ordenadas:
         c_id = enc.cliente.id
         if c_id not in resumo_agrupado:
-            resumo_agrupado[c_id] = {
-                'cliente': enc.cliente,
-                'itens': [],
-                'total_sugerido': 0.0
-            }
+            resumo_agrupado[c_id] = {'cliente': enc.cliente, 'itens': [], 'total_sugerido': 0.0}
         
         dias_estoque = (agora - enc.data_chegada).days
         if dias_estoque < 0: dias_estoque = 0
@@ -126,7 +115,6 @@ def marcar_entregue(modeladmin, request, queryset):
         'opts': modeladmin.model._meta,
         'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
     }
-    
     return render(request, 'admin/confirmar_entrega.html', context)
 
 class StatusFilter(admin.SimpleListFilter):
@@ -134,7 +122,7 @@ class StatusFilter(admin.SimpleListFilter):
     parameter_name = 'status'
 
     def lookups(self, request, model_admin):
-        return (('PENDENTE', 'Aguardando Retirada'), ('ENTREGUE', 'Entregue ao Cliente'), ('TODOS', 'Todas'),)
+        return (('PENDENTE', 'Aguardando Retirada'), ('ENTREGUE', 'Entregue ao Cliente'), ('TODOS', 'Todas'))
 
     def choices(self, changelist):
         total_pendente = Encomenda.objects.filter(status='PENDENTE').count()
@@ -165,7 +153,7 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
-        my_urls = [path('exportar-xml/', self.exportar_xml),]
+        my_urls = [path('exportar-xml/', self.exportar_xml)]
         return my_urls + urls
 
     def exportar_xml(self, request):
@@ -179,7 +167,12 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
-    list_display = ('get_cliente_nome', 'get_descricao_fmt', 'get_status_fmt', 'get_data_chegada_fmt', 'get_data_saida_fmt', 'valor_base', 'valor_calculado', 'valor_cobrado')
+    # ALTERAÇÃO NO LIST DISPLAY: Usando funções customizadas para mudar o título
+    list_display = (
+        'get_cliente_nome', 'get_descricao_fmt', 'get_status_fmt', 
+        'get_data_chegada_fmt', 'get_data_saida_fmt', 
+        'get_valor_base_custom', 'get_valor_calculado_custom', 'get_valor_cobrado_custom'
+    )
     
     list_filter = (StatusFilter,) 
     search_fields = ('cliente__nome',)
@@ -195,6 +188,22 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
             if dias > 120:
                 return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', text)
         return text
+
+    # --- CAMPOS FORMATADOS E RENOMEADOS ---
+
+    @admin.display(ordering='valor_base', description='Valor Base')
+    def get_valor_base_custom(self, obj):
+        return obj.valor_base
+
+    @admin.display(ordering='valor_calculado', description='Valor Calculado')
+    def get_valor_calculado_custom(self, obj):
+        return obj.valor_calculado
+
+    @admin.display(ordering='valor_cobrado', description='Valor Final Cobrado')
+    def get_valor_cobrado_custom(self, obj):
+        return obj.valor_cobrado
+
+    # --- OUTROS CAMPOS ---
 
     @admin.display(ordering='descricao', description='Descrição')
     def get_descricao_fmt(self, obj):
@@ -233,7 +242,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
-        my_urls = [path('exportar-xml/', self.exportar_xml),]
+        my_urls = [path('exportar-xml/', self.exportar_xml)]
         return my_urls + urls
 
     def exportar_xml(self, request):

@@ -5,7 +5,13 @@
     {{ block.super }}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .dashboard-container { padding: 20px; max-width: 1200px; margin: 0 auto; font-family: 'Segoe UI', sans-serif; }
+        /* ALTERAÇÃO AQUI: 
+           Removi 'padding: 20px', 'max-width' e 'margin: 0 auto'.
+           Agora ele herda o espaçamento padrão do #content do Django (base_site).
+        */
+        .dashboard-container { 
+            font-family: 'Segoe UI', sans-serif; 
+        }
         
         /* FILTRO */
         .filter-bar { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #123C65; }

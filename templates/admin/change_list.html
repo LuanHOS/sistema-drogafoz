@@ -4,7 +4,7 @@
 {% block extrastyle %}
   {{ block.super }}
   <style>
-    /* CSS PARA AS COLUNAS */
+    /* CSS PARA AS COLUNAS (MANTIDO) */
     
     /* Aumenta a largura do Status */
     .field-get_status_fmt {
@@ -19,60 +19,14 @@
         min-width: 110px !important;
     }
 
-    /* Cliente: Deixa flexível (diminui "proporcionalmente" já que o status ocupou espaço) */
+    /* Cliente: Deixa flexível */
     .field-get_cliente_nome {
-        /* O comportamento padrão de tabela já ajusta isso, 
-           mas podemos limitar se necessário. Por padrão está ok. */
-    }
-    
-    /* Estilo para botão desativado */
-    .actions button[disabled] {
-        opacity: 0.5;
-        cursor: not-allowed;
-        background-color: #ccc !important;
-        color: #666 !important;
+        /* Padrão do Django */
     }
   </style>
 {% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // FUNÇÃO: Ativar/Desativar botão de ação
-    function toggleActionButton() {
-        // Seleciona o botão "Ir" (submit) dentro da div .actions
-        const actionButton = document.querySelector('.actions button[type="submit"]'); 
-        
-        if (!actionButton) return;
-
-        // Conta quantos checkboxes de linha estão marcados
-        const checkedCount = document.querySelectorAll('input.action-select:checked').length;
-        
-        if (checkedCount === 0) {
-            actionButton.disabled = true;
-            actionButton.title = "Selecione pelo menos um item";
-        } else {
-            actionButton.disabled = false;
-            actionButton.title = "";
-        }
-    }
-
-    // LISTENER: Monitora mudanças na tabela (seleção individual e "selecionar tudo")
-    const table = document.getElementById('result_list') || document.querySelector('.results'); // Fallback
-    
-    // Adiciona listener global na tabela para pegar cliques nos checkboxes
-    if (table) {
-        table.addEventListener('change', function(e) {
-            // Se mudou um checkbox de seleção
-            if (e.target.classList.contains('action-select') || e.target.id === 'action-toggle') {
-                toggleActionButton();
-            }
-        });
-    }
-
-    // Inicializa o estado ao carregar a página
-    toggleActionButton();
-});
-</script>
+{# Script de bloqueio removido conforme solicitado #}
 {% endblock %}

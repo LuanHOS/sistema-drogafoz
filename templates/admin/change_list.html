@@ -1,5 +1,5 @@
 {% extends "admin/change_list.html" %}
-{% load static %}
+{% load static admin_urls %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -10,6 +10,7 @@
     .field-get_status_fmt {
         min-width: 170px !important;
         width: 170px !important;
+        text-align: center;
     }
     
     /* Datas: Garante que fiquem em uma linha só */
@@ -22,10 +23,31 @@
     .field-get_cliente_nome {
         /* Padrão do Django */
     }
+    
+    /* Ajuste para o botão voltar ficar bonito na lista */
+    .btn-voltar-container {
+        margin-bottom: 20px;
+    }
+    
+    .btn-voltar-topo {
+        text-decoration: none;
+        color: #666;
+        font-weight: bold;
+        font-size: 13px;
+        text-transform: uppercase;
+    }
+    .btn-voltar-topo:hover {
+        color: #333;
+    }
   </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="btn-voltar-container">
+    <a href="{% url 'admin:index' %}" class="btn-voltar-topo">← Voltar ao Início</a>
+</div>
 {% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
-{# Script de bloqueio removido conforme solicitado #}
 {% endblock %}

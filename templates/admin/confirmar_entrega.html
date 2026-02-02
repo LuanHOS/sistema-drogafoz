@@ -110,7 +110,7 @@
     </form>
 </div>
 
-<div id="container-molde-pdf" style="display: none;">
+<div id="container-molde-pdf" style="position: absolute; left: -10000px; top: 0;">
     <div id="receipt-template" class="receipt-box">
         <div class="receipt-header">
             <h1>DROGAFOZ ENCOMENDAS</h1>
@@ -124,9 +124,9 @@
         <table class="receipt-table">
             <thead>
                 <tr>
-                    <th style="width: 60%;">Descrição da Encomenda</th>
+                    <th style="width: 55%;">Descrição da Encomenda</th>
                     <th style="width: 20%; text-align: center;">Dias</th>
-                    <th style="width: 20%; text-align: right;">Valor</th>
+                    <th style="width: 25%; text-align: right;">Valor</th>
                 </tr>
             </thead>
             <tbody id="receipt-items-body">
@@ -202,11 +202,12 @@
     }
 
     // --- GERAÇÃO DE PDF (NOTA DE RETIRADA) ---
-    
+    // Configurações calibradas para A4 sem corte
     const pdfOptions = {
         margin: 10,
+        filename: 'nota.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
@@ -260,7 +261,11 @@
         const element = document.getElementById('receipt-template');
         const filename = `${nome.trim()}_${qtdItens}itens_${getFilenameDate()}.pdf`;
         
-        html2pdf().set(pdfOptions).from(element).save(filename);
+        // Clona as opções e aplica o nome do arquivo
+        let opt = {...pdfOptions};
+        opt.filename = filename;
+
+        html2pdf().set(opt).from(element).save();
     }
 
     function gerarPDFGeral() {
@@ -278,7 +283,7 @@
             // Cabeçalho de Grupo (Cliente) na tabela
             tbodyHtml += `
                 <tr style="background-color: #f0f0f0;">
-                    <td colspan="3" style="font-weight: bold; border-top: 2px solid #333;">CLIENTE: ${nome}</td>
+                    <td colspan="3" style="font-weight: bold; border-top: 2px solid #333; padding-top:5px; padding-bottom:5px;">CLIENTE: ${nome}</td>
                 </tr>
             `;
 
@@ -311,7 +316,10 @@
         const element = document.getElementById('receipt-template');
         const filename = `Entrega_${meta.dataset.qtdClientes}clientes_${meta.dataset.qtdItens}itens_${getFilenameDate()}.pdf`;
 
-        html2pdf().set(pdfOptions).from(element).save(filename);
+        let opt = {...pdfOptions};
+        opt.filename = filename;
+
+        html2pdf().set(opt).from(element).save();
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -393,12 +401,12 @@
     }
 
     .btn-cancelar {
-        background: #6c757d; color: white; padding: 12px 25px; 
+        background: #6c757d; color: #fff !important; padding: 12px 25px; 
         text-decoration: none; border-radius: 5px; font-weight: bold;
-        text-transform: uppercase; font-size: 14px;
+        text-transform: uppercase; font-size: 14px; display: inline-block;
         transition: background 0.2s;
     }
-    .btn-cancelar:hover { background: #5a6268; color: white; }
+    .btn-cancelar:hover { background: #5a6268; color: #fff !important; }
 
     .btn-confirmar {
         background: #28a745 !important; color: white; border: none; 
@@ -411,11 +419,11 @@
 
     /* --- ESTILO DO PDF (NOTA FISCAL) --- */
     .receipt-box {
-        width: 100%;
-        font-family: 'Courier New', Courier, monospace; /* Fonte tipo recibo */
+        width: 190mm; /* CORREÇÃO AQUI: Largura fixa para A4 */
+        font-family: 'Courier New', Courier, monospace; 
         color: #000;
         background: #fff;
-        padding: 20px;
+        padding: 10px;
     }
     .receipt-header { text-align: center; margin-bottom: 30px; }
     .receipt-header h1 { font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 2px; }

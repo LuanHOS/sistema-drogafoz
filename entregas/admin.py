@@ -195,11 +195,11 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     def get_valor_base_custom(self, obj):
         return obj.valor_base
 
-    @admin.display(ordering='valor_calculado', description='Valor Calculado')
+    @admin.display(ordering='valor_calculado', description='Valor Calc.')
     def get_valor_calculado_custom(self, obj):
         return obj.valor_calculado
 
-    @admin.display(ordering='valor_cobrado', description='Valor Final Cobrado')
+    @admin.display(ordering='valor_cobrado', description='Valor Final')
     def get_valor_cobrado_custom(self, obj):
         return obj.valor_cobrado
 

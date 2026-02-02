@@ -31,17 +31,23 @@ def relatorio_entregas(request):
 
     qs_todas = Encomenda.objects.all()
 
-    # --- 2. DADOS DO PERÍODO (Fluxo e Financeiro) ---
+    # --- 2. DADOS DO PERÍODO ---
     if ignorar_periodo:
-        encomendas_entregues = qs_todas.filter(status='ENTREGUE')
-        encomendas_chegadas = qs_todas
+        # Se ignorar, pega tudo
+        encomendas_entregues = qs_todas.filter(status='ENTREGUE') # Todas as saídas da história
+        encomendas_chegadas = qs_todas # Todas as chegadas da história
         periodo_label = "Todo o Histórico"
     else:
+        # SAÍDAS: Filtra pela data que SAIU (Data de Entrega)
+        # Regra: Conta entregas dadas baixa no período, mesmo que tenham chegado antes.
         encomendas_entregues = qs_todas.filter(status='ENTREGUE', data_entrega__range=(dt_inicial, dt_final))
+        
+        # CHEGADAS: Filtra pela data que CHEGOU (Data de Chegada)
         encomendas_chegadas = qs_todas.filter(data_chegada__range=(dt_inicial, dt_final))
+        
         periodo_label = f"{dt_inicial.strftime('%d/%m/%Y')} até {dt_final.strftime('%d/%m/%Y')}"
 
-    # Cálculos Financeiros
+    # Cálculos Financeiros (Baseados nas Saídas/Baixas do período)
     faturamento_real = encomendas_entregues.aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
     faturamento_ideal = encomendas_entregues.aggregate(Sum('valor_calculado'))['valor_calculado__sum'] or 0
     
@@ -50,23 +56,25 @@ def relatorio_entregas(request):
         
     descontos_dados = faturamento_ideal - faturamento_real
     
-    qtd_entregues = encomendas_entregues.count()
+    qtd_entregues = encomendas_entregues.count() # Total de Saídas no período
+    qtd_chegadas = encomendas_chegadas.count()   # Total de Chegadas no período
+    
     ticket_medio = (faturamento_real / qtd_entregues) if qtd_entregues > 0 else 0
 
-    # Tempo Médio de Retirada (Dias) - AGORA GLOBAL (HISTÓRICO COMPLETO)
-    # Alterado para pegar de qs_todas.filter(status='ENTREGUE') ao invés de encomendas_entregues (filtrada por data)
+    # Tempo Médio de Retirada (Dias) - GLOBAL (HISTÓRICO COMPLETO)
+    # Independente do filtro de data, calcula a média de tudo que já foi entregue
     media_timedelta = qs_todas.filter(status='ENTREGUE').aggregate(media=Avg(F('data_entrega') - F('data_chegada')))['media']
     tempo_medio_dias = media_timedelta.days if media_timedelta else 0
 
-    # Top 5 Clientes (Vips do Período)
+    # Top 5 Clientes (Baseado em quem deu baixa no período)
     top_clientes = encomendas_entregues.values('cliente__nome') \
         .annotate(total_gasto=Sum('valor_cobrado'), qtd=Count('id')) \
         .order_by('-total_gasto')[:5]
 
-    # Auditoria (Entregas zeradas ou gratuitas)
+    # Auditoria
     entregas_zeradas = encomendas_entregues.filter(Q(valor_cobrado__isnull=True) | Q(valor_cobrado=0)).count()
 
-    # --- 3. DADOS GERAIS DO ESTOQUE (Snapshot Atual - Independente da Data) ---
+    # --- 3. DADOS GERAIS DO ESTOQUE (Snapshot Atual) ---
     pendentes = qs_todas.filter(status='PENDENTE')
     estoque_qtd = pendentes.count()
     estoque_valor_base = pendentes.aggregate(Sum('valor_base'))['valor_base__sum'] or 0
@@ -78,10 +86,9 @@ def relatorio_entregas(request):
     alertas_criticos = pendentes.filter(data_chegada__lte=limite_critico).count()
     alertas_atencao = pendentes.filter(data_chegada__lte=limite_atencao, data_chegada__gt=limite_critico).count()
     
-    # Clientes sem cadastro completo (Audit)
     clientes_incompletos = Cliente.objects.filter(Q(telefone__isnull=True) | Q(telefone='')).count()
 
-    # --- 4. DADOS PARA O GRÁFICO (Últimos 6 meses) ---
+    # --- 4. DADOS PARA O GRÁFICO ---
     grafico_labels = []
     grafico_dados = []
     
@@ -110,8 +117,8 @@ def relatorio_entregas(request):
         'faturamento_real': faturamento_real,
         'descontos_dados': descontos_dados,
         'ticket_medio': ticket_medio,
-        'qtd_entregues': qtd_entregues,
-        'qtd_chegadas': encomendas_chegadas.count(), # Já estava sendo passado, agora vamos usar na tela
+        'qtd_entregues': qtd_entregues, # SAÍDAS
+        'qtd_chegadas': qtd_chegadas,   # CHEGADAS
         
         'estoque_qtd': estoque_qtd,
         'estoque_valor_base': estoque_valor_base,

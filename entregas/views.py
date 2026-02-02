@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Sum, Count, Avg, F, Q
+# ADICIONEI Min e Max NA LINHA ABAIXO
+from django.db.models import Sum, Count, Avg, F, Q, Min, Max
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
@@ -20,7 +21,6 @@ def relatorio_entregas(request):
         data_final_str = hoje.strftime('%Y-%m-%d')
     
     if not data_inicial_str:
-        # ALTERAÇÃO AQUI: Pega sempre o dia 1 do mês atual
         data_inicial_str = hoje.replace(day=1).strftime('%Y-%m-%d')
 
     try:
@@ -129,7 +129,7 @@ def relatorio_entregas(request):
     
     return render(request, 'admin/relatorio_ganhos.html', context)
 
-# --- OUTRAS VIEWS (CONSULTA PUBLICA / HOME) ---
+# --- OUTRAS VIEWS ---
 def consulta_publica(request):
     query = request.GET.get('q')
     resultados = []

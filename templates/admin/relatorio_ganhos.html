@@ -60,12 +60,12 @@
         .badge-alert { background: #ffeeba; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .badge-crit { background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 
-        /* CHART WRAPPER - A JAULA DO GRÁFICO */
+        /* CHART WRAPPER */
         .chart-container-box {
             position: relative;
             height: 300px;
             width: 100%;
-            overflow: hidden; /* Impede vazamento */
+            overflow: hidden;
         }
 
         @media (max-width: 768px) {
@@ -77,8 +77,10 @@
 {% block content %}
 <div class="dashboard-container">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1 style="margin: 0;">Dashboard de Gestão</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div class="btn-voltar-container" style="margin: 0 !important; padding: 0 !important;">
+            <a href="{% url 'admin:index' %}" class="btn-voltar-topo">← Voltar ao Início</a>
+        </div>
         <span style="font-size: 12px; color: #888;">Última atualização: {% now "d/m/Y H:i" %}</span>
     </div>
 
@@ -222,7 +224,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // O pai tem altura fixa, então ok!
+                maintainAspectRatio: false,
                 scales: {
                     y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
                     x: { grid: { display: false } }

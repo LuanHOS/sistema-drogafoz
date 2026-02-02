@@ -15,16 +15,19 @@ def relatorio_entregas(request):
     ignorar_periodo = request.GET.get('ignorar_periodo') == 'on'
 
     hoje = timezone.now()
+    
     if not data_final_str:
         data_final_str = hoje.strftime('%Y-%m-%d')
+    
     if not data_inicial_str:
-        data_inicial_str = (hoje - timedelta(days=30)).strftime('%Y-%m-%d')
+        # ALTERAÇÃO AQUI: Pega sempre o dia 1 do mês atual
+        data_inicial_str = hoje.replace(day=1).strftime('%Y-%m-%d')
 
     try:
         dt_inicial = make_aware(datetime.strptime(data_inicial_str, '%Y-%m-%d'))
         dt_final = make_aware(datetime.strptime(data_final_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
     except ValueError:
-        dt_inicial = hoje - timedelta(days=30)
+        dt_inicial = hoje.replace(day=1)
         dt_final = hoje
 
     qs_todas = Encomenda.objects.all()
@@ -43,7 +46,6 @@ def relatorio_entregas(request):
     faturamento_real = encomendas_entregues.aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
     faturamento_ideal = encomendas_entregues.aggregate(Sum('valor_calculado'))['valor_calculado__sum'] or 0
     
-    # Se faturamento ideal for menor que o real (ex: dados antigos), assume o real para não dar negativo
     if faturamento_ideal < faturamento_real:
         faturamento_ideal = faturamento_real
         
@@ -80,14 +82,12 @@ def relatorio_entregas(request):
     clientes_incompletos = Cliente.objects.filter(Q(telefone__isnull=True) | Q(telefone='')).count()
 
     # --- 4. DADOS PARA O GRÁFICO (Últimos 6 meses) ---
-    # Geramos isso manualmente para ser compatível com qualquer banco (SQLite/Postgres)
     grafico_labels = []
     grafico_dados = []
     
     for i in range(5, -1, -1):
         mes_ref = hoje - timedelta(days=i*30)
         inicio_mes = make_aware(datetime(mes_ref.year, mes_ref.month, 1))
-        # Gambiarra segura para fim do mês
         prox_mes = inicio_mes + timedelta(days=32)
         fim_mes = make_aware(datetime(prox_mes.year, prox_mes.month, 1)) - timedelta(seconds=1)
         
@@ -107,33 +107,29 @@ def relatorio_entregas(request):
         'ignorar_periodo': ignorar_periodo,
         'periodo_label': periodo_label,
         
-        # Financeiro
         'faturamento_real': faturamento_real,
         'descontos_dados': descontos_dados,
         'ticket_medio': ticket_medio,
         'qtd_entregues': qtd_entregues,
         'qtd_chegadas': encomendas_chegadas.count(),
         
-        # Estoque
         'estoque_qtd': estoque_qtd,
         'estoque_valor_base': estoque_valor_base,
         'alertas_criticos': alertas_criticos,
         'alertas_atencao': alertas_atencao,
         
-        # Intel & Audit
         'tempo_medio_dias': tempo_medio_dias,
         'top_clientes': top_clientes,
         'entregas_zeradas': entregas_zeradas,
         'clientes_incompletos': clientes_incompletos,
         
-        # Gráfico (Json dumps para o JS ler)
         'grafico_labels': json.dumps(grafico_labels),
         'grafico_dados': json.dumps(grafico_dados),
     }
     
     return render(request, 'admin/relatorio_ganhos.html', context)
 
-# --- OUTRAS VIEWS MANTIDAS IGUAIS ---
+# --- OUTRAS VIEWS (CONSULTA PUBLICA / HOME) ---
 def consulta_publica(request):
     query = request.GET.get('q')
     resultados = []

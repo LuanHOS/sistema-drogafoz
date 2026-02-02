@@ -98,24 +98,24 @@
             <div class="value text-green">R$ {{ faturamento_real|floatformat:2 }}</div>
             <div class="sub">{{ qtd_entregues }} encomendas baixadas</div>
         </div>
-        <div class="stat-card border-orange">
+        <div class="stat-card border-red">
             <h3>Descontos Concedidos</h3>
             <div class="value text-red">R$ {{ descontos_dados|floatformat:2 }}</div>
             <div class="sub">Diferença entre o calculado e o cobrado</div>
         </div>
-        <div class="stat-card border-blue">
+        <div class="stat-card border-black">
             <h3>Ticket Médio</h3>
             <div class="value text-black">R$ {{ ticket_medio|floatformat:2 }}</div>
             <div class="sub">Média por cliente</div>
         </div>
         
-        <div class="stat-card border-blue">
+        <div class="stat-card border-green">
             <h3>Chegadas no Período</h3>
             <div class="value text-green">{{ qtd_chegadas }}</div>
             <div class="sub">Chegaram no intervalo definido</div>
         </div>
 
-        <div class="stat-card border-green">
+        <div class="stat-card border-red">
             <h3>Saídas no Período</h3>
             <div class="value text-red">{{ qtd_entregues }}</div>
             <div class="sub">Entregues no intervalo definido</div>

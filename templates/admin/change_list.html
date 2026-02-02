@@ -1,32 +1,78 @@
 {% extends "admin/change_list.html" %}
-{% load i18n %}
+{% load static %}
 
-{# --- 1. Script de Navegação (Mantido) --- #}
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    /* CSS PARA AS COLUNAS */
+    
+    /* Aumenta a largura do Status */
+    .field-get_status_fmt {
+        min-width: 170px !important;
+        width: 170px !important;
+        text-align: center;
+    }
+    
+    /* Datas: Garante que fiquem em uma linha só */
+    .field-get_data_chegada_fmt, .field-get_data_saida_fmt {
+        white-space: nowrap !important;
+        min-width: 110px !important;
+    }
+
+    /* Cliente: Deixa flexível (diminui "proporcionalmente" já que o status ocupou espaço) */
+    .field-get_cliente_nome {
+        /* O comportamento padrão de tabela já ajusta isso, 
+           mas podemos limitar se necessário. Por padrão está ok. */
+    }
+    
+    /* Estilo para botão desativado */
+    .actions button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #ccc !important;
+        color: #666 !important;
+    }
+  </style>
+{% endblock %}
+
 {% block extrahead %}
-    {{ block.super }}
-    <style>
-        #result_list tbody tr td:not(.action-checkbox), #result_list tbody tr th { cursor: pointer; }
-        #result_list tbody tr:hover td:not(.action-checkbox), #result_list tbody tr:hover th { background-color: #f0f4ff !important; }
-    </style>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const rows = document.querySelectorAll('#result_list tbody tr');
-            rows.forEach(row => {
-                row.addEventListener('click', function(e) {
-                    if (e.target.closest('.action-checkbox') || e.target.closest('a')) return;
-                    const editLink = row.querySelector('th a') || row.querySelector('td a');
-                    if (editLink) window.location.href = editLink.href;
-                });
-            });
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // FUNÇÃO: Ativar/Desativar botão de ação
+    function toggleActionButton() {
+        // Seleciona o botão "Ir" (submit) dentro da div .actions
+        const actionButton = document.querySelector('.actions button[type="submit"]'); 
+        
+        if (!actionButton) return;
+
+        // Conta quantos checkboxes de linha estão marcados
+        const checkedCount = document.querySelectorAll('input.action-select:checked').length;
+        
+        if (checkedCount === 0) {
+            actionButton.disabled = true;
+            actionButton.title = "Selecione pelo menos um item";
+        } else {
+            actionButton.disabled = false;
+            actionButton.title = "";
+        }
+    }
+
+    // LISTENER: Monitora mudanças na tabela (seleção individual e "selecionar tudo")
+    const table = document.getElementById('result_list') || document.querySelector('.results'); // Fallback
+    
+    // Adiciona listener global na tabela para pegar cliques nos checkboxes
+    if (table) {
+        table.addEventListener('change', function(e) {
+            // Se mudou um checkbox de seleção
+            if (e.target.classList.contains('action-select') || e.target.id === 'action-toggle') {
+                toggleActionButton();
+            }
         });
-    </script>
-{% endblock %}
+    }
 
-{# --- 2. Botão Voltar (Mantido) --- #}
-{% block breadcrumbs %}
-    <div class="btn-voltar-container">
-        <a href="/admin/" class="btn-voltar-topo">← Voltar ao Início</a>
-    </div>
+    // Inicializa o estado ao carregar a página
+    toggleActionButton();
+});
+</script>
 {% endblock %}
-
-{% block object-tools %}{{ block.super }}{% endblock %}

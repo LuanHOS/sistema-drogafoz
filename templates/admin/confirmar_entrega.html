@@ -19,7 +19,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="margin: 0; color: #333;">Confirmar Entrega e Valores</h2>
         
-        <button type="button" onclick="gerarPDFGeral()" class="btn-acao-topo">
+        <button type="button" onclick="prepararPDF('geral')" class="btn-acao-topo">
             <i class="fas fa-file-export"></i> Exportar Relatório Geral
         </button>
     </div>
@@ -44,6 +44,7 @@
         <div id="lista-clientes-wrapper">
             {% for grupo in resumo_agrupado %}
                 <div class="cliente-card" id="card-cliente-{{ grupo.cliente.id }}" 
+                     data-client-id="{{ grupo.cliente.id }}"
                      data-client-name="{{ grupo.cliente.nome }}" 
                      data-client-cpf="{{ grupo.cliente.cpf|default:'' }}"
                      data-item-count="{{ grupo.itens|length }}">
@@ -52,7 +53,7 @@
                         <div style="display: flex; align-items: center;">
                             <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> {{ grupo.cliente.nome }}
                         </div>
-                        <button type="button" class="btn-export-mini" onclick="gerarPDFCliente('{{ grupo.cliente.id }}')" title="Gerar Nota de Retirada">
+                        <button type="button" class="btn-export-mini" onclick="prepararPDF('individual', '{{ grupo.cliente.id }}')" title="Gerar Nota de Retirada">
                             <i class="fas fa-file-export"></i>
                         </button>
                     </div>
@@ -110,15 +111,15 @@
     </form>
 </div>
 
-<div id="container-molde-pdf" style="position: absolute; left: -10000px; top: 0;">
-    <div id="receipt-template" class="receipt-box">
+<div id="molde-original" style="display: none;">
+    <div class="receipt-box">
         <div class="receipt-header">
             <h1>DROGAFOZ ENCOMENDAS</h1>
             <h2>NOTA DE RETIRADA</h2>
-            <p id="receipt-date">Data: 01/01/2026</p>
+            <p class="receipt-date">Data: --/--/----</p>
         </div>
 
-        <div id="receipt-client-info" class="receipt-section">
+        <div class="receipt-client-info receipt-section">
             </div>
 
         <table class="receipt-table">
@@ -129,12 +130,12 @@
                     <th style="width: 25%; text-align: right;">Valor</th>
                 </tr>
             </thead>
-            <tbody id="receipt-items-body">
+            <tbody class="receipt-items-body">
                 </tbody>
             <tfoot>
                 <tr>
                     <td colspan="2" class="total-label">TOTAL</td>
-                    <td class="total-value" id="receipt-total-value">R$ 0,00</td>
+                    <td class="total-value receipt-total-value">R$ 0,00</td>
                 </tr>
             </tfoot>
         </table>
@@ -148,13 +149,15 @@
     </div>
 </div>
 
+<div id="render-zone"></div>
+
 <div id="meta-dados" 
      data-qtd-clientes="{{ resumo_agrupado|length }}"
      data-qtd-itens="{{ encomendas.count }}">
 </div>
 
 <script>
-    // --- FUNÇÕES UTILITÁRIAS ---
+    // --- CONFIGURAÇÃO E UTILITÁRIOS ---
     function formatCurrency(value) {
         return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
@@ -175,7 +178,7 @@
         return `${dd}-${mm}-${yyyy}`;
     }
 
-    // --- CÁLCULOS EM TEMPO REAL ---
+    // --- CÁLCULOS TELA (PREÇO) ---
     function recalcularTudo(clientId) {
         let inputsCliente = document.querySelectorAll(`.valor-cliente-${clientId}`);
         let totalCliente = 0;
@@ -201,89 +204,110 @@
         document.getElementById('display-total-geral').innerText = formatCurrency(totalGeral);
     }
 
-    // --- GERAÇÃO DE PDF (NOTA DE RETIRADA) ---
-    // Configurações calibradas para A4 sem corte
-    const pdfOptions = {
-        margin: 10,
-        filename: 'nota.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true }, 
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+    // --- LÓGICA DE PDF BLINDADA ---
+    
+    // Função centralizadora que prepara o clone
+    function prepararPDF(tipo, clientId = null) {
+        // 1. Clona o molde original
+        const molde = document.getElementById('molde-original').firstElementChild.cloneNode(true);
+        const renderZone = document.getElementById('render-zone');
+        
+        // Limpa zona antiga
+        renderZone.innerHTML = '';
+        
+        // 2. Preenche os dados no clone
+        let filename = '';
+        
+        if (tipo === 'individual') {
+            filename = preencherIndividual(molde, clientId);
+        } else {
+            filename = preencherGeral(molde);
+        }
 
-    function gerarPDFCliente(clientId) {
-        // 1. Coletar Dados
+        // 3. Adiciona o clone na zona de renderização (visível para o HTML2PDF)
+        renderZone.appendChild(molde);
+
+        // 4. Configuração ajustada para evitar cortes
+        const opt = {
+            margin: [5, 5, 5, 5], // margem pequena
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, scrollX: 0, scrollY: 0 }, 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // 5. Gera e depois limpa
+        html2pdf().set(opt).from(molde).save().then(function(){
+            // Opcional: limpar após alguns segundos ou deixar oculto
+            setTimeout(() => renderZone.innerHTML = '', 1000);
+        });
+    }
+
+    function preencherIndividual(el, clientId) {
         const card = document.getElementById(`card-cliente-${clientId}`);
         const nome = card.dataset.clientName;
         const cpf = card.dataset.clientCpf;
         const itensElements = card.querySelectorAll('.item-linha');
         const qtdItens = itensElements.length;
+
+        // Data
+        el.querySelector('.receipt-date').innerText = `Data: ${getFormattedDate()}`;
         
-        let itensData = [];
+        // Cliente Info
+        let infoHtml = `<strong>Cliente:</strong> ${nome}`;
+        if(cpf) infoHtml += `<br><strong>CPF:</strong> ${cpf}`;
+        el.querySelector('.receipt-client-info').innerHTML = infoHtml;
+
+        // Itens
+        let tbodyHtml = '';
         let totalVal = 0;
 
         itensElements.forEach(row => {
             const desc = row.dataset.desc;
             const dias = row.dataset.dias;
-            const inputVal = row.querySelector('input').value;
+            const inputVal = row.querySelector('input').value; // Pega o valor atual do input
             const valFloat = parseFloat(inputVal.replace(',', '.'));
-            
             totalVal += (isNaN(valFloat) ? 0 : valFloat);
-            
-            itensData.push({
-                desc: desc,
-                dias: dias,
-                val: formatCurrency(valFloat)
-            });
-        });
 
-        // 2. Preencher o Molde
-        document.getElementById('receipt-date').innerText = `Data: ${getFormattedDate()}`;
-        
-        let clientHtml = `<strong>Cliente:</strong> ${nome}`;
-        if(cpf) clientHtml += `<br><strong>CPF:</strong> ${cpf}`;
-        document.getElementById('receipt-client-info').innerHTML = clientHtml;
-
-        let tbodyHtml = '';
-        itensData.forEach(item => {
             tbodyHtml += `
                 <tr>
-                    <td>${item.desc}</td>
-                    <td style="text-align: center;">${item.dias} dias</td>
-                    <td style="text-align: right;">${item.val}</td>
+                    <td>${desc}</td>
+                    <td style="text-align: center;">${dias} dias</td>
+                    <td style="text-align: right;">${formatCurrency(valFloat)}</td>
                 </tr>
             `;
         });
-        document.getElementById('receipt-items-body').innerHTML = tbodyHtml;
-        document.getElementById('receipt-total-value').innerText = formatCurrency(totalVal);
 
-        // 3. Gerar PDF
-        const element = document.getElementById('receipt-template');
-        const filename = `${nome.trim()}_${qtdItens}itens_${getFilenameDate()}.pdf`;
-        
-        // Clona as opções e aplica o nome do arquivo
-        let opt = {...pdfOptions};
-        opt.filename = filename;
+        el.querySelector('.receipt-items-body').innerHTML = tbodyHtml;
+        el.querySelector('.receipt-total-value').innerText = formatCurrency(totalVal);
 
-        html2pdf().set(opt).from(element).save();
+        return `${nome.trim()}_${qtdItens}itens_${getFilenameDate()}.pdf`;
     }
 
-    function gerarPDFGeral() {
-        // 1. Coleta dados globais
+    function preencherGeral(el) {
         const clientesCards = document.querySelectorAll('.cliente-card');
         const meta = document.getElementById('meta-dados');
-        
+
+        el.querySelector('.receipt-date').innerText = `Data: ${getFormattedDate()}`;
+        el.querySelector('.receipt-client-info').innerHTML = `
+            <strong>RELATÓRIO GERAL DE BAIXA</strong><br>
+            Quantidade de Clientes: ${meta.dataset.qtdClientes}<br>
+            Quantidade de Itens: ${meta.dataset.qtdItens}
+        `;
+
         let tbodyHtml = '';
         let totalGeral = 0;
 
         clientesCards.forEach(card => {
             const nome = card.dataset.clientName;
             const itensElements = card.querySelectorAll('.item-linha');
-            
-            // Cabeçalho de Grupo (Cliente) na tabela
+
+            // Cabeçalho do Cliente na tabela
             tbodyHtml += `
                 <tr style="background-color: #f0f0f0;">
-                    <td colspan="3" style="font-weight: bold; border-top: 2px solid #333; padding-top:5px; padding-bottom:5px;">CLIENTE: ${nome}</td>
+                    <td colspan="3" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 0;">
+                        CLIENTE: ${nome}
+                    </td>
                 </tr>
             `;
 
@@ -292,12 +316,11 @@
                 const dias = row.dataset.dias;
                 const inputVal = row.querySelector('input').value;
                 const valFloat = parseFloat(inputVal.replace(',', '.'));
-                
                 totalGeral += (isNaN(valFloat) ? 0 : valFloat);
 
                 tbodyHtml += `
                     <tr>
-                        <td style="padding-left: 20px;">• ${desc}</td>
+                        <td style="padding-left: 15px;">• ${desc}</td>
                         <td style="text-align: center;">${dias} dias</td>
                         <td style="text-align: right;">${formatCurrency(valFloat)}</td>
                     </tr>
@@ -305,21 +328,10 @@
             });
         });
 
-        // 2. Preencher Molde
-        document.getElementById('receipt-date').innerText = `Data: ${getFormattedDate()}`;
-        document.getElementById('receipt-client-info').innerHTML = `<strong>RELATÓRIO GERAL DE BAIXA</strong><br>Quantidade de Clientes: ${meta.dataset.qtdClientes}`;
-        
-        document.getElementById('receipt-items-body').innerHTML = tbodyHtml;
-        document.getElementById('receipt-total-value').innerText = formatCurrency(totalGeral);
+        el.querySelector('.receipt-items-body').innerHTML = tbodyHtml;
+        el.querySelector('.receipt-total-value').innerText = formatCurrency(totalGeral);
 
-        // 3. Gerar PDF
-        const element = document.getElementById('receipt-template');
-        const filename = `Entrega_${meta.dataset.qtdClientes}clientes_${meta.dataset.qtdItens}itens_${getFilenameDate()}.pdf`;
-
-        let opt = {...pdfOptions};
-        opt.filename = filename;
-
-        html2pdf().set(opt).from(element).save();
+        return `Entrega_${meta.dataset.qtdClientes}clientes_${getFilenameDate()}.pdf`;
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -328,7 +340,7 @@
 </script>
 
 <style>
-    /* --- CSS DA TELA (INTERFACE) --- */
+    /* CSS BOTÕES */
     .btn-acao-topo {
         background: #17a2b8; color: white; border: none; padding: 8px 15px; 
         border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;
@@ -392,21 +404,22 @@
     }
     #display-total-geral { font-size: 28px; }
 
-    /* --- NOVOS BOTÕES INFERIORES --- */
+    /* BOTÕES INFERIORES AJUSTADOS */
     .submit-row {
         margin-top: 25px; padding: 0; background: none; border: none;
-        display: flex; 
-        justify-content: flex-end; /* Joga tudo para a direita */
-        gap: 15px; /* Espaço entre botões */
+        display: flex; justify-content: flex-end; gap: 15px;
     }
 
     .btn-cancelar {
-        background: #6c757d; color: #fff !important; padding: 12px 25px; 
+        background: #6c757d; 
+        color: white !important; /* Forçado branco */
+        padding: 12px 30px; /* Igual ao confirmar */
         text-decoration: none; border-radius: 5px; font-weight: bold;
-        text-transform: uppercase; font-size: 14px; display: inline-block;
+        text-transform: uppercase; font-size: 14px; /* Igual ao confirmar */
+        display: flex; align-items: center;
         transition: background 0.2s;
     }
-    .btn-cancelar:hover { background: #5a6268; color: #fff !important; }
+    .btn-cancelar:hover { background: #5a6268; color: white !important; }
 
     .btn-confirmar {
         background: #28a745 !important; color: white; border: none; 
@@ -417,14 +430,17 @@
     .btn-confirmar:hover { background: #218838 !important; }
 
 
-    /* --- ESTILO DO PDF (NOTA FISCAL) --- */
+    /* --- CSS DA NOTA FISCAL (MOLDE) --- */
+    /* Importante: Definir largura fixa em pixels para simular A4 na tela do renderizador */
     .receipt-box {
-        width: 190mm; /* CORREÇÃO AQUI: Largura fixa para A4 */
+        width: 750px; /* Largura segura para A4 (aprox 794px @ 96dpi) */
         font-family: 'Courier New', Courier, monospace; 
         color: #000;
         background: #fff;
-        padding: 10px;
+        padding: 20px;
+        border: 1px solid #ddd; /* Apenas para visualização se inspecionar */
     }
+    
     .receipt-header { text-align: center; margin-bottom: 30px; }
     .receipt-header h1 { font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
     .receipt-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: normal; border-bottom: 1px dashed #000; display: inline-block; padding-bottom: 5px;}
@@ -432,14 +448,22 @@
 
     .receipt-section { margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
 
-    .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+    .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; table-layout: fixed; }
     .receipt-table th { border-bottom: 2px solid #000; padding: 8px 0; text-align: left; text-transform: uppercase; }
-    .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 0; }
+    .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 0; word-wrap: break-word; }
     
     .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
     .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
 
     .receipt-footer { margin-top: 50px; text-align: center; font-size: 12px; }
     .signature-line { margin-top: 40px; border-top: 1px solid #000; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; }
+
+    /* ZONA DE RENDERIZAÇÃO (Mantém o PDF fora da vista normal, mas 'renderizável') */
+    #render-zone {
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        z-index: -100;
+    }
 </style>
 {% endblock %}

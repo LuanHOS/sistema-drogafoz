@@ -125,9 +125,9 @@
         <table class="receipt-table">
             <thead>
                 <tr>
-                    <th style="width: 55%;">Descrição da Encomenda</th>
-                    <th style="width: 20%; text-align: center;">Dias</th>
-                    <th style="width: 25%; text-align: right;">Valor</th>
+                    <th class="col-desc">Descrição da Encomenda</th>
+                    <th class="col-dias">Dias</th>
+                    <th class="col-valor">Valor</th>
                 </tr>
             </thead>
             <tbody class="receipt-items-body">
@@ -157,7 +157,7 @@
 </div>
 
 <script>
-    // --- CONFIGURAÇÃO E UTILITÁRIOS ---
+    // --- UTILITÁRIOS ---
     function formatCurrency(value) {
         return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
@@ -178,7 +178,7 @@
         return `${dd}-${mm}-${yyyy}`;
     }
 
-    // --- CÁLCULOS TELA (PREÇO) ---
+    // --- CÁLCULOS ---
     function recalcularTudo(clientId) {
         let inputsCliente = document.querySelectorAll(`.valor-cliente-${clientId}`);
         let totalCliente = 0;
@@ -204,43 +204,41 @@
         document.getElementById('display-total-geral').innerText = formatCurrency(totalGeral);
     }
 
-    // --- LÓGICA DE PDF BLINDADA ---
-    
-    // Função centralizadora que prepara o clone
+    // --- PDF ---
     function prepararPDF(tipo, clientId = null) {
-        // 1. Clona o molde original
+        // 1. Clona o molde para a zona de renderização
         const molde = document.getElementById('molde-original').firstElementChild.cloneNode(true);
         const renderZone = document.getElementById('render-zone');
+        renderZone.innerHTML = ''; // Limpa anterior
         
-        // Limpa zona antiga
-        renderZone.innerHTML = '';
-        
-        // 2. Preenche os dados no clone
+        // 2. Preenche os dados
         let filename = '';
-        
         if (tipo === 'individual') {
             filename = preencherIndividual(molde, clientId);
         } else {
             filename = preencherGeral(molde);
         }
 
-        // 3. Adiciona o clone na zona de renderização (visível para o HTML2PDF)
+        // 3. Coloca na tela (invisível) para o HTML2PDF ler
         renderZone.appendChild(molde);
 
-        // 4. Configuração ajustada para evitar cortes
+        // 4. Gera PDF com margens ajustadas
         const opt = {
-            margin: [5, 5, 5, 5], // margem pequena
+            margin: [10, 10, 10, 10], // Margem de 10mm (segura)
             filename: filename,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, scrollX: 0, scrollY: 0 }, 
+            // enableLinks e useCORS ajudam na estabilidade
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // 5. Gera e depois limpa
-        html2pdf().set(opt).from(molde).save().then(function(){
-            // Opcional: limpar após alguns segundos ou deixar oculto
-            setTimeout(() => renderZone.innerHTML = '', 1000);
-        });
+        // Delay mínimo para garantir renderização do DOM antes do print
+        setTimeout(() => {
+            html2pdf().set(opt).from(molde).save().then(() => {
+                // Limpa a memória visual após gerar
+                renderZone.innerHTML = '';
+            });
+        }, 100);
     }
 
     function preencherIndividual(el, clientId) {
@@ -250,22 +248,19 @@
         const itensElements = card.querySelectorAll('.item-linha');
         const qtdItens = itensElements.length;
 
-        // Data
         el.querySelector('.receipt-date').innerText = `Data: ${getFormattedDate()}`;
         
-        // Cliente Info
         let infoHtml = `<strong>Cliente:</strong> ${nome}`;
         if(cpf) infoHtml += `<br><strong>CPF:</strong> ${cpf}`;
         el.querySelector('.receipt-client-info').innerHTML = infoHtml;
 
-        // Itens
         let tbodyHtml = '';
         let totalVal = 0;
 
         itensElements.forEach(row => {
             const desc = row.dataset.desc;
             const dias = row.dataset.dias;
-            const inputVal = row.querySelector('input').value; // Pega o valor atual do input
+            const inputVal = row.querySelector('input').value;
             const valFloat = parseFloat(inputVal.replace(',', '.'));
             totalVal += (isNaN(valFloat) ? 0 : valFloat);
 
@@ -302,10 +297,9 @@
             const nome = card.dataset.clientName;
             const itensElements = card.querySelectorAll('.item-linha');
 
-            // Cabeçalho do Cliente na tabela
             tbodyHtml += `
                 <tr style="background-color: #f0f0f0;">
-                    <td colspan="3" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 0;">
+                    <td colspan="3" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
                         CLIENTE: ${nome}
                     </td>
                 </tr>
@@ -340,7 +334,7 @@
 </script>
 
 <style>
-    /* CSS BOTÕES */
+    /* BOTÕES TOPO */
     .btn-acao-topo {
         background: #17a2b8; color: white; border: none; padding: 8px 15px; 
         border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;
@@ -348,17 +342,16 @@
     }
     .btn-acao-topo:hover { background: #138496; }
 
+    /* CARD CLIENTE */
     .cliente-card {
         background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;
         margin-bottom: 25px; overflow: hidden;
     }
-    
     .cliente-header {
         background: #123C65; color: white; padding: 12px 20px;
         font-weight: bold; font-size: 16px; text-transform: uppercase;
         display: flex; justify-content: space-between; align-items: center;
     }
-
     .btn-export-mini {
         background: rgba(255,255,255,0.2); border: none; color: white; cursor: pointer;
         width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -366,13 +359,12 @@
     }
     .btn-export-mini:hover { background: rgba(255,255,255,0.4); }
 
+    /* LISTA ITENS TELA */
     .itens-lista { list-style: none; padding: 0; margin: 0; }
-
     .item-linha {
         display: flex; justify-content: space-between; align-items: center;
         padding: 15px 20px; border-bottom: 1px solid #eee; font-size: 14px; color: #555;
     }
-    
     .item-info { display: flex; flex-direction: column; gap: 5px; width: 65%; } 
     .desc { font-weight: bold; color: #333; font-size: 15px; word-break: break-word; }
     .valor-original { font-weight: normal; font-size: 12px; color: #888; margin-left: 8px; }
@@ -404,19 +396,16 @@
     }
     #display-total-geral { font-size: 28px; }
 
-    /* BOTÕES INFERIORES AJUSTADOS */
+    /* BOTÕES INFERIORES */
     .submit-row {
         margin-top: 25px; padding: 0; background: none; border: none;
         display: flex; justify-content: flex-end; gap: 15px;
     }
-
     .btn-cancelar {
-        background: #6c757d; 
-        color: white !important; /* Forçado branco */
-        padding: 12px 30px; /* Igual ao confirmar */
-        text-decoration: none; border-radius: 5px; font-weight: bold;
-        text-transform: uppercase; font-size: 14px; /* Igual ao confirmar */
-        display: flex; align-items: center;
+        background: #6c757d; color: white !important; 
+        padding: 12px 30px; border-radius: 5px; font-weight: bold;
+        text-transform: uppercase; font-size: 14px; text-decoration: none;
+        display: inline-flex; align-items: center; justify-content: center;
         transition: background 0.2s;
     }
     .btn-cancelar:hover { background: #5a6268; color: white !important; }
@@ -430,15 +419,16 @@
     .btn-confirmar:hover { background: #218838 !important; }
 
 
-    /* --- CSS DA NOTA FISCAL (MOLDE) --- */
-    /* Importante: Definir largura fixa em pixels para simular A4 na tela do renderizador */
+    /* --- CSS DA NOTA FISCAL (MOLDE CORRIGIDO) --- */
     .receipt-box {
-        width: 750px; /* Largura segura para A4 (aprox 794px @ 96dpi) */
+        /* LARGURA FIXA PARA CABER NO A4 SEM CORTAR */
+        width: 700px;
+        max-width: 700px;
         font-family: 'Courier New', Courier, monospace; 
         color: #000;
         background: #fff;
         padding: 20px;
-        border: 1px solid #ddd; /* Apenas para visualização se inspecionar */
+        box-sizing: border-box;
     }
     
     .receipt-header { text-align: center; margin-bottom: 30px; }
@@ -448,9 +438,34 @@
 
     .receipt-section { margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
 
-    .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; table-layout: fixed; }
-    .receipt-table th { border-bottom: 2px solid #000; padding: 8px 0; text-align: left; text-transform: uppercase; }
-    .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 0; word-wrap: break-word; }
+    /* TABELA ADAPTÁVEL */
+    .receipt-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-bottom: 20px; 
+        font-size: 14px; 
+        table-layout: fixed; /* Força respeitar as larguras */
+    }
+    
+    .receipt-table th { 
+        border-bottom: 2px solid #000; padding: 8px 5px; 
+        text-align: left; text-transform: uppercase; 
+    }
+    
+    .receipt-table td { 
+        border-bottom: 1px dashed #ccc; padding: 8px 5px; 
+        vertical-align: top;
+        /* QUEBRA DE LINHA FORÇADA */
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
+        white-space: normal;
+    }
+    
+    /* Larguras Definidas para evitar estouro */
+    .col-desc { width: 55%; }
+    .col-dias { width: 20%; text-align: center; }
+    .col-valor { width: 25%; text-align: right; }
     
     .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
     .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
@@ -458,12 +473,13 @@
     .receipt-footer { margin-top: 50px; text-align: center; font-size: 12px; }
     .signature-line { margin-top: 40px; border-top: 1px solid #000; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; }
 
-    /* ZONA DE RENDERIZAÇÃO (Mantém o PDF fora da vista normal, mas 'renderizável') */
+    /* RENDER ZONE: Mantém o elemento visível para o script mas invisível para o usuário */
     #render-zone {
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        z-index: -100;
+        position: absolute;
+        top: 0; left: 0;
+        z-index: -1000; /* Atrás de tudo */
+        opacity: 0; /* Invisível */
+        width: 700px;
     }
 </style>
 {% endblock %}

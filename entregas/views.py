@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.contrib.admin.views.decorators import staff_member_required
-# ADICIONEI Min e Max NA LINHA ABAIXO
 from django.db.models import Sum, Count, Avg, F, Q, Min, Max
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -54,8 +53,9 @@ def relatorio_entregas(request):
     qtd_entregues = encomendas_entregues.count()
     ticket_medio = (faturamento_real / qtd_entregues) if qtd_entregues > 0 else 0
 
-    # Tempo Médio de Retirada (Dias)
-    media_timedelta = encomendas_entregues.aggregate(media=Avg(F('data_entrega') - F('data_chegada')))['media']
+    # Tempo Médio de Retirada (Dias) - AGORA GLOBAL (HISTÓRICO COMPLETO)
+    # Alterado para pegar de qs_todas.filter(status='ENTREGUE') ao invés de encomendas_entregues (filtrada por data)
+    media_timedelta = qs_todas.filter(status='ENTREGUE').aggregate(media=Avg(F('data_entrega') - F('data_chegada')))['media']
     tempo_medio_dias = media_timedelta.days if media_timedelta else 0
 
     # Top 5 Clientes (Vips do Período)
@@ -111,7 +111,7 @@ def relatorio_entregas(request):
         'descontos_dados': descontos_dados,
         'ticket_medio': ticket_medio,
         'qtd_entregues': qtd_entregues,
-        'qtd_chegadas': encomendas_chegadas.count(),
+        'qtd_chegadas': encomendas_chegadas.count(), # Já estava sendo passado, agora vamos usar na tela
         
         'estoque_qtd': estoque_qtd,
         'estoque_valor_base': estoque_valor_base,
@@ -136,7 +136,7 @@ def consulta_publica(request):
     if query:
         termo_limpo = query.replace('.', '').replace('-', '').strip()
         resultados = Cliente.objects.filter(
-            Q(cpf=query) | Q(cpf=termo_limpo) | Q(rg=query),
+            Q(cpf__icontains=query) | Q(cpf__icontains=termo_limpo) | Q(rg__icontains=query) | Q(nome__icontains=query),
             encomenda__status='PENDENTE'
         ).annotate(
             qtd_encomendas=Count('encomenda'),

@@ -5,13 +5,7 @@
     {{ block.super }}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ALTERAÇÃO AQUI: 
-           Removi 'padding: 20px', 'max-width' e 'margin: 0 auto'.
-           Agora ele herda o espaçamento padrão do #content do Django (base_site).
-        */
-        .dashboard-container { 
-            font-family: 'Segoe UI', sans-serif; 
-        }
+        .dashboard-container { font-family: 'Segoe UI', sans-serif; }
         
         /* FILTRO */
         .filter-bar { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #123C65; }
@@ -35,13 +29,10 @@
         /* CORES */
         .border-green { border-bottom: 3px solid #28a745; }
         .text-green { color: #28a745 !important; }
-        
         .border-red { border-bottom: 3px solid #dc3545; }
         .text-red { color: #dc3545 !important; }
-
         .border-blue { border-bottom: 3px solid #17a2b8; }
         .text-blue { color: #17a2b8 !important; }
-
         .border-orange { border-bottom: 3px solid #fd7e14; }
         .text-orange { color: #fd7e14 !important; }
 
@@ -49,14 +40,9 @@
         .content-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
         
         .panel { 
-            background: #fff; 
-            padding: 20px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-            /* TRAVA DE SEGURANÇA PARA O GRID: */
-            min-width: 0; 
+            background: #fff; padding: 20px; border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08); min-width: 0; 
         }
-
         .panel h4 { margin-top: 0; color: #444; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
 
         .mini-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -67,16 +53,9 @@
         .badge-crit { background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 
         /* CHART WRAPPER */
-        .chart-container-box {
-            position: relative;
-            height: 300px;
-            width: 100%;
-            overflow: hidden;
-        }
+        .chart-container-box { position: relative; height: 300px; width: 100%; overflow: hidden; }
 
-        @media (max-width: 768px) {
-            .content-row { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 768px) { .content-row { grid-template-columns: 1fr; } }
     </style>
 {% endblock %}
 
@@ -129,10 +108,10 @@
             <div class="value text-blue">R$ {{ ticket_medio|floatformat:2 }}</div>
             <div class="sub">Média por cliente</div>
         </div>
-        <div class="stat-card">
-            <h3>Tempo de Retirada</h3>
-            <div class="value">{{ tempo_medio_dias }} Dias</div>
-            <div class="sub">Média de permanência na loja</div>
+        <div class="stat-card border-blue">
+            <h3>Chegadas no Período</h3>
+            <div class="value text-blue">{{ qtd_chegadas }}</div>
+            <div class="sub">Encomendas registradas nas datas</div>
         </div>
     </div>
 
@@ -181,20 +160,19 @@
             <div class="value">R$ {{ estoque_valor_base|floatformat:2 }}</div>
             <div class="sub">Valor mínimo acumulado</div>
         </div>
+        
+        <div class="stat-card">
+            <h3>Tempo Médio (Geral)</h3>
+            <div class="value">{{ tempo_medio_dias }} Dias</div>
+            <div class="sub">Média histórica desde o início</div>
+        </div>
+
         <div class="stat-card border-red">
             <h3>Alertas de Prazo</h3>
             <div class="value text-red">{{ alertas_criticos }}</div>
             <div class="sub">
                 <span class="badge-crit">Críticos (+120d)</span> 
                 <span class="badge-alert">{{ alertas_atencao }} Atenção (+30d)</span>
-            </div>
-        </div>
-        <div class="stat-card">
-            <h3>Auditoria de Dados</h3>
-            <div class="value">{{ entregas_zeradas }}</div>
-            <div class="sub">
-                Entregas R$ 0,00 (Período) <br>
-                <span style="color: #d63384;">{{ clientes_incompletos }} Clientes s/ contato</span>
             </div>
         </div>
     </div>

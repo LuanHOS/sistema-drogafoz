@@ -60,7 +60,11 @@
                     
                     <ul class="itens-lista">
                         {% for item in grupo.itens %}
-                            <li class="item-linha" data-desc="{{ item.descricao }}" data-dias="{{ item.dias_estoque }}">
+                            <li class="item-linha" 
+                                data-desc="{{ item.descricao }}" 
+                                data-dias="{{ item.dias_estoque }}"
+                                data-base-val="{{ item.valor_base|unlocalize }}">
+                                
                                 <div class="item-info">
                                     <div class="desc">
                                         📦 {{ item.descricao|linebreaksbr }}
@@ -125,20 +129,21 @@
         <table class="receipt-table">
             <thead>
                 <tr>
-                    <th class="col-desc">Descrição da Encomenda</th>
+                    <th class="col-desc">Descrição</th>
                     <th class="col-dias">Dias</th>
-                    <th class="col-valor">Valor</th>
+                    <th class="col-base">Valor Base</th> <th class="col-valor">Valor Final</th>
                 </tr>
             </thead>
             <tbody class="receipt-items-body">
                 </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="2" class="total-label">TOTAL</td>
-                    <td class="total-value receipt-total-value">R$ 0,00</td>
+                    <td colspan="3" class="total-label">TOTAL A PAGAR</td> <td class="total-value receipt-total-value">R$ 0,00</td>
                 </tr>
             </tfoot>
         </table>
+
+        <p class="receipt-note">Observação: A taxa é cobrada a cada 10 dias de armazenamento.</p>
 
         <div class="receipt-footer">
             <p>Obrigado pela preferência!</p>
@@ -206,12 +211,10 @@
 
     // --- PDF ---
     function prepararPDF(tipo, clientId = null) {
-        // 1. Clona o molde para a zona de renderização
         const molde = document.getElementById('molde-original').firstElementChild.cloneNode(true);
         const renderZone = document.getElementById('render-zone');
-        renderZone.innerHTML = ''; // Limpa anterior
+        renderZone.innerHTML = ''; 
         
-        // 2. Preenche os dados
         let filename = '';
         if (tipo === 'individual') {
             filename = preencherIndividual(molde, clientId);
@@ -219,23 +222,18 @@
             filename = preencherGeral(molde);
         }
 
-        // 3. Coloca na tela (invisível) para o HTML2PDF ler
         renderZone.appendChild(molde);
 
-        // 4. Gera PDF com margens ajustadas
         const opt = {
-            margin: [10, 10, 10, 10], // Margem de 10mm (segura)
+            margin: [10, 10, 10, 10], 
             filename: filename,
             image: { type: 'jpeg', quality: 0.98 },
-            // enableLinks e useCORS ajudam na estabilidade
             html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Delay mínimo para garantir renderização do DOM antes do print
         setTimeout(() => {
             html2pdf().set(opt).from(molde).save().then(() => {
-                // Limpa a memória visual após gerar
                 renderZone.innerHTML = '';
             });
         }, 100);
@@ -260,14 +258,19 @@
         itensElements.forEach(row => {
             const desc = row.dataset.desc;
             const dias = row.dataset.dias;
-            const inputVal = row.querySelector('input').value;
+            const baseValStr = row.dataset.baseVal; // Valor Base
+            const inputVal = row.querySelector('input').value; // Valor Final
+            
             const valFloat = parseFloat(inputVal.replace(',', '.'));
+            const baseFloat = parseFloat(baseValStr.replace(',', '.'));
+            
             totalVal += (isNaN(valFloat) ? 0 : valFloat);
 
             tbodyHtml += `
                 <tr>
                     <td>${desc}</td>
                     <td style="text-align: center;">${dias} dias</td>
+                    <td style="text-align: right;">${formatCurrency(baseFloat)}</td>
                     <td style="text-align: right;">${formatCurrency(valFloat)}</td>
                 </tr>
             `;
@@ -299,7 +302,7 @@
 
             tbodyHtml += `
                 <tr style="background-color: #f0f0f0;">
-                    <td colspan="3" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
+                    <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
                         CLIENTE: ${nome}
                     </td>
                 </tr>
@@ -308,14 +311,19 @@
             itensElements.forEach(row => {
                 const desc = row.dataset.desc;
                 const dias = row.dataset.dias;
+                const baseValStr = row.dataset.baseVal;
                 const inputVal = row.querySelector('input').value;
+                
                 const valFloat = parseFloat(inputVal.replace(',', '.'));
+                const baseFloat = parseFloat(baseValStr.replace(',', '.'));
+                
                 totalGeral += (isNaN(valFloat) ? 0 : valFloat);
 
                 tbodyHtml += `
                     <tr>
                         <td style="padding-left: 15px;">• ${desc}</td>
                         <td style="text-align: center;">${dias} dias</td>
+                        <td style="text-align: right;">${formatCurrency(baseFloat)}</td>
                         <td style="text-align: right;">${formatCurrency(valFloat)}</td>
                     </tr>
                 `;
@@ -421,7 +429,6 @@
 
     /* --- CSS DA NOTA FISCAL (MOLDE CORRIGIDO) --- */
     .receipt-box {
-        /* LARGURA FIXA PARA CABER NO A4 SEM CORTAR */
         width: 700px;
         max-width: 700px;
         font-family: 'Courier New', Courier, monospace; 
@@ -438,13 +445,12 @@
 
     .receipt-section { margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
 
-    /* TABELA ADAPTÁVEL */
     .receipt-table { 
         width: 100%; 
         border-collapse: collapse; 
-        margin-bottom: 20px; 
+        margin-bottom: 10px; /* Reduzido para aproximar a nota */
         font-size: 14px; 
-        table-layout: fixed; /* Força respeitar as larguras */
+        table-layout: fixed; 
     }
     
     .receipt-table th { 
@@ -455,30 +461,37 @@
     .receipt-table td { 
         border-bottom: 1px dashed #ccc; padding: 8px 5px; 
         vertical-align: top;
-        /* QUEBRA DE LINHA FORÇADA */
         overflow-wrap: break-word;
         word-wrap: break-word;
         word-break: break-word;
         white-space: normal;
     }
     
-    /* Larguras Definidas para evitar estouro */
-    .col-desc { width: 55%; }
-    .col-dias { width: 20%; text-align: center; }
+    /* Larguras Ajustadas */
+    .col-desc { width: 40%; }
+    .col-dias { width: 15%; text-align: center; }
+    .col-base { width: 20%; text-align: right; }
     .col-valor { width: 25%; text-align: right; }
     
     .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
     .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
 
-    .receipt-footer { margin-top: 50px; text-align: center; font-size: 12px; }
+    /* OBSERVAÇÃO ABAIXO DA TABELA */
+    .receipt-note {
+        font-size: 11px;
+        font-style: italic;
+        margin-top: 5px;
+        margin-bottom: 40px;
+    }
+
+    .receipt-footer { margin-top: 30px; text-align: center; font-size: 12px; }
     .signature-line { margin-top: 40px; border-top: 1px solid #000; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; }
 
-    /* RENDER ZONE: Mantém o elemento visível para o script mas invisível para o usuário */
     #render-zone {
         position: absolute;
         top: 0; left: 0;
-        z-index: -1000; /* Atrás de tudo */
-        opacity: 0; /* Invisível */
+        z-index: -1000; 
+        opacity: 0;
         width: 700px;
     }
 </style>

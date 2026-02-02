@@ -12,7 +12,6 @@ from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
 from .models import Cliente, Encomenda
-import math
 
 admin.site.site_header = "DROGAFOZ ENCOMENDAS"
 admin.site.site_title = "Drogafoz Admin"
@@ -22,9 +21,28 @@ admin.site.enable_nav_sidebar = False
 admin.site.unregister(Group)
 admin.site.unregister(User)
 
+# --- MIXIN PARA BUSCA SEM ACENTO ---
+class BuscaSemAcentoMixin:
+    def get_search_results(self, request, queryset, search_term):
+        # Salva os campos originais
+        campos_originais = self.search_fields
+        # Adiciona o modificador '__unaccent' para ignorar acentos no Postgres
+        self.search_fields = [f"{campo}__unaccent" for campo in self.search_fields]
+        
+        try:
+            qs, use_distinct = super().get_search_results(request, queryset, search_term)
+        finally:
+            # Restaura os campos originais para não dar erro em outras partes
+            self.search_fields = campos_originais
+            
+        return qs, use_distinct
+
 @admin.register(User)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
     actions = None
+    # Definimos explicitamente onde buscar
+    search_fields = ('username', 'first_name', 'last_name', 'email')
+    
     readonly_fields = ('date_joined', 'last_login')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
@@ -40,7 +58,6 @@ class CustomUserAdmin(UserAdmin):
             return False
         return super().has_delete_permission(request, obj)
 
-# --- AÇÃO COM CÁLCULO ---
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
     if 'post' in request.POST:
@@ -134,7 +151,7 @@ class StatusFilter(admin.SimpleListFilter):
         return queryset.filter(status='PENDENTE')
 
 @admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
+class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     actions = None
     list_display = ('get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
     search_fields = ('nome', 'cpf', 'rg')
@@ -159,10 +176,9 @@ class ClienteAdmin(admin.ModelAdmin):
         return response
 
 @admin.register(Encomenda)
-class EncomendaAdmin(admin.ModelAdmin):
+class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
-    # Adicionei os wrappers fmt para Descrição e Status
     list_display = ('get_cliente_nome', 'get_descricao_fmt', 'get_status_fmt', 'get_data_chegada_fmt', 'get_data_saida_fmt', 'valor_base', 'valor_calculado', 'valor_cobrado')
     
     list_filter = (StatusFilter,) 
@@ -173,16 +189,12 @@ class EncomendaAdmin(admin.ModelAdmin):
     readonly_fields = ('valor_calculado',)
     fields = ('cliente', 'descricao', 'status', 'data_chegada', 'data_entrega', 'valor_base', 'valor_calculado', 'valor_cobrado')
 
-    # --- LÓGICA DE COR (ALERTA DE 120 DIAS) ---
     def _get_colored_text(self, obj, text):
-        # Regra: Se pendente E data de chegada maior que 120 dias
         if obj.status == 'PENDENTE':
             dias = (timezone.now() - obj.data_chegada).days
             if dias > 120:
                 return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', text)
         return text
-
-    # --- COLUNAS PERSONALIZADAS ---
 
     @admin.display(ordering='descricao', description='Descrição')
     def get_descricao_fmt(self, obj):
@@ -206,11 +218,8 @@ class EncomendaAdmin(admin.ModelAdmin):
     @admin.display(ordering='cliente__nome', description='Cliente')
     def get_cliente_nome(self, obj):
         cliente = obj.cliente
-        # Prioridade 1: Dados faltantes do cliente
         if not cliente.cpf or not cliente.telefone:
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', cliente.nome)
-        
-        # Prioridade 2: Encomenda atrasada (120 dias)
         return self._get_colored_text(obj, cliente.nome)
 
     def get_form(self, request, obj=None, **kwargs):

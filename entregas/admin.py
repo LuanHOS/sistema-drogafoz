@@ -26,7 +26,6 @@ admin.site.unregister(User)
 class BuscaSemAcentoMixin:
     def get_search_results(self, request, queryset, search_term):
         campos_originais = self.search_fields
-        # Adiciona o modificador '__unaccent' para ignorar acentos no Postgres
         self.search_fields = [f"{campo}__unaccent" for campo in self.search_fields]
         
         try:
@@ -62,8 +61,15 @@ def marcar_entregue(modeladmin, request, queryset):
             input_name = f'valor_{encomenda.id}'
             novo_valor_cobrado = request.POST.get(input_name)
 
-            if novo_valor_cobrado:
-                encomenda.valor_cobrado = novo_valor_cobrado.replace(',', '.')
+            # ALTERAÇÃO AQUI: Verifica se o campo existe (não é None). 
+            # Se for string vazia, assume '0'.
+            if novo_valor_cobrado is not None:
+                if novo_valor_cobrado.strip() == '':
+                    valor_final = '0'
+                else:
+                    valor_final = novo_valor_cobrado.replace(',', '.')
+
+                encomenda.valor_cobrado = valor_final
                 encomenda.status = 'ENTREGUE'
                 encomenda.data_entrega = agora
                 encomenda.save()
@@ -167,7 +173,6 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
-    # ALTERAÇÃO NO LIST DISPLAY: Usando funções customizadas para mudar o título
     list_display = (
         'get_cliente_nome', 'get_descricao_fmt', 'get_status_fmt', 
         'get_data_chegada_fmt', 'get_data_saida_fmt', 
@@ -195,7 +200,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     def get_valor_base_custom(self, obj):
         return obj.valor_base
 
-    @admin.display(ordering='valor_calculado', description='Valor Calc.')
+    @admin.display(ordering='valor_calculado', description='Valor Calculado')
     def get_valor_calculado_custom(self, obj):
         return obj.valor_calculado
 

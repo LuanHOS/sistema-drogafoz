@@ -19,9 +19,15 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="margin: 0; color: #333;">Confirmar Entrega e Valores</h2>
         
-        <button type="button" onclick="prepararPDF('geral')" class="btn-acao-topo">
-            <i class="fas fa-file-export"></i> Exportar Relatório Geral
-        </button>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="prepararPDF('geral')" class="btn-acao-topo">
+                <i class="fas fa-file-export"></i> Relatório Geral (A4)
+            </button>
+            
+            <button type="button" onclick="prepararPDF80mmGeral()" class="btn-acao-topo btn-termica">
+                <i class="fas fa-print"></i> Geral (80mm)
+            </button>
+        </div>
     </div>
     
     {% if tem_duplicata %}
@@ -53,9 +59,16 @@
                         <div style="display: flex; align-items: center;">
                             <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> {{ grupo.cliente.nome }}
                         </div>
-                        <button type="button" class="btn-export-mini" onclick="prepararPDF('individual', '{{ grupo.cliente.id }}')" title="Gerar Nota de Retirada">
-                            <i class="fas fa-file-export"></i>
-                        </button>
+                        
+                        <div style="display: flex; gap: 5px;">
+                            <button type="button" class="btn-export-mini" onclick="prepararPDF('individual', '{{ grupo.cliente.id }}')" title="Nota A4">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                            
+                            <button type="button" class="btn-export-mini btn-termica-mini" onclick="prepararPDF80mmIndividual('{{ grupo.cliente.id }}')" title="Cupom 80mm">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <ul class="itens-lista">
@@ -123,33 +136,65 @@
             <p class="receipt-date">Data: --/--/----</p>
         </div>
 
-        <div class="receipt-client-info receipt-section">
-            </div>
+        <div class="receipt-client-info receipt-section"></div>
 
         <table class="receipt-table">
             <thead>
                 <tr>
                     <th class="col-desc">Descrição</th>
                     <th class="col-dias">Dias</th>
-                    <th class="col-base">Valor Base</th> <th class="col-valor">Valor Final</th>
+                    <th class="col-base">Valor Base</th>
+                    <th class="col-valor">Valor Final</th>
                 </tr>
             </thead>
-            <tbody class="receipt-items-body">
-                </tbody>
+            <tbody class="receipt-items-body"></tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" class="total-label">TOTAL A PAGAR</td> <td class="total-value receipt-total-value">R$ 0,00</td>
+                    <td colspan="3" class="total-label">TOTAL A PAGAR</td>
+                    <td class="total-value receipt-total-value">R$ 0,00</td>
                 </tr>
             </tfoot>
         </table>
 
-        <p class="receipt-note">Observação: O valor base é cobrado a cada 10 dias de armazenamento.</p>
+        <p class="receipt-note">Observação: A taxa é cobrada a cada 10 dias de armazenamento.</p>
 
         <div class="receipt-footer">
             <p>Obrigado pela preferência!</p>
-            <div class="signature-line">
-                Assinatura do Responsável
-            </div>
+            <div class="signature-line">Assinatura do Responsável</div>
+        </div>
+    </div>
+</div>
+
+<div id="molde-80mm" style="display: none;">
+    <div class="thermal-box">
+        <div class="thermal-header">
+            <h1>DROGAFOZ ENCOMENDAS</h1>
+            <h2>COMPROVANTE DE ENTREGA</h2>
+            <p class="thermal-date">--/--/----</p>
+        </div>
+        
+        <div class="thermal-dashed-line">--------------------------------</div>
+        
+        <div class="thermal-client-info"></div>
+        
+        <div class="thermal-dashed-line">--------------------------------</div>
+        
+        <div class="thermal-items-body"></div>
+        
+        <div class="thermal-dashed-line">--------------------------------</div>
+        
+        <div class="thermal-total-row">
+            <span>TOTAL A PAGAR</span>
+            <span class="thermal-total-value">R$ 0,00</span>
+        </div>
+        
+        <div class="thermal-dashed-line">--------------------------------</div>
+        
+        <p class="thermal-note">Obs: Taxa cobrada a cada 10 dias.</p>
+        
+        <div class="thermal-footer">
+            <br>
+            <div class="thermal-signature">__________________________<br>Responsável</div>
         </div>
     </div>
 </div>
@@ -209,7 +254,9 @@
         document.getElementById('display-total-geral').innerText = formatCurrency(totalGeral);
     }
 
-    // --- PDF ---
+    // ==========================================
+    // LÓGICA PDF A4 (ORIGINAL)
+    // ==========================================
     function prepararPDF(tipo, clientId = null) {
         const molde = document.getElementById('molde-original').firstElementChild.cloneNode(true);
         const renderZone = document.getElementById('render-zone');
@@ -217,9 +264,9 @@
         
         let filename = '';
         if (tipo === 'individual') {
-            filename = preencherIndividual(molde, clientId);
+            filename = preencherIndividualA4(molde, clientId);
         } else {
-            filename = preencherGeral(molde);
+            filename = preencherGeralA4(molde);
         }
 
         renderZone.appendChild(molde);
@@ -233,13 +280,11 @@
         };
 
         setTimeout(() => {
-            html2pdf().set(opt).from(molde).save().then(() => {
-                renderZone.innerHTML = '';
-            });
+            html2pdf().set(opt).from(molde).save().then(() => { renderZone.innerHTML = ''; });
         }, 100);
     }
 
-    function preencherIndividual(el, clientId) {
+    function preencherIndividualA4(el, clientId) {
         const card = document.getElementById(`card-cliente-${clientId}`);
         const nome = card.dataset.clientName;
         const cpf = card.dataset.clientCpf;
@@ -258,8 +303,8 @@
         itensElements.forEach(row => {
             const desc = row.dataset.desc;
             const dias = row.dataset.dias;
-            const baseValStr = row.dataset.baseVal; // Valor Base
-            const inputVal = row.querySelector('input').value; // Valor Final
+            const baseValStr = row.dataset.baseVal; 
+            const inputVal = row.querySelector('input').value; 
             
             const valFloat = parseFloat(inputVal.replace(',', '.'));
             const baseFloat = parseFloat(baseValStr.replace(',', '.'));
@@ -282,7 +327,7 @@
         return `${nome.trim()}_${qtdItens}itens_${getFilenameDate()}.pdf`;
     }
 
-    function preencherGeral(el) {
+    function preencherGeralA4(el) {
         const clientesCards = document.querySelectorAll('.cliente-card');
         const meta = document.getElementById('meta-dados');
 
@@ -302,9 +347,7 @@
 
             tbodyHtml += `
                 <tr style="background-color: #f0f0f0;">
-                    <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
-                        CLIENTE: ${nome}
-                    </td>
+                    <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">CLIENTE: ${nome}</td>
                 </tr>
             `;
 
@@ -336,6 +379,120 @@
         return `Entrega_${meta.dataset.qtdClientes}clientes_${getFilenameDate()}.pdf`;
     }
 
+    // ==========================================
+    // LÓGICA TÉRMICA 80mm (NOVA)
+    // ==========================================
+    function prepararPDF80mmGeral() {
+        const molde = document.getElementById('molde-80mm').firstElementChild.cloneNode(true);
+        const renderZone = document.getElementById('render-zone');
+        renderZone.innerHTML = '';
+        
+        const meta = document.getElementById('meta-dados');
+        
+        // Cabeçalho Geral
+        molde.querySelector('.thermal-date').innerText = `Data: ${getFormattedDate()}`;
+        molde.querySelector('.thermal-client-info').innerHTML = `RELATÓRIO DE BAIXA<br>Clientes: ${meta.dataset.qtdClientes} | Itens: ${meta.dataset.qtdItens}`;
+
+        let itemsHtml = '';
+        let totalGeral = 0;
+        const clientesCards = document.querySelectorAll('.cliente-card');
+
+        clientesCards.forEach(card => {
+            const nome = card.dataset.clientName;
+            const itensElements = card.querySelectorAll('.item-linha');
+
+            itemsHtml += `<div class="thermal-client-header">CLI: ${nome}</div>`;
+
+            itensElements.forEach(row => {
+                const desc = row.dataset.desc;
+                const dias = row.dataset.dias;
+                const baseValStr = row.dataset.baseVal;
+                const inputVal = row.querySelector('input').value;
+                const valFloat = parseFloat(inputVal.replace(',', '.'));
+                const baseFloat = parseFloat(baseValStr.replace(',', '.'));
+                totalGeral += (isNaN(valFloat) ? 0 : valFloat);
+
+                itemsHtml += `
+                    <div class="thermal-item-row">
+                        <div class="thermal-desc">${desc}</div>
+                        <div class="thermal-values">
+                            ${dias}d | Base:${baseFloat.toFixed(2)} | <strong>R$ ${valFloat.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+            itemsHtml += `<div class="thermal-item-spacer"></div>`;
+        });
+
+        molde.querySelector('.thermal-items-body').innerHTML = itemsHtml;
+        molde.querySelector('.thermal-total-value').innerText = formatCurrency(totalGeral);
+
+        renderZone.appendChild(molde);
+        exportar80mm(`Geral_80mm_${getFilenameDate()}.pdf`, molde);
+    }
+
+    function prepararPDF80mmIndividual(clientId) {
+        const molde = document.getElementById('molde-80mm').firstElementChild.cloneNode(true);
+        const renderZone = document.getElementById('render-zone');
+        renderZone.innerHTML = '';
+
+        const card = document.getElementById(`card-cliente-${clientId}`);
+        const nome = card.dataset.clientName;
+        const cpf = card.dataset.clientCpf;
+        const itensElements = card.querySelectorAll('.item-linha');
+
+        molde.querySelector('.thermal-date').innerText = `Data: ${getFormattedDate()}`;
+        
+        let clientTxt = `CLIENTE: ${nome}`;
+        if(cpf) clientTxt += `<br>CPF: ${cpf}`;
+        molde.querySelector('.thermal-client-info').innerHTML = clientTxt;
+
+        let itemsHtml = '';
+        let totalVal = 0;
+
+        itensElements.forEach(row => {
+            const desc = row.dataset.desc;
+            const dias = row.dataset.dias;
+            const baseValStr = row.dataset.baseVal;
+            const inputVal = row.querySelector('input').value;
+            const valFloat = parseFloat(inputVal.replace(',', '.'));
+            const baseFloat = parseFloat(baseValStr.replace(',', '.'));
+            totalVal += (isNaN(valFloat) ? 0 : valFloat);
+
+            itemsHtml += `
+                <div class="thermal-item-row">
+                    <div class="thermal-desc">${desc}</div>
+                    <div class="thermal-values">
+                        ${dias}d | Base:${baseFloat.toFixed(2)} | <strong>R$ ${valFloat.toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+        });
+
+        molde.querySelector('.thermal-items-body').innerHTML = itemsHtml;
+        molde.querySelector('.thermal-total-value').innerText = formatCurrency(totalVal);
+
+        renderZone.appendChild(molde);
+        exportar80mm(`${nome.split(' ')[0]}_80mm_${getFilenameDate()}.pdf`, molde);
+    }
+
+    function exportar80mm(filename, element) {
+        const opt = {
+            margin: 0,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            // Configura para 80mm de largura e altura fixa de "cupom" (297mm é o max A4, serve como bobina longa)
+            jsPDF: { unit: 'mm', format: [80, 297], orientation: 'portrait' }
+        };
+
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).save().then(() => {
+                document.getElementById('render-zone').innerHTML = '';
+            });
+        }, 150);
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         recalcularTotalGeral();
     });
@@ -346,9 +503,15 @@
     .btn-acao-topo {
         background: #17a2b8; color: white; border: none; padding: 8px 15px; 
         border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;
-        transition: background 0.2s;
+        transition: background 0.2s; display: flex; align-items: center; gap: 8px;
     }
     .btn-acao-topo:hover { background: #138496; }
+
+    /* Estilo do Botão Térmico */
+    .btn-termica {
+        background: #ffc107 !important; color: #212529 !important;
+    }
+    .btn-termica:hover { background: #e0a800 !important; }
 
     /* CARD CLIENTE */
     .cliente-card {
@@ -366,6 +529,12 @@
         transition: background 0.2s;
     }
     .btn-export-mini:hover { background: rgba(255,255,255,0.4); }
+    
+    .btn-termica-mini {
+        background: #ffc107 !important; color: #212529 !important;
+        opacity: 0.9;
+    }
+    .btn-termica-mini:hover { opacity: 1; }
 
     /* LISTA ITENS TELA */
     .itens-lista { list-style: none; padding: 0; margin: 0; }
@@ -427,7 +596,7 @@
     .btn-confirmar:hover { background: #218838 !important; }
 
 
-    /* --- CSS DA NOTA FISCAL (MOLDE CORRIGIDO) --- */
+    /* --- CSS DA NOTA FISCAL A4 (Mantida Original) --- */
     .receipt-box {
         width: 700px;
         max-width: 700px;
@@ -437,62 +606,63 @@
         padding: 20px;
         box-sizing: border-box;
     }
-    
     .receipt-header { text-align: center; margin-bottom: 30px; }
     .receipt-header h1 { font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
     .receipt-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: normal; border-bottom: 1px dashed #000; display: inline-block; padding-bottom: 5px;}
     .receipt-header p { font-size: 14px; margin-top: 10px; }
-
     .receipt-section { margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
-
-    .receipt-table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        margin-bottom: 10px; /* Reduzido para aproximar a nota */
-        font-size: 14px; 
-        table-layout: fixed; 
-    }
-    
-    .receipt-table th { 
-        border-bottom: 2px solid #000; padding: 8px 5px; 
-        text-align: left; text-transform: uppercase; 
-    }
-    
-    .receipt-table td { 
-        border-bottom: 1px dashed #ccc; padding: 8px 5px; 
-        vertical-align: top;
-        overflow-wrap: break-word;
-        word-wrap: break-word;
-        word-break: break-word;
-        white-space: normal;
-    }
-    
-    /* Larguras Ajustadas */
-    .col-desc { width: 40%; }
-    .col-dias { width: 15%; text-align: center; }
-    .col-base { width: 20%; text-align: right; }
-    .col-valor { width: 25%; text-align: right; }
-    
+    .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px; table-layout: fixed; }
+    .receipt-table th { border-bottom: 2px solid #000; padding: 8px 5px; text-align: left; text-transform: uppercase; }
+    .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 5px; vertical-align: top; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; white-space: normal; }
+    .col-desc { width: 40%; } .col-dias { width: 15%; text-align: center; } .col-base { width: 20%; text-align: right; } .col-valor { width: 25%; text-align: right; }
     .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
     .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
-
-    /* OBSERVAÇÃO ABAIXO DA TABELA */
-    .receipt-note {
-        font-size: 11px;
-        font-style: italic;
-        margin-top: 5px;
-        margin-bottom: 40px;
-    }
-
+    .receipt-note { font-size: 11px; font-style: italic; margin-top: 5px; margin-bottom: 40px; }
     .receipt-footer { margin-top: 30px; text-align: center; font-size: 12px; }
     .signature-line { margin-top: 40px; border-top: 1px solid #000; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; }
 
+    /* --- CSS DA NOTA TÉRMICA 80mm (NOVO - BEMATECH MP-4200) --- */
+    .thermal-box {
+        width: 72mm; /* Largura segura para 80mm */
+        font-family: 'Courier New', Courier, monospace; /* Monoespaçada funciona melhor */
+        color: #000 !important;
+        background: #fff;
+        padding: 2mm;
+        box-sizing: border-box;
+        font-size: 12px;
+        font-weight: 900 !important; /* Negrito FORÇADO para impressão térmica */
+        line-height: 1.2;
+    }
+    .thermal-header { text-align: center; margin-bottom: 5px; }
+    .thermal-header h1 { font-size: 16px; margin: 0; text-transform: uppercase; font-weight: 900; }
+    .thermal-header h2 { font-size: 12px; margin: 3px 0; font-weight: 900; }
+    .thermal-date { font-size: 12px; margin-top: 5px; }
+    
+    .thermal-dashed-line {
+        text-align: center; overflow: hidden; white-space: nowrap;
+        margin: 5px 0; font-weight: 900; letter-spacing: -2px;
+    }
+    
+    .thermal-client-info { font-size: 13px; font-weight: 900; margin-bottom: 5px; word-break: break-all;}
+    .thermal-client-header { background: #000; color: #fff; padding: 2px; font-weight: bold; margin-top: 5px; }
+
+    .thermal-item-row { margin-bottom: 5px; border-bottom: 1px dashed #000; padding-bottom: 3px; }
+    .thermal-desc { font-weight: 900; font-size: 12px; margin-bottom: 2px; }
+    .thermal-values { font-size: 12px; text-align: right; font-weight: 900; }
+    .thermal-item-spacer { height: 5px; }
+
+    .thermal-total-row {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 16px; font-weight: 900; margin: 10px 0; border-top: 2px solid #000; padding-top: 5px;
+    }
+    .thermal-note { font-size: 10px; font-style: italic; text-align: center; font-weight: bold; }
+    .thermal-footer { margin-top: 20px; text-align: center; }
+    .thermal-signature { font-size: 12px; font-weight: 900; }
+
+    /* RENDER ZONE */
     #render-zone {
-        position: absolute;
-        top: 0; left: 0;
-        z-index: -1000; 
-        opacity: 0;
-        width: 700px;
+        position: absolute; top: 0; left: 0;
+        z-index: -1000; opacity: 0; width: 800px;
     }
 </style>
 {% endblock %}

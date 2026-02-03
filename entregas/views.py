@@ -39,6 +39,7 @@ def relatorio_entregas(request):
         periodo_label = "Todo o Histórico"
     else:
         # SAÍDAS: Filtra pela data que SAIU (Data de Entrega)
+        # Regra: Conta entregas dadas baixa no período, mesmo que tenham chegado antes.
         encomendas_entregues = qs_todas.filter(status='ENTREGUE', data_entrega__range=(dt_inicial, dt_final))
         
         # CHEGADAS: Filtra pela data que CHEGOU (Data de Chegada)
@@ -46,7 +47,7 @@ def relatorio_entregas(request):
         
         periodo_label = f"{dt_inicial.strftime('%d/%m/%Y')} até {dt_final.strftime('%d/%m/%Y')}"
 
-    # Cálculos Financeiros
+    # Cálculos Financeiros (Baseados nas Saídas/Baixas do período)
     faturamento_real = encomendas_entregues.aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
     faturamento_ideal = encomendas_entregues.aggregate(Sum('valor_calculado'))['valor_calculado__sum'] or 0
     
@@ -60,11 +61,12 @@ def relatorio_entregas(request):
     
     ticket_medio = (faturamento_real / qtd_entregues) if qtd_entregues > 0 else 0
 
-    # Tempo Médio de Retirada (Dias) - GLOBAL
+    # Tempo Médio de Retirada (Dias) - GLOBAL (HISTÓRICO COMPLETO)
+    # Independente do filtro de data, calcula a média de tudo que já foi entregue
     media_timedelta = qs_todas.filter(status='ENTREGUE').aggregate(media=Avg(F('data_entrega') - F('data_chegada')))['media']
     tempo_medio_dias = media_timedelta.days if media_timedelta else 0
 
-    # Top 5 Clientes
+    # Top 5 Clientes (Baseado em quem deu baixa no período)
     top_clientes = encomendas_entregues.values('cliente__nome') \
         .annotate(total_gasto=Sum('valor_cobrado'), qtd=Count('id')) \
         .order_by('-total_gasto')[:5]
@@ -134,58 +136,21 @@ def relatorio_entregas(request):
     
     return render(request, 'admin/relatorio_ganhos.html', context)
 
-# --- NOVA CONSULTA PÚBLICA DETALHADA ---
+# --- OUTRAS VIEWS ---
 def consulta_publica(request):
     query = request.GET.get('q')
-    resultados_processados = []
-    
+    resultados = []
     if query:
         termo_limpo = query.replace('.', '').replace('-', '').strip()
-        
-        # 1. Busca os clientes (pelo Nome, CPF ou RG) que tem encomenda pendente
-        clientes_encontrados = Cliente.objects.filter(
+        resultados = Cliente.objects.filter(
             Q(cpf__icontains=query) | Q(cpf__icontains=termo_limpo) | Q(rg__icontains=query) | Q(nome__icontains=query),
             encomenda__status='PENDENTE'
-        ).distinct()
-
-        agora = timezone.now()
-
-        # 2. Processa os dados para exibição (Calcula valores na hora)
-        for cliente in clientes_encontrados:
-            # Pega as encomendas pendentes ordenadas por chegada (antiga -> nova)
-            encomendas = Encomenda.objects.filter(cliente=cliente, status='PENDENTE').order_by('data_chegada')
-            
-            lista_encomendas = []
-            total_cliente = 0.0
-            
-            for enc in encomendas:
-                # Lógica de Dias em Estoque
-                dias_estoque = (agora - enc.data_chegada).days
-                if dias_estoque < 0: dias_estoque = 0
-                
-                # Lógica de Valor (Multiplicador a cada 10 dias)
-                multiplicador = max(1, dias_estoque // 10)
-                valor_base = float(enc.valor_base)
-                valor_final = valor_base * multiplicador
-                
-                total_cliente += valor_final
-                
-                lista_encomendas.append({
-                    'data_chegada': enc.data_chegada,
-                    'dias': dias_estoque,
-                    'taxa': valor_base,
-                    'valor_final': valor_final,
-                    'atrasado': dias_estoque >= 10 # Flag para o vermelho
-                })
-
-            if lista_encomendas:
-                resultados_processados.append({
-                    'cliente': cliente,
-                    'encomendas': lista_encomendas,
-                    'total': total_cliente
-                })
-
-    return render(request, 'publica/consulta.html', {'resultados': resultados_processados, 'query': query})
+        ).annotate(
+            qtd_encomendas=Count('encomenda'),
+            primeira_chegada=Min('encomenda__data_chegada'),
+            ultima_chegada=Max('encomenda__data_chegada')
+        ).filter(qtd_encomendas__gt=0)
+    return render(request, 'publica/consulta.html', {'resultados': resultados, 'query': query})
 
 def home(request):
     return render(request, 'publica/home.html')

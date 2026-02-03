@@ -16,7 +16,7 @@
         header a { text-decoration: none; }
 
         /* Container Principal */
-        .container { width: 90%; max-width: 600px; margin-top: 40px; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .container { width: 90%; max-width: 800px; margin-top: 40px; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
 
         /* Busca */
         .search-box { text-align: center; margin-bottom: 30px; }
@@ -42,8 +42,11 @@
         td { padding: 15px; border-bottom: 1px solid #eee; color: #555; font-size: 15px; text-align: center; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         
-        .badge { background: #123C65; color: white; padding: 5px 10px; border-radius: 15px; font-size: 14px; font-weight: bold; }
-        
+        /* Estilos Novos */
+        .text-danger { color: #C51625; font-weight: bold; }
+        .total-row { background-color: #e9ecef !important; font-weight: bold; color: #333; }
+        .obs-text { font-size: 12px; color: #888; margin-top: 10px; text-align: right; font-style: italic; }
+
         /* Mensagem de Ajuda (WhatsApp) */
         .help-box { margin-top: 40px; padding: 20px; background: #e9ecef; border-radius: 8px; text-align: center; border-left: 5px solid #25D366; }
         .help-box h3 { margin: 0 0 10px; font-size: 16px; color: #333; }
@@ -57,7 +60,8 @@
             .input-group { flex-direction: column; gap: 10px; }
             .search-box input[type="text"] { width: 100%; border-radius: 5px; box-sizing: border-box;}
             .search-box button { width: 100%; border-radius: 5px; }
-            th, td { font-size: 12px; padding: 10px; }
+            th, td { font-size: 12px; padding: 8px 5px; }
+            .container { padding: 20px; width: 95%; }
         }
     </style>
 </head>
@@ -93,21 +97,34 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Encomendas</th>
-                            <th>Chegada (Mais Antiga)</th>
-                            <th>Chegada (Mais Recente)</th>
+                            <th>Item</th>
+                            <th>Chegada</th>
+                            <th>Dias Armaz.</th>
+                            <th>Valor Taxa</th>
+                            <th>Valor Final</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for cliente in resultados %}
-                        <tr>
-                            <td><span class="badge">{{ cliente.qtd_encomendas }}</span></td>
-                            <td>{{ cliente.primeira_chegada|date:"d/m/Y H:i" }}</td>
-                            <td>{{ cliente.ultima_chegada|date:"d/m/Y H:i" }}</td>
+                        {% for item in resultados %}
+                        <tr class="{% if item.is_atrasado %}text-danger{% endif %}">
+                            <td>Encomenda {{ forloop.counter }}</td>
+                            <td>{{ item.data_chegada|date:"d/m/Y" }}</td>
+                            <td>{{ item.dias_display }} dias</td>
+                            <td>R$ {{ item.valor_base|floatformat:2 }}</td>
+                            <td>R$ {{ item.valor_final_display|floatformat:2 }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="4" style="text-align: right;">TOTAL A PAGAR:</td>
+                            <td>R$ {{ total_geral|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
                 </table>
+                <div class="obs-text">
+                    * Observação: A taxa é cobrada à cada 10 dias de armazenamento.
+                </div>
             {% else %}
                 <div class="empty-msg">
                     <p>Nenhuma encomenda encontrada para o documento informado.</p>

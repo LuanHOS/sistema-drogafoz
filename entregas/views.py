@@ -136,21 +136,53 @@ def relatorio_entregas(request):
     
     return render(request, 'admin/relatorio_ganhos.html', context)
 
-# --- OUTRAS VIEWS ---
+# --- CONSULTA PÚBLICA ALTERADA ---
 def consulta_publica(request):
     query = request.GET.get('q')
     resultados = []
+    total_geral = 0.0
+    
     if query:
+        # Limpa formatação de CPF/RG para busca
         termo_limpo = query.replace('.', '').replace('-', '').strip()
-        resultados = Cliente.objects.filter(
-            Q(cpf__icontains=query) | Q(cpf__icontains=termo_limpo) | Q(rg__icontains=query) | Q(nome__icontains=query),
-            encomenda__status='PENDENTE'
-        ).annotate(
-            qtd_encomendas=Count('encomenda'),
-            primeira_chegada=Min('encomenda__data_chegada'),
-            ultima_chegada=Max('encomenda__data_chegada')
-        ).filter(qtd_encomendas__gt=0)
-    return render(request, 'publica/consulta.html', {'resultados': resultados, 'query': query})
+        
+        # Busca encomendas PENDENTES vinculadas ao CPF ou RG ou Nome
+        # Ordenadas por DATA DE CHEGADA DECRESCENTE (Mais recente para mais antiga)
+        qs = Encomenda.objects.filter(
+            Q(cliente__cpf__icontains=termo_limpo) | 
+            Q(cliente__rg__icontains=termo_limpo) | 
+            Q(cliente__nome__icontains=query),
+            status='PENDENTE'
+        ).order_by('-data_chegada')
+
+        agora = timezone.now()
+
+        for item in qs:
+            # 1. Calcular dias em estoque (mesma lógica do admin)
+            dias_estoque = (agora - item.data_chegada).days
+            if dias_estoque < 0: dias_estoque = 0
+            
+            # 2. Calcular multiplicador (regra de 10 dias do admin)
+            multiplicador = max(1, dias_estoque // 10)
+            
+            # 3. Calcular valor atualizado
+            valor_final = float(item.valor_base) * multiplicador
+
+            # Adiciona atributos dinâmicos ao objeto para usar no template
+            item.dias_display = dias_estoque
+            item.valor_final_display = valor_final
+            
+            # Flag para vermelho se ultrapassar 10 dias
+            item.is_atrasado = (dias_estoque > 10) 
+            
+            resultados.append(item)
+            total_geral += valor_final
+
+    return render(request, 'publica/consulta.html', {
+        'resultados': resultados, 
+        'query': query,
+        'total_geral': total_geral
+    })
 
 def home(request):
     return render(request, 'publica/home.html')

@@ -68,7 +68,7 @@ class Encomenda(models.Model):
     data_chegada = models.DateTimeField(verbose_name="Data de Chegada")
     data_entrega = models.DateTimeField(verbose_name="Data de Entrega", blank=True, null=True)
     
-    valor_base = models.DecimalField(max_digits=10, decimal_places=2, default=10.00, verbose_name="Valor Taxa")
+    valor_base = models.DecimalField(max_digits=10, decimal_places=2, default=10.00, verbose_name="Valor Base")
     
     valor_calculado = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Valor Calculado")
     

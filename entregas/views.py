@@ -33,15 +33,21 @@ def relatorio_entregas(request):
 
     # --- 2. DADOS DO PERÍODO ---
     if ignorar_periodo:
-        encomendas_entregues = qs_todas.filter(status='ENTREGUE') 
-        encomendas_chegadas = qs_todas 
+        # Se ignorar, pega tudo
+        encomendas_entregues = qs_todas.filter(status='ENTREGUE') # Todas as saídas da história
+        encomendas_chegadas = qs_todas # Todas as chegadas da história
         periodo_label = "Todo o Histórico"
     else:
+        # SAÍDAS: Filtra pela data que SAIU (Data de Entrega)
+        # Regra: Conta entregas dadas baixa no período, mesmo que tenham chegado antes.
         encomendas_entregues = qs_todas.filter(status='ENTREGUE', data_entrega__range=(dt_inicial, dt_final))
+        
+        # CHEGADAS: Filtra pela data que CHEGOU (Data de Chegada)
         encomendas_chegadas = qs_todas.filter(data_chegada__range=(dt_inicial, dt_final))
+        
         periodo_label = f"{dt_inicial.strftime('%d/%m/%Y')} até {dt_final.strftime('%d/%m/%Y')}"
 
-    # Cálculos Financeiros
+    # Cálculos Financeiros (Baseados nas Saídas/Baixas do período)
     faturamento_real = encomendas_entregues.aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
     faturamento_ideal = encomendas_entregues.aggregate(Sum('valor_calculado'))['valor_calculado__sum'] or 0
     
@@ -50,16 +56,17 @@ def relatorio_entregas(request):
         
     descontos_dados = faturamento_ideal - faturamento_real
     
-    qtd_entregues = encomendas_entregues.count() 
-    qtd_chegadas = encomendas_chegadas.count()   
+    qtd_entregues = encomendas_entregues.count() # Total de Saídas no período
+    qtd_chegadas = encomendas_chegadas.count()   # Total de Chegadas no período
     
     ticket_medio = (faturamento_real / qtd_entregues) if qtd_entregues > 0 else 0
 
-    # Tempo Médio Global
+    # Tempo Médio de Retirada (Dias) - GLOBAL (HISTÓRICO COMPLETO)
+    # Independente do filtro de data, calcula a média de tudo que já foi entregue
     media_timedelta = qs_todas.filter(status='ENTREGUE').aggregate(media=Avg(F('data_entrega') - F('data_chegada')))['media']
     tempo_medio_dias = media_timedelta.days if media_timedelta else 0
 
-    # Top 5 Clientes
+    # Top 5 Clientes (Baseado em quem deu baixa no período)
     top_clientes = encomendas_entregues.values('cliente__nome') \
         .annotate(total_gasto=Sum('valor_cobrado'), qtd=Count('id')) \
         .order_by('-total_gasto')[:5]
@@ -67,11 +74,12 @@ def relatorio_entregas(request):
     # Auditoria
     entregas_zeradas = encomendas_entregues.filter(Q(valor_cobrado__isnull=True) | Q(valor_cobrado=0)).count()
 
-    # Estoque Atual
+    # --- 3. DADOS GERAIS DO ESTOQUE (Snapshot Atual) ---
     pendentes = qs_todas.filter(status='PENDENTE')
     estoque_qtd = pendentes.count()
     estoque_valor_base = pendentes.aggregate(Sum('valor_base'))['valor_base__sum'] or 0
     
+    # Alertas
     limite_critico = hoje - timedelta(days=120)
     limite_atencao = hoje - timedelta(days=30)
     
@@ -80,7 +88,7 @@ def relatorio_entregas(request):
     
     clientes_incompletos = Cliente.objects.filter(Q(telefone__isnull=True) | Q(telefone='')).count()
 
-    # Gráfico
+    # --- 4. DADOS PARA O GRÁFICO ---
     grafico_labels = []
     grafico_dados = []
     
@@ -105,77 +113,44 @@ def relatorio_entregas(request):
         'data_final': data_final_str,
         'ignorar_periodo': ignorar_periodo,
         'periodo_label': periodo_label,
+        
         'faturamento_real': faturamento_real,
         'descontos_dados': descontos_dados,
         'ticket_medio': ticket_medio,
-        'qtd_entregues': qtd_entregues, 
-        'qtd_chegadas': qtd_chegadas,   
+        'qtd_entregues': qtd_entregues, # SAÍDAS
+        'qtd_chegadas': qtd_chegadas,   # CHEGADAS
+        
         'estoque_qtd': estoque_qtd,
         'estoque_valor_base': estoque_valor_base,
         'alertas_criticos': alertas_criticos,
         'alertas_atencao': alertas_atencao,
+        
         'tempo_medio_dias': tempo_medio_dias,
         'top_clientes': top_clientes,
         'entregas_zeradas': entregas_zeradas,
         'clientes_incompletos': clientes_incompletos,
+        
         'grafico_labels': json.dumps(grafico_labels),
         'grafico_dados': json.dumps(grafico_dados),
     }
     
     return render(request, 'admin/relatorio_ganhos.html', context)
 
-# --- CONSULTA PÚBLICA (Atualizada) ---
+# --- OUTRAS VIEWS ---
 def consulta_publica(request):
     query = request.GET.get('q')
-    resultados_processados = []
-    
+    resultados = []
     if query:
         termo_limpo = query.replace('.', '').replace('-', '').strip()
-        
-        # Busca clientes com encomendas pendentes
-        clientes_encontrados = Cliente.objects.filter(
+        resultados = Cliente.objects.filter(
             Q(cpf__icontains=query) | Q(cpf__icontains=termo_limpo) | Q(rg__icontains=query) | Q(nome__icontains=query),
             encomenda__status='PENDENTE'
-        ).distinct()
-
-        agora = timezone.now()
-
-        # Para cada cliente encontrado, monta a lista de encomendas detalhada
-        for cliente in clientes_encontrados:
-            encomendas = Encomenda.objects.filter(cliente=cliente, status='PENDENTE').order_by('data_chegada')
-            
-            lista_encomendas = []
-            total_cliente = 0.0
-            
-            for index, enc in enumerate(encomendas, start=1):
-                # Calcula dias
-                dias_estoque = (agora - enc.data_chegada).days
-                if dias_estoque < 0: dias_estoque = 0
-                
-                # Calcula Valor
-                multiplicador = max(1, dias_estoque // 10)
-                valor_base = float(enc.valor_base)
-                valor_final = valor_base * multiplicador
-                
-                total_cliente += valor_final
-                
-                lista_encomendas.append({
-                    'nome_exibicao': f"Encomenda {index}", # Nome genérico "Encomenda 1, 2..."
-                    'data_chegada': enc.data_chegada,
-                    'dias': dias_estoque,
-                    'taxa': valor_base,
-                    'valor_final': valor_final,
-                    'alerta_prazo': dias_estoque > 10 # Flag para ficar vermelho
-                })
-
-            if lista_encomendas:
-                resultados_processados.append({
-                    # Não enviamos o nome do cliente explicitamente para exibição, mas enviamos o objeto para controle interno se precisar
-                    'encomendas': lista_encomendas,
-                    'total': total_cliente
-                })
-
-    return render(request, 'publica/consulta.html', {'resultados': resultados_processados, 'query': query})
+        ).annotate(
+            qtd_encomendas=Count('encomenda'),
+            primeira_chegada=Min('encomenda__data_chegada'),
+            ultima_chegada=Max('encomenda__data_chegada')
+        ).filter(qtd_encomendas__gt=0)
+    return render(request, 'publica/consulta.html', {'resultados': resultados, 'query': query})
 
 def home(request):
     return render(request, 'publica/home.html')

@@ -20,7 +20,7 @@
         <h2 style="margin: 0; color: #333;">Confirmar Entrega e Valores</h2>
         
         <button type="button" onclick="prepararPDF('geral')" class="btn-acao-topo">
-            <i class="fas fa-file-export"></i> Imprimir Relatório Geral (80mm)
+            <i class="fas fa-file-export"></i> Exportar Relatório Geral
         </button>
     </div>
     
@@ -53,7 +53,7 @@
                         <div style="display: flex; align-items: center;">
                             <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> {{ grupo.cliente.nome }}
                         </div>
-                        <button type="button" class="btn-export-mini" onclick="prepararPDF('individual', '{{ grupo.cliente.id }}')" title="Imprimir Cupom (80mm)">
+                        <button type="button" class="btn-export-mini" onclick="prepararPDF('individual', '{{ grupo.cliente.id }}')" title="Gerar Nota de Retirada">
                             <i class="fas fa-file-export"></i>
                         </button>
                     </div>
@@ -123,30 +123,27 @@
             <p class="receipt-date">Data: --/--/----</p>
         </div>
 
-        <div class="receipt-separator">--------------------------------</div>
-
-        <div class="receipt-client-info">
+        <div class="receipt-client-info receipt-section">
             </div>
-
-        <div class="receipt-separator">--------------------------------</div>
 
         <table class="receipt-table">
+            <thead>
+                <tr>
+                    <th class="col-desc">Descrição</th>
+                    <th class="col-dias">Dias</th>
+                    <th class="col-base">Valor Base</th> <th class="col-valor">Valor Final</th>
+                </tr>
+            </thead>
             <tbody class="receipt-items-body">
                 </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="total-label">TOTAL A PAGAR</td> <td class="total-value receipt-total-value">R$ 0,00</td>
+                </tr>
+            </tfoot>
         </table>
 
-        <div class="receipt-separator">--------------------------------</div>
-
-        <div class="total-section">
-            <div class="total-row">
-                <span>TOTAL A PAGAR</span>
-                <span class="receipt-total-value">R$ 0,00</span>
-            </div>
-        </div>
-
-        <div class="receipt-separator">--------------------------------</div>
-
-        <p class="receipt-note">Obs: Taxa cobrada a cada 10 dias.</p>
+        <p class="receipt-note">Observação: O valor base é cobrado a cada 10 dias de armazenamento.</p>
 
         <div class="receipt-footer">
             <p>Obrigado pela preferência!</p>
@@ -227,21 +224,19 @@
 
         renderZone.appendChild(molde);
 
-        // CONFIGURAÇÃO PARA 80mm
         const opt = {
-            margin: [0, 0, 0, 0], // Margem Zero (controlada pelo CSS)
+            margin: [10, 10, 10, 10], 
             filename: filename,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
-            // 80mm de largura, altura automática (simulada por um valor alto ou array)
-            jsPDF: { unit: 'mm', format: [80, 297], orientation: 'portrait' } 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         setTimeout(() => {
             html2pdf().set(opt).from(molde).save().then(() => {
                 renderZone.innerHTML = '';
             });
-        }, 150);
+        }, 100);
     }
 
     function preencherIndividual(el, clientId) {
@@ -253,8 +248,8 @@
 
         el.querySelector('.receipt-date').innerText = `Data: ${getFormattedDate()}`;
         
-        let infoHtml = `<strong>CLIENTE:</strong><br>${nome}`;
-        if(cpf) infoHtml += `<br>CPF: ${cpf}`;
+        let infoHtml = `<strong>Cliente:</strong> ${nome}`;
+        if(cpf) infoHtml += `<br><strong>CPF:</strong> ${cpf}`;
         el.querySelector('.receipt-client-info').innerHTML = infoHtml;
 
         let tbodyHtml = '';
@@ -263,32 +258,28 @@
         itensElements.forEach(row => {
             const desc = row.dataset.desc;
             const dias = row.dataset.dias;
-            const baseValStr = row.dataset.baseVal; 
-            const inputVal = row.querySelector('input').value; 
+            const baseValStr = row.dataset.baseVal; // Valor Base
+            const inputVal = row.querySelector('input').value; // Valor Final
             
             const valFloat = parseFloat(inputVal.replace(',', '.'));
             const baseFloat = parseFloat(baseValStr.replace(',', '.'));
             
             totalVal += (isNaN(valFloat) ? 0 : valFloat);
 
-            // LAYOUT DE DUAS LINHAS PARA 80mm
             tbodyHtml += `
-                <tr class="item-header-row">
-                    <td colspan="3" class="item-desc">${desc}</td>
+                <tr>
+                    <td>${desc}</td>
+                    <td style="text-align: center;">${dias} dias</td>
+                    <td style="text-align: right;">${formatCurrency(baseFloat)}</td>
+                    <td style="text-align: right;">${formatCurrency(valFloat)}</td>
                 </tr>
-                <tr class="item-value-row">
-                    <td style="text-align: left;">${dias}d</td>
-                    <td style="text-align: center;">Base: ${baseFloat.toFixed(2)}</td>
-                    <td style="text-align: right; font-weight:bold;">${valFloat.toFixed(2)}</td>
-                </tr>
-                <tr class="item-spacer"><td colspan="3"></td></tr>
             `;
         });
 
         el.querySelector('.receipt-items-body').innerHTML = tbodyHtml;
         el.querySelector('.receipt-total-value').innerText = formatCurrency(totalVal);
 
-        return `Cupom_${nome.trim().split(' ')[0]}_${getFilenameDate()}.pdf`;
+        return `${nome.trim()}_${qtdItens}itens_${getFilenameDate()}.pdf`;
     }
 
     function preencherGeral(el) {
@@ -297,8 +288,9 @@
 
         el.querySelector('.receipt-date').innerText = `Data: ${getFormattedDate()}`;
         el.querySelector('.receipt-client-info').innerHTML = `
-            <strong>RELATÓRIO DE BAIXA</strong><br>
-            Clientes: ${meta.dataset.qtdClientes} | Itens: ${meta.dataset.qtdItens}
+            <strong>RELATÓRIO GERAL DE BAIXA</strong><br>
+            Quantidade de Clientes: ${meta.dataset.qtdClientes}<br>
+            Quantidade de Itens: ${meta.dataset.qtdItens}
         `;
 
         let tbodyHtml = '';
@@ -308,10 +300,11 @@
             const nome = card.dataset.clientName;
             const itensElements = card.querySelectorAll('.item-linha');
 
-            // Separador de Cliente
             tbodyHtml += `
-                <tr class="client-header-row">
-                    <td colspan="3">CLIENTE: ${nome}</td>
+                <tr style="background-color: #f0f0f0;">
+                    <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
+                        CLIENTE: ${nome}
+                    </td>
                 </tr>
             `;
 
@@ -326,17 +319,13 @@
                 
                 totalGeral += (isNaN(valFloat) ? 0 : valFloat);
 
-                // LAYOUT DE DUAS LINHAS
                 tbodyHtml += `
-                    <tr class="item-header-row">
-                        <td colspan="3" class="item-desc sub-item">• ${desc}</td>
+                    <tr>
+                        <td style="padding-left: 15px;">• ${desc}</td>
+                        <td style="text-align: center;">${dias} dias</td>
+                        <td style="text-align: right;">${formatCurrency(baseFloat)}</td>
+                        <td style="text-align: right;">${formatCurrency(valFloat)}</td>
                     </tr>
-                    <tr class="item-value-row">
-                        <td style="text-align: left;">${dias}d</td>
-                        <td style="text-align: center;">Base: ${baseFloat.toFixed(2)}</td>
-                        <td style="text-align: right; font-weight:bold;">${valFloat.toFixed(2)}</td>
-                    </tr>
-                    <tr class="item-spacer"><td colspan="3"></td></tr>
                 `;
             });
         });
@@ -344,7 +333,7 @@
         el.querySelector('.receipt-items-body').innerHTML = tbodyHtml;
         el.querySelector('.receipt-total-value').innerText = formatCurrency(totalGeral);
 
-        return `Cupom_Geral_${getFilenameDate()}.pdf`;
+        return `Entrega_${meta.dataset.qtdClientes}clientes_${getFilenameDate()}.pdf`;
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -438,89 +427,72 @@
     .btn-confirmar:hover { background: #218838 !important; }
 
 
-    /* --- CSS DA NOTA FISCAL (MOLDE 80mm) --- */
+    /* --- CSS DA NOTA FISCAL (MOLDE CORRIGIDO) --- */
     .receipt-box {
-        /* LARGURA PARA 80mm (Area Util ~72mm) */
-        width: 72mm; 
-        max-width: 72mm;
+        width: 700px;
+        max-width: 700px;
         font-family: 'Courier New', Courier, monospace; 
         color: #000;
         background: #fff;
-        padding: 2mm;
+        padding: 20px;
         box-sizing: border-box;
-        font-size: 11px; /* Fonte reduzida para caber */
     }
     
-    .receipt-header { text-align: center; margin-bottom: 5px; }
-    .receipt-header h1 { font-size: 14px; margin: 0; text-transform: uppercase; font-weight: bold; }
-    .receipt-header h2 { font-size: 12px; margin: 2px 0; font-weight: normal; }
-    .receipt-header p { font-size: 10px; margin: 2px 0; }
+    .receipt-header { text-align: center; margin-bottom: 30px; }
+    .receipt-header h1 { font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+    .receipt-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: normal; border-bottom: 1px dashed #000; display: inline-block; padding-bottom: 5px;}
+    .receipt-header p { font-size: 14px; margin-top: 10px; }
 
-    .receipt-separator {
-        text-align: center;
-        overflow: hidden;
-        white-space: nowrap;
-        font-size: 10px;
-        margin: 5px 0;
-    }
+    .receipt-section { margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
 
-    .receipt-client-info { 
-        font-size: 12px; 
-        line-height: 1.3; 
-        word-break: break-all;
-    }
-
-    /* TABELA TÉRMICA */
     .receipt-table { 
         width: 100%; 
         border-collapse: collapse; 
-        margin-bottom: 5px; 
-        font-size: 11px; 
-        table-layout: fixed; /* Importante */
+        margin-bottom: 10px; /* Reduzido para aproximar a nota */
+        font-size: 14px; 
+        table-layout: fixed; 
     }
     
-    .item-desc {
-        font-weight: bold;
-        font-size: 11px;
-        padding-top: 4px;
+    .receipt-table th { 
+        border-bottom: 2px solid #000; padding: 8px 5px; 
+        text-align: left; text-transform: uppercase; 
+    }
+    
+    .receipt-table td { 
+        border-bottom: 1px dashed #ccc; padding: 8px 5px; 
+        vertical-align: top;
+        overflow-wrap: break-word;
         word-wrap: break-word;
+        word-break: break-word;
+        white-space: normal;
     }
-    .sub-item { padding-left: 5px; }
+    
+    /* Larguras Ajustadas */
+    .col-desc { width: 40%; }
+    .col-dias { width: 15%; text-align: center; }
+    .col-base { width: 20%; text-align: right; }
+    .col-valor { width: 25%; text-align: right; }
+    
+    .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
+    .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
 
-    .item-value-row td {
-        padding-bottom: 4px;
-        border-bottom: 1px dashed #ccc;
-    }
-
-    .client-header-row td {
-        padding-top: 10px;
-        font-weight: bold;
-        border-bottom: 1px solid #000;
-        background: #eee;
-    }
-
-    /* Total Section */
-    .total-section {
-        display: flex; justify-content: space-between; align-items: center;
-        font-size: 14px; font-weight: bold; margin: 5px 0;
-    }
-
+    /* OBSERVAÇÃO ABAIXO DA TABELA */
     .receipt-note {
-        font-size: 10px;
+        font-size: 11px;
         font-style: italic;
-        text-align: center;
         margin-top: 5px;
+        margin-bottom: 40px;
     }
 
-    .receipt-footer { margin-top: 20px; text-align: center; font-size: 10px; }
-    .signature-line { margin-top: 30px; border-top: 1px solid #000; width: 80%; margin-left: auto; margin-right: auto; padding-top: 5px; }
+    .receipt-footer { margin-top: 30px; text-align: center; font-size: 12px; }
+    .signature-line { margin-top: 40px; border-top: 1px solid #000; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; }
 
     #render-zone {
         position: absolute;
         top: 0; left: 0;
         z-index: -1000; 
         opacity: 0;
-        width: 72mm; /* Força renderização na largura certa */
+        width: 700px;
     }
 </style>
 {% endblock %}

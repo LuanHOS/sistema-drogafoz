@@ -42,8 +42,7 @@
         td { padding: 15px; border-bottom: 1px solid #eee; color: #555; font-size: 15px; text-align: center; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         
-        /* Estilos Novos */
-        .text-danger { color: #C51625; font-weight: bold; }
+        /* Estilos de Rodapé */
         .total-row { background-color: #e9ecef !important; font-weight: bold; color: #333; }
         .obs-text { font-size: 12px; color: #888; margin-top: 10px; text-align: right; font-style: italic; }
 
@@ -99,17 +98,21 @@
                         <tr>
                             <th>Item</th>
                             <th>Chegada</th>
-                            <th>Dias Armaz.</th>
+                            <th>Armazenamento</th>
                             <th>Valor Taxa</th>
                             <th>Valor Final</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in resultados %}
-                        <tr class="{% if item.is_atrasado %}text-danger{% endif %}">
+                        <tr>
                             <td>Encomenda {{ forloop.counter }}</td>
                             <td>{{ item.data_chegada|date:"d/m/Y" }}</td>
-                            <td>{{ item.dias_display }} dias</td>
+                            
+                            <td {% if item.is_atrasado %}style="color: #C51625; font-weight: bold;"{% endif %}>
+                                {{ item.dias_display }} dias
+                            </td>
+                            
                             <td>R$ {{ item.valor_base|floatformat:2 }}</td>
                             <td>R$ {{ item.valor_final_display|floatformat:2 }}</td>
                         </tr>
@@ -123,7 +126,7 @@
                     </tfoot>
                 </table>
                 <div class="obs-text">
-                    * Observação: A taxa é cobrada à cada 10 dias de armazenamento.
+                    * Observação: A taxa é cobrada a cada 10 dias de armazenamento.
                 </div>
             {% else %}
                 <div class="empty-msg">

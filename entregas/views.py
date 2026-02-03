@@ -34,20 +34,18 @@ def relatorio_entregas(request):
     # --- 2. DADOS DO PERÍODO ---
     if ignorar_periodo:
         # Se ignorar, pega tudo
-        encomendas_entregues = qs_todas.filter(status='ENTREGUE') # Todas as saídas da história
-        encomendas_chegadas = qs_todas # Todas as chegadas da história
+        encomendas_entregues = qs_todas.filter(status='ENTREGUE') 
+        encomendas_chegadas = qs_todas 
         periodo_label = "Todo o Histórico"
     else:
-        # SAÍDAS: Filtra pela data que SAIU (Data de Entrega)
-        # Regra: Conta entregas dadas baixa no período, mesmo que tenham chegado antes.
+        # SAÍDAS
         encomendas_entregues = qs_todas.filter(status='ENTREGUE', data_entrega__range=(dt_inicial, dt_final))
-        
-        # CHEGADAS: Filtra pela data que CHEGOU (Data de Chegada)
+        # CHEGADAS
         encomendas_chegadas = qs_todas.filter(data_chegada__range=(dt_inicial, dt_final))
         
         periodo_label = f"{dt_inicial.strftime('%d/%m/%Y')} até {dt_final.strftime('%d/%m/%Y')}"
 
-    # Cálculos Financeiros (Baseados nas Saídas/Baixas do período)
+    # Cálculos Financeiros
     faturamento_real = encomendas_entregues.aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
     faturamento_ideal = encomendas_entregues.aggregate(Sum('valor_calculado'))['valor_calculado__sum'] or 0
     
@@ -56,17 +54,16 @@ def relatorio_entregas(request):
         
     descontos_dados = faturamento_ideal - faturamento_real
     
-    qtd_entregues = encomendas_entregues.count() # Total de Saídas no período
-    qtd_chegadas = encomendas_chegadas.count()   # Total de Chegadas no período
+    qtd_entregues = encomendas_entregues.count() 
+    qtd_chegadas = encomendas_chegadas.count()   
     
     ticket_medio = (faturamento_real / qtd_entregues) if qtd_entregues > 0 else 0
 
-    # Tempo Médio de Retirada (Dias) - GLOBAL (HISTÓRICO COMPLETO)
-    # Independente do filtro de data, calcula a média de tudo que já foi entregue
+    # Tempo Médio Global
     media_timedelta = qs_todas.filter(status='ENTREGUE').aggregate(media=Avg(F('data_entrega') - F('data_chegada')))['media']
     tempo_medio_dias = media_timedelta.days if media_timedelta else 0
 
-    # Top 5 Clientes (Baseado em quem deu baixa no período)
+    # Top 5 Clientes
     top_clientes = encomendas_entregues.values('cliente__nome') \
         .annotate(total_gasto=Sum('valor_cobrado'), qtd=Count('id')) \
         .order_by('-total_gasto')[:5]
@@ -74,7 +71,7 @@ def relatorio_entregas(request):
     # Auditoria
     entregas_zeradas = encomendas_entregues.filter(Q(valor_cobrado__isnull=True) | Q(valor_cobrado=0)).count()
 
-    # --- 3. DADOS GERAIS DO ESTOQUE (Snapshot Atual) ---
+    # --- 3. DADOS GERAIS DO ESTOQUE ---
     pendentes = qs_todas.filter(status='PENDENTE')
     estoque_qtd = pendentes.count()
     estoque_valor_base = pendentes.aggregate(Sum('valor_base'))['valor_base__sum'] or 0
@@ -117,8 +114,8 @@ def relatorio_entregas(request):
         'faturamento_real': faturamento_real,
         'descontos_dados': descontos_dados,
         'ticket_medio': ticket_medio,
-        'qtd_entregues': qtd_entregues, # SAÍDAS
-        'qtd_chegadas': qtd_chegadas,   # CHEGADAS
+        'qtd_entregues': qtd_entregues, 
+        'qtd_chegadas': qtd_chegadas,   
         
         'estoque_qtd': estoque_qtd,
         'estoque_valor_base': estoque_valor_base,
@@ -136,43 +133,42 @@ def relatorio_entregas(request):
     
     return render(request, 'admin/relatorio_ganhos.html', context)
 
-# --- CONSULTA PÚBLICA ALTERADA ---
 def consulta_publica(request):
     query = request.GET.get('q')
     resultados = []
     total_geral = 0.0
     
     if query:
-        # Limpa formatação de CPF/RG para busca
+        # Remove caracteres especiais para comparar apenas números
         termo_limpo = query.replace('.', '').replace('-', '').strip()
         
-        # Busca encomendas PENDENTES vinculadas ao CPF ou RG ou Nome
-        # Ordenadas por DATA DE CHEGADA DECRESCENTE (Mais recente para mais antiga)
+        # Busca EXATA pelo CPF ou RG. 
+        # Não usa 'icontains' para evitar matches parciais.
+        # Não busca por nome para garantir privacidade.
         qs = Encomenda.objects.filter(
-            Q(cliente__cpf__icontains=termo_limpo) | 
-            Q(cliente__rg__icontains=termo_limpo) | 
-            Q(cliente__nome__icontains=query),
+            Q(cliente__cpf=termo_limpo) | 
+            Q(cliente__rg=termo_limpo),
             status='PENDENTE'
         ).order_by('-data_chegada')
 
         agora = timezone.now()
 
         for item in qs:
-            # 1. Calcular dias em estoque (mesma lógica do admin)
+            # 1. Calcular dias em estoque
             dias_estoque = (agora - item.data_chegada).days
             if dias_estoque < 0: dias_estoque = 0
             
-            # 2. Calcular multiplicador (regra de 10 dias do admin)
+            # 2. Calcular multiplicador
             multiplicador = max(1, dias_estoque // 10)
             
             # 3. Calcular valor atualizado
             valor_final = float(item.valor_base) * multiplicador
 
-            # Adiciona atributos dinâmicos ao objeto para usar no template
+            # Atributos para o template
             item.dias_display = dias_estoque
             item.valor_final_display = valor_final
             
-            # Flag para vermelho se ultrapassar 10 dias
+            # Flag para destacar SOMENTE se ultrapassar 10 dias
             item.is_atrasado = (dias_estoque > 10) 
             
             resultados.append(item)

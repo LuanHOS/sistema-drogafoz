@@ -24,21 +24,33 @@ class Cliente(models.Model):
     apenas_numeros = RegexValidator(r'^\d+$', 'Este campo deve conter apenas números (sem pontos ou traços).')
 
     nome = models.CharField(max_length=200)
+    
+    # CPF já possui unique=True, garantindo que não se repita entre CPFs
     cpf = models.CharField(
         max_length=14, unique=True, blank=True, null=True, 
         validators=[apenas_numeros, validar_cpf_algoritmo],
         error_messages={'unique': 'Já existe um cliente cadastrado com este CPF.'}
     )
+    
     rg = models.CharField(max_length=20, blank=True, null=True, validators=[apenas_numeros])
+    
     genero = models.CharField(max_length=20, choices=[('M', 'Masculino'), ('F', 'Feminino'), ('O', 'Outro')], blank=True, null=True)
     telefone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     data_cadastro = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
+        # 1. Validação de Unicidade de RG (RG não pode ser igual a outro RG)
         if self.rg:
             if Cliente.objects.filter(rg=self.rg).exclude(pk=self.pk).exists():
                 raise ValidationError({'rg': 'Já existe um cliente cadastrado com este RG.'})
+
+            # 2. NOVA VALIDAÇÃO (SOLICITADA): RG não pode ser igual a um CPF existente
+            # Isso impede que o RG digitado coincida com o CPF de qualquer pessoa no sistema
+            if Cliente.objects.filter(cpf=self.rg).exists():
+                raise ValidationError({'rg': 'Este número já está cadastrado como CPF no sistema. Por segurança, ele não pode ser usado como RG.'})
+
+        # 3. Validação de Nome (se não tiver docs)
         if not self.cpf and not self.rg:
             if Cliente.objects.filter(nome__iexact=self.nome).exclude(pk=self.pk).exists():
                 raise ValidationError('Já existe um cliente com este Nome. Informe CPF ou RG.')
@@ -77,7 +89,7 @@ class Encomenda(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
 
     def save(self, *args, **kwargs):
-        # ALTERAÇÃO AQUI: Se voltar para Pendente, limpa TUDO (incluindo o cobrado)
+        # Se voltar para Pendente, limpa TUDO (incluindo o cobrado)
         if self.status == 'PENDENTE':
             self.data_entrega = None
             self.valor_calculado = None

@@ -153,7 +153,11 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     @admin.display(ordering='nome', description='Nome')
     def get_nome_status(self, obj):
-        if not obj.cpf or not obj.telefone:
+        # Validação Nova: Precisa de (CPF ou RG) E (Telefone ou Email)
+        tem_documento = obj.cpf or obj.rg
+        tem_contato = obj.telefone or obj.email
+        
+        if not tem_documento or not tem_contato:
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', obj.nome)
         return obj.nome
 
@@ -232,7 +236,12 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     @admin.display(ordering='cliente__nome', description='Cliente')
     def get_cliente_nome(self, obj):
         cliente = obj.cliente
-        if not cliente.cpf or not cliente.telefone:
+        
+        # Validação Nova: Precisa de (CPF ou RG) E (Telefone ou Email)
+        tem_documento = cliente.cpf or cliente.rg
+        tem_contato = cliente.telefone or cliente.email
+
+        if not tem_documento or not tem_contato:
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', cliente.nome)
         return self._get_colored_text(obj, cliente.nome)
 

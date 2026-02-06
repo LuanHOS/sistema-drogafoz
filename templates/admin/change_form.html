@@ -1,48 +1,100 @@
-{% extends "admin/change_form.html" %}
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
 
-{# 1. Botão Voltar no Topo Esquerdo #}
-{# (Só mostramos se NÃO for popup) #}
-{% block breadcrumbs %}
-    {% if not is_popup %}
-    <div class="btn-voltar-container">
-        <a href="{% if add %}../{% else %}../../{% endif %}" class="btn-voltar-topo">← Voltar para a Lista</a>
-    </div>
-    {% endif %}
+{% block extrahead %}
+    {{ block.super }}
+    <script src="{% url 'admin:jsi18n' %}"></script>
+    {{ media }}
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Procura pelo checkbox de "descartado" (o ID padrão do Django é id_nomedocampo)
+            const checkboxDescarte = document.getElementById("id_descartado");
+            
+            if (checkboxDescarte) {
+                checkboxDescarte.addEventListener('click', function(e) {
+                    // Se o usuário estiver tentando MARCAR (check)
+                    if (this.checked) {
+                        // Mostra o pop-up de confirmação
+                        const confirmacao = confirm("ATENÇÃO: Tem certeza que deseja marcar esta encomenda como descartada?\n\nEla desaparecerá das listas principais e só poderá ser vista no filtro 'Lixeira'.");
+                        
+                        // Se o usuário clicar em "Cancelar", impede a marcação
+                        if (!confirmacao) {
+                            e.preventDefault();
+                            this.checked = false;
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %}
 
 {% block extrastyle %}
     {{ block.super }}
-    <style>
-        /* Esconde botões extras indesejados */
-        input[name="_addanother"], input[name="_continue"] { display: none !important; }
-    </style>
+    <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
 {% endblock %}
 
-{# 2. Cria o botão Cancelar (inteligente: fecha popup ou volta pra lista correta) #}
-{% block submit_buttons_bottom %}
-    {{ block.super }}
-    <div class="submit-row-extras" style="display:none;">
-        {% if is_popup %}
-            <a href="#" onclick="window.close(); return false;" class="btn-cancel">Cancelar</a>
-        {% else %}
-            <a href="{% if add %}../{% else %}../../{% endif %}" class="btn-cancel">Cancelar</a>
-        {% endif %}
-    </div>
+{% block coltype %}colM{% endblock %}
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const submitRow = document.querySelector('.submit-row');
-            const cancelContainer = document.querySelector('.submit-row-extras');
-            
-            if (submitRow && cancelContainer) {
-                const cancelBtn = cancelContainer.querySelector('a');
-                if (cancelBtn) {
-                    // Move o botão Cancelar para dentro da barra principal
-                    submitRow.appendChild(cancelBtn);
-                    // Mostra o botão (tira o display:none do CSS original)
-                    cancelBtn.style.display = 'inline-block';
-                }
-            }
-        });
-    </script>
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    {% block object-tools %}
+    {% if change %}{% if not is_popup %}
+      <ul class="object-tools">
+        {% block object-tools-items %}
+          {% change_form_object_tools %}
+        {% endblock %}
+      </ul>
+    {% endif %}{% endif %}
+    {% endblock %}
+    
+    <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}{% if form_url %}action="{{ form_url }}" {% endif %}method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
+        <div>
+        {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+        {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+        {% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
+        
+        {% if errors %}
+            <p class="errornote">
+            {% if errors|length == 1 %}{% translate "Please correct the error below." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
+            </p>
+            {{ adminform.form.non_field_errors }}
+        {% endif %}
+
+        {% block field_sets %}
+        {% for fieldset in adminform %}
+          {% include "admin/includes/fieldset.html" %}
+        {% endfor %}
+        {% endblock %}
+
+        {% block after_field_sets %}{% endblock %}
+
+        {% block inline_field_sets %}
+        {% for inline_admin_formset in inline_admin_formsets %}
+            {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+        {% endblock %}
+
+        {% block after_related_objects %}{% endblock %}
+
+        {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+
+        {% block admin_change_form_document_ready %}
+            <script id="django-admin-form-add-constants" src="{% static 'admin/js/change_form.js' %}"
+                {% if adminform and add %}
+                    data-model-name="{{ opts.model_name }}"
+                {% endif %}
+                async>
+            </script>
+        {% endblock %}
+
+        {# JavaScript for prepopulated fields #}
+        {% prepopulated_fields_js %}
+
+        </div>
+    </form>
+</div>
 {% endblock %}

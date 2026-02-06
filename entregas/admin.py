@@ -128,21 +128,57 @@ class StatusFilter(admin.SimpleListFilter):
     parameter_name = 'status'
 
     def lookups(self, request, model_admin):
-        return (('PENDENTE', 'Aguardando Retirada'), ('ENTREGUE', 'Entregue ao Cliente'), ('TODOS', 'Todas'))
+        # Adicionei a opção de LIXEIRA
+        return (
+            ('PENDENTE', 'Aguardando Retirada'), 
+            ('ENTREGUE', 'Entregue ao Cliente'), 
+            ('TODOS', 'Todas (Ativas)'),
+            ('LIXEIRA', 'Lixeira / Descartados')
+        )
 
     def choices(self, changelist):
-        total_pendente = Encomenda.objects.filter(status='PENDENTE').count()
-        total_entregue = Encomenda.objects.filter(status='ENTREGUE').count()
-        total_geral = Encomenda.objects.count()
+        # Contadores agora consideram apenas não-descartados para os status normais
+        total_pendente = Encomenda.objects.filter(status='PENDENTE', descartado=False).count()
+        total_entregue = Encomenda.objects.filter(status='ENTREGUE', descartado=False).count()
+        total_geral = Encomenda.objects.filter(descartado=False).count()
+        total_lixeira = Encomenda.objects.filter(descartado=True).count()
+        
         value = self.value()
-        yield {'selected': value is None or value == 'PENDENTE', 'query_string': changelist.get_query_string({'status': 'PENDENTE'}, []), 'display': f'Aguardando Retirada ({total_pendente})'}
-        yield {'selected': value == 'ENTREGUE', 'query_string': changelist.get_query_string({'status': 'ENTREGUE'}, []), 'display': f'Entregue ao Cliente ({total_entregue})'}
-        yield {'selected': value == 'TODOS', 'query_string': changelist.get_query_string({'status': 'TODOS'}, []), 'display': f'Todas ({total_geral})'}
+        
+        yield {
+            'selected': value is None or value == 'PENDENTE', 
+            'query_string': changelist.get_query_string({'status': 'PENDENTE'}, []), 
+            'display': f'Aguardando Retirada ({total_pendente})'
+        }
+        yield {
+            'selected': value == 'ENTREGUE', 
+            'query_string': changelist.get_query_string({'status': 'ENTREGUE'}, []), 
+            'display': f'Entregue ao Cliente ({total_entregue})'
+        }
+        yield {
+            'selected': value == 'TODOS', 
+            'query_string': changelist.get_query_string({'status': 'TODOS'}, []), 
+            'display': f'Todas ({total_geral})'
+        }
+        yield {
+            'selected': value == 'LIXEIRA', 
+            'query_string': changelist.get_query_string({'status': 'LIXEIRA'}, []), 
+            'display': f'Itens Descartados ({total_lixeira})'
+        }
 
     def queryset(self, request, queryset):
-        if self.value() == 'ENTREGUE': return queryset.filter(status='ENTREGUE')
-        if self.value() == 'TODOS': return queryset
-        return queryset.filter(status='PENDENTE')
+        # Lógica de filtro alterada para respeitar o campo 'descartado'
+        if self.value() == 'LIXEIRA':
+            return queryset.filter(descartado=True)
+            
+        if self.value() == 'ENTREGUE': 
+            return queryset.filter(status='ENTREGUE', descartado=False)
+        
+        if self.value() == 'TODOS': 
+            return queryset.filter(descartado=False)
+            
+        # Padrão: Pendentes e não descartadas
+        return queryset.filter(status='PENDENTE', descartado=False)
 
 @admin.register(Cliente)
 class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
@@ -177,10 +213,11 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
+    # LIST DISPLAY: Adicionei observacao e removi valor_calculado
     list_display = (
-        'get_cliente_nome', 'get_descricao_fmt', 'get_status_fmt', 
+        'get_cliente_nome', 'get_descricao_fmt', 'observacao', 'get_status_fmt', 
         'get_data_chegada_fmt', 'get_data_saida_fmt', 
-        'get_valor_base_custom', 'get_valor_calculado_custom', 'get_valor_cobrado_custom'
+        'get_valor_base_custom', 'get_valor_cobrado_custom'
     )
     
     list_filter = (StatusFilter,) 
@@ -189,7 +226,28 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     actions = [marcar_entregue]
     
     readonly_fields = ('valor_calculado',)
-    fields = ('cliente', 'descricao', 'status', 'data_chegada', 'data_entrega', 'valor_base', 'valor_calculado', 'valor_cobrado')
+    
+    # FIELDSETS: Organização visual do formulário com botão de descarte isolado
+    fieldsets = (
+        ('Dados da Encomenda', {
+            'fields': (
+                'cliente', 
+                'descricao', 
+                'observacao', 
+                'status', 
+                'data_chegada', 
+                'data_entrega', 
+                'valor_base', 
+                'valor_calculado', 
+                'valor_cobrado'
+            )
+        }),
+        ('Área de Controle (Zona de Perigo)', {
+            'classes': ('collapse',), # Opcional: faz a seção ser "retrátil" se quiser, mas deixei visível
+            'fields': ('descartado',),
+            'description': '<span style="color: red; font-weight: bold;">Cuidado:</span> Encomendas descartadas somem da lista principal.'
+        }),
+    )
 
     def _get_colored_text(self, obj, text):
         if obj.status == 'PENDENTE':

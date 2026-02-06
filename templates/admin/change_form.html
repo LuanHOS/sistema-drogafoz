@@ -8,17 +8,11 @@
     
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Procura pelo checkbox de "descartado" (o ID padrão do Django é id_nomedocampo)
             const checkboxDescarte = document.getElementById("id_descartado");
-            
             if (checkboxDescarte) {
                 checkboxDescarte.addEventListener('click', function(e) {
-                    // Se o usuário estiver tentando MARCAR (check)
                     if (this.checked) {
-                        // Mostra o pop-up de confirmação
                         const confirmacao = confirm("ATENÇÃO: Tem certeza que deseja marcar esta encomenda como descartada?\n\nEla desaparecerá das listas principais e só poderá ser vista no filtro 'Lixeira'.");
-                        
-                        // Se o usuário clicar em "Cancelar", impede a marcação
                         if (!confirmacao) {
                             e.preventDefault();
                             this.checked = false;
@@ -33,6 +27,46 @@
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+    
+    <style>
+        /* Botão Voltar no Topo */
+        .btn-voltar-topo {
+            display: inline-flex; align-items: center; 
+            background: #6c757d; color: white; padding: 10px 20px; 
+            border-radius: 5px; text-decoration: none; font-weight: bold; 
+            margin-bottom: 20px; font-size: 13px; text-transform: uppercase;
+        }
+        .btn-voltar-topo:hover { background: #5a6268; color: white; }
+
+        /* Barra de Botões Inferior Personalizada */
+        .custom-submit-row {
+            padding: 12px 14px; margin: 0 0 20px; background: #f8f9fa;
+            border: 1px solid #e9ecef; border-radius: 5px; text-align: right;
+            overflow: hidden; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* Grupo da Direita (Salvar + Cancelar) */
+        .submit-right-group { display: flex; gap: 10px; align-items: center; }
+
+        /* Botão Cancelar */
+        .btn-cancelar {
+            background: #dc3545; color: white; height: 35px; line-height: 35px;
+            padding: 0 15px; border-radius: 4px; text-transform: uppercase;
+            font-size: 11px; font-weight: bold; letter-spacing: 0.5px;
+            text-decoration: none; border: none; cursor: pointer; display: inline-block;
+        }
+        .btn-cancelar:hover { background: #c82333; color: white; }
+
+        /* Botão Apagar (Esquerda) */
+        .btn-apagar {
+            background: transparent; color: #bd2130; font-weight: bold;
+            text-decoration: none; padding: 10px; font-size: 13px;
+        }
+        .btn-apagar:hover { text-decoration: underline; color: #a71d2a; }
+
+        /* Ajuste para inputs do Django ficarem alinhados */
+        .custom-submit-row input { margin: 0 !important; height: 35px; }
+    </style>
 {% endblock %}
 
 {% block coltype %}colM{% endblock %}
@@ -41,6 +75,11 @@
 
 {% block content %}
 <div id="content-main">
+    
+    <div>
+        <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-voltar-topo">← Voltar</a>
+    </div>
+
     {% block object-tools %}
     {% if change %}{% if not is_popup %}
       <ul class="object-tools">
@@ -80,7 +119,25 @@
 
         {% block after_related_objects %}{% endblock %}
 
-        {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+        {% block submit_buttons_bottom %}
+        <div class="custom-submit-row">
+            
+            <div class="submit-left">
+                {% if change and has_delete_permission %}
+                    {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
+                    <a href="{% add_preserved_filters delete_url %}" class="btn-apagar">Apagar {{ opts.verbose_name }}</a>
+                {% endif %}
+            </div>
+
+            <div class="submit-right-group">
+                <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-cancelar">Cancelar</a>
+                
+                {% if show_save_and_add_another %}<input type="submit" value="{% translate 'Save and add another' %}" name="_addanother">{% endif %}
+                {% if show_save_and_continue %}<input type="submit" value="{% translate 'Save and continue editing' %}" name="_continue">{% endif %}
+                <input type="submit" value="{% translate 'Save' %}" class="default" name="_save">
+            </div>
+        </div>
+        {% endblock %}
 
         {% block admin_change_form_document_ready %}
             <script id="django-admin-form-add-constants" src="{% static 'admin/js/change_form.js' %}"

@@ -33,19 +33,21 @@
            BOTÃO VOLTAR (TOPO) 
            ======================== */
         .btn-voltar-container {
-            margin-bottom: 20px;
+            margin-bottom: 25px; /* Espaço para separar do título */
+            display: block;
         }
         .btn-voltar-topo {
             display: inline-flex; 
             align-items: center; 
             background: #6c757d; /* Cinza */
             color: white !important; 
-            padding: 10px 20px; 
-            border-radius: 5px; 
+            padding: 8px 20px; 
+            border-radius: 4px; 
             text-decoration: none; 
             font-weight: bold; 
-            font-size: 14px; 
+            font-size: 13px; 
             text-transform: uppercase;
+            letter-spacing: 0.5px;
             transition: background 0.2s;
         }
         .btn-voltar-topo:hover { 
@@ -57,95 +59,73 @@
            BARRA DE AÇÕES (INFERIOR)
            ======================== */
         .submit-row {
-            padding: 12px 14px; 
-            margin: 0 0 20px; 
+            padding: 15px 20px; 
+            margin: 20px 0; 
             background: #f8f9fa; 
             border: 1px solid #e9ecef; 
             border-radius: 5px; 
             display: flex; 
-            justify-content: space-between; /* Apagar na esq, Salvar/Cancelar na dir */
+            justify-content: space-between; 
             align-items: center;
         }
 
-        /* GRUPO DIREITA (Salvar + Cancelar) */
-        .submit-row-right {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        /* BOTÃO CANCELAR (CINZA) */
-        .btn-cancelar {
-            background-color: #6c757d !important; 
-            color: white !important;
-            padding: 10px 20px;
+        /* CLASSE COMUM PARA TODOS OS BOTÕES INFERIORES
+           Garante que todos tenham exatamente a mesma geometria */
+        .btn-admin-action {
+            height: 40px;               /* Altura fixa igual para todos */
+            padding: 0 25px;            /* Largura interna igual */
             border-radius: 4px;
             text-transform: uppercase;
             font-weight: bold;
             font-size: 13px;
-            text-decoration: none;
             border: none;
-            height: 35px;
-            line-height: 15px; /* Ajuste para centralizar texto no link */
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            text-decoration: none;
             transition: background 0.3s;
+            box-sizing: border-box;
+            min-width: 120px;           /* Largura mínima para uniformidade */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1;             /* Garante alinhamento vertical do texto */
+        }
+
+        /* Cores Específicas */
+
+        /* 1. APAGAR (Vermelho) - Estilizando o link .deletelink do Django */
+        a.deletelink {
+            background-color: #C51625 !important; 
+            color: white !important;
+        }
+        a.deletelink:hover {
+            background-color: #a71d2a !important;
+        }
+
+        /* 2. CANCELAR (Cinza) */
+        .btn-cancelar {
+            background-color: #6c757d !important; 
+            color: white !important;
+            margin-right: 10px; /* Espaço entre Cancelar e Salvar */
         }
         .btn-cancelar:hover {
             background-color: #5a6268 !important;
         }
 
-        /* BOTÃO SALVAR (VERDE) */
+        /* 3. SALVAR (Verde) */
         .submit-row input[type=submit].default {
             background-color: #28a745 !important; 
             color: white !important;
-            border: none;
-            text-transform: uppercase;
-            font-weight: bold;
-            padding: 10px 30px;
-            border-radius: 4px;
-            height: 35px;
-            cursor: pointer;
-            transition: background 0.3s;
         }
         .submit-row input[type=submit].default:hover {
             background-color: #218838 !important;
         }
         
-        /* Outros botões de salvar (Save and add another, etc) */
+        /* Botões secundários de salvar (Save and add another, etc) */
         .submit-row input[type=submit]:not(.default) {
-            background: #17a2b8;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            text-transform: uppercase;
-            font-weight: bold;
-            height: 35px;
-            padding: 0 15px;
-        }
-
-        /* BOTÃO APAGAR (VERMELHO COM TEXTO BRANCO) */
-        /* O Django gera um link com class="deletelink", vamos estilizá-lo */
-        a.deletelink {
-            background-color: #C51625 !important; 
+            background: #17a2b8 !important;
             color: white !important;
-            padding: 10px 20px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            font-weight: bold;
-            font-size: 13px;
-            text-decoration: none;
-            height: 35px;
-            line-height: 15px; 
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.3s;
-        }
-        a.deletelink:hover {
-            background-color: #a71d2a !important;
+            margin-right: 10px;
         }
     </style>
 {% endblock %}
@@ -157,7 +137,7 @@
 {% block content %}
 
 <div class="btn-voltar-container">
-    <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-voltar-topo">← Voltar</a>
+    <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-voltar-topo">← Voltar para a lista</a>
 </div>
 
 <div id="content-main">
@@ -206,16 +186,22 @@
             <div class="submit-left">
                 {% if change and has_delete_permission %}
                     {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
-                    <a href="{% add_preserved_filters delete_url %}" class="deletelink">Apagar {{ opts.verbose_name }}</a>
+                    <a href="{% add_preserved_filters delete_url %}" class="btn-admin-action deletelink">Apagar {{ opts.verbose_name }}</a>
                 {% endif %}
             </div>
 
             <div class="submit-row-right">
-                <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-cancelar">Cancelar</a>
+                <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-admin-action btn-cancelar">Cancelar</a>
                 
-                {% if show_save_and_add_another %}<input type="submit" value="{% translate 'Save and add another' %}" name="_addanother">{% endif %}
-                {% if show_save_and_continue %}<input type="submit" value="{% translate 'Save and continue editing' %}" name="_continue">{% endif %}
-                <input type="submit" value="{% translate 'Save' %}" class="default" name="_save">
+                {% if show_save_and_add_another %}
+                    <input type="submit" value="{% translate 'Save and add another' %}" name="_addanother" class="btn-admin-action">
+                {% endif %}
+                
+                {% if show_save_and_continue %}
+                    <input type="submit" value="{% translate 'Save and continue editing' %}" name="_continue" class="btn-admin-action">
+                {% endif %}
+                
+                <input type="submit" value="{% translate 'Save' %}" class="default btn-admin-action" name="_save">
             </div>
         </div>
         {% endblock %}

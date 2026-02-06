@@ -35,9 +35,9 @@
         .btn-voltar-container {
             margin-bottom: 25px; 
             margin-top: 0;
-            margin-left: 0 !important; /* Força alinhamento à esquerda */
-            padding-left: 0 !important; /* Remove qualquer padding do container */
-            display: flex;             /* Garante que o container ocupe o espaço correto */
+            margin-left: 0 !important;
+            padding-left: 0 !important;
+            display: flex;
             justify-content: flex-start;
             width: 100%;
         }
@@ -47,9 +47,9 @@
             justify-content: center;
             background: #6c757d; /* Cinza */
             color: white !important; 
-            padding: 0 20px;         /* Padding lateral apenas */
-            height: 35px;            /* Altura fixa */
-            line-height: 35px;       /* Centralização vertical */
+            padding: 0 20px;
+            height: 35px;
+            line-height: 1; /* Garante centralização vertical exata */
             border-radius: 4px; 
             text-decoration: none; 
             font-weight: bold; 
@@ -78,10 +78,16 @@
             align-items: center;
         }
 
-        /* CLASSE COMUM PARA TODOS OS BOTÕES (LINKS E INPUTS)
-           Normalização agressiva para garantir identidade visual */
+        /* Container flexível para os botões da direita (Alinhamento perfeito) */
+        .submit-row-right {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Espaçamento uniforme entre os botões */
+        }
+
+        /* CLASSE COMUM PARA TODOS OS BOTÕES (LINKS E INPUTS) */
         .btn-admin-action {
-            -webkit-appearance: none;   /* Remove estilo nativo do OS */
+            -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
             
@@ -90,25 +96,26 @@
             justify-content: center;
             
             height: 40px !important;    /* Altura idêntica */
-            padding: 0 25px !important; /* Largura interna idêntica */
-            min-width: 120px;           /* Largura mínima garantida */
+            padding: 0 25px !important;
+            min-width: 120px;
             box-sizing: border-box;
             
-            border: none;
+            /* Borda transparente para igualar o box-model de inputs e links */
+            border: 1px solid transparent !important;
             border-radius: 4px;
             
             /* Tipografia EXATA */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-            font-size: 12px !important; /* Reduzi levemente para 12px para garantir nitidez igual */
-            font-weight: 700 !important; /* Bold */
+            font-size: 13px !important; /* Fonte ajustada para legibilidade */
+            font-weight: 700 !important;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             text-decoration: none;
-            line-height: 1 !important; /* Zera line-height para o flexbox alinhar */
+            line-height: 1 !important;
             
             cursor: pointer;
             transition: background 0.3s;
-            margin: 0;
+            margin: 0 !important; /* Removemos margens pois usamos gap no container */
         }
 
         /* Cores Específicas */
@@ -126,7 +133,6 @@
         .btn-cancelar {
             background-color: #6c757d !important; 
             color: white !important;
-            margin-right: 10px; 
         }
         .btn-cancelar:hover {
             background-color: #5a6268 !important;
@@ -145,7 +151,6 @@
         .submit-row input[type=submit]:not(.default) {
             background: #17a2b8 !important;
             color: white !important;
-            margin-right: 10px;
         }
     </style>
 {% endblock %}
@@ -154,11 +159,17 @@
 
 {% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
 
+{# --- ALTERAÇÃO: Bloco adicionado para colocar o botão acima do título --- #}
+{% block content_title %}
+    <div class="btn-voltar-container">
+        <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-voltar-topo">← Voltar para a lista</a>
+    </div>
+    {{ block.super }}
+{% endblock %}
+
 {% block content %}
 
-<div class="btn-voltar-container">
-    <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-voltar-topo">← Voltar para a lista</a>
-</div>
+{# --- ALTERAÇÃO: Botão removido daqui de dentro --- #}
 
 <div id="content-main">
     {% block object-tools %}

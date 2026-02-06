@@ -35,29 +35,34 @@
         .btn-voltar-container {
             margin-bottom: 25px; 
             margin-top: 0;
-            margin-left: 0 !important; /* Força alinhamento à esquerda */
-            padding-left: 0 !important; /* Remove qualquer padding do container */
-            display: flex;             /* Garante que o container ocupe o espaço correto */
+            padding: 0;
+            display: flex;
             justify-content: flex-start;
-            width: 100%;
+            /* Remove margens padrão que possam estar empurrando */
+            margin-left: 0 !important;
         }
+        
         .btn-voltar-topo {
-            display: inline-flex; 
+            /* Flexbox para centralizar texto perfeitamente */
+            display: flex; 
             align-items: center; 
             justify-content: center;
-            background: #6c757d; /* Cinza */
+            
+            background: #6c757d; 
             color: white !important; 
-            padding: 0 20px;         /* Padding lateral apenas */
-            height: 35px;            /* Altura fixa */
-            line-height: 35px;       /* Centralização vertical */
+            
+            height: 35px;            
+            padding: 0 20px;         
             border-radius: 4px; 
+            
             text-decoration: none; 
-            font-weight: bold; 
-            font-size: 13px; 
+            font-weight: 700; 
+            font-size: 12px;         
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            font-family: Roboto, "Segoe UI", sans-serif; /* Mesma fonte do sistema */
+            
             transition: background 0.2s;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         .btn-voltar-topo:hover { 
             background: #5a6268; 
@@ -78,33 +83,36 @@
             align-items: center;
         }
 
-        /* CLASSE COMUM PARA TODOS OS BOTÕES (LINKS E INPUTS)
-           Normalização agressiva para garantir identidade visual */
+        /* CLASSE COMUM "FORCE" PARA TODOS OS BOTÕES 
+           Garante identidade visual entre <a> e <input> */
         .btn-admin-action {
-            -webkit-appearance: none;   /* Remove estilo nativo do OS */
+            /* Reseta estilos nativos do navegador */
+            -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            
-            height: 40px !important;    /* Altura idêntica */
-            padding: 0 25px !important; /* Largura interna idêntica */
-            min-width: 120px;           /* Largura mínima garantida */
-            box-sizing: border-box;
-            
             border: none;
+            background: none;
+            
+            /* Layout Flexbox Rígido */
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            
+            /* Dimensões Fixas */
+            height: 40px !important;
+            padding: 0 25px !important;
+            min-width: 120px;
+            box-sizing: border-box;
             border-radius: 4px;
             
-            /* Tipografia EXATA */
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-            font-size: 12px !important; /* Reduzi levemente para 12px para garantir nitidez igual */
-            font-weight: 700 !important; /* Bold */
+            /* Tipografia Exata */
+            font-family: Roboto, "Segoe UI", sans-serif !important;
+            font-size: 12px !important; /* Tamanho fixo e igual para todos */
+            font-weight: 700 !important;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            text-decoration: none;
-            line-height: 1 !important; /* Zera line-height para o flexbox alinhar */
+            line-height: 1 !important; /* Remove entrelinha extra */
+            text-decoration: none !important;
             
             cursor: pointer;
             transition: background 0.3s;
@@ -126,26 +134,30 @@
         .btn-cancelar {
             background-color: #6c757d !important; 
             color: white !important;
-            margin-right: 10px; 
+            margin-right: 10px !important; 
         }
         .btn-cancelar:hover {
             background-color: #5a6268 !important;
         }
 
         /* 3. SALVAR (Verde) */
-        .submit-row input[type=submit].default {
+        /* Seletores específicos para input[type=submit] para vencer o CSS do Django Admin */
+        .submit-row input[type=submit].default,
+        input[type=submit].default.btn-admin-action {
             background-color: #28a745 !important; 
             color: white !important;
         }
-        .submit-row input[type=submit].default:hover {
+        .submit-row input[type=submit].default:hover,
+        input[type=submit].default.btn-admin-action:hover {
             background-color: #218838 !important;
         }
         
         /* Botões secundários de salvar */
-        .submit-row input[type=submit]:not(.default) {
+        .submit-row input[type=submit]:not(.default),
+        input[type=submit]:not(.default).btn-admin-action {
             background: #17a2b8 !important;
             color: white !important;
-            margin-right: 10px;
+            margin-right: 10px !important;
         }
     </style>
 {% endblock %}

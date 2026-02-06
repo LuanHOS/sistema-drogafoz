@@ -61,7 +61,7 @@ def marcar_entregue(modeladmin, request, queryset):
             input_name = f'valor_{encomenda.id}'
             novo_valor_cobrado = request.POST.get(input_name)
 
-            # ALTERAÇÃO AQUI: Verifica se o campo existe (não é None). 
+            # Verifica se o campo existe (não é None). 
             # Se for string vazia, assume '0'.
             if novo_valor_cobrado is not None:
                 if novo_valor_cobrado.strip() == '':
@@ -305,11 +305,19 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
+        
+        # Configuração dos widgets do Cliente
         field = form.base_fields['cliente']
         field.widget.can_add_related = True      
         field.widget.can_change_related = True   
         field.widget.can_view_related = False    
         field.widget.can_delete_related = False  
+
+        # --- ALTERAÇÃO AQUI: Preencher Data de Chegada Automaticamente ---
+        # Se obj for None, significa que estamos criando uma nova encomenda.
+        if obj is None:
+            form.base_fields['data_chegada'].initial = timezone.now()
+            
         return form
 
     def get_urls(self):

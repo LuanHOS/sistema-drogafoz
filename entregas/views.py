@@ -45,14 +45,17 @@ def relatorio_entregas(request):
         
         periodo_label = f"{dt_inicial.strftime('%d/%m/%Y')} até {dt_final.strftime('%d/%m/%Y')}"
 
-    # Cálculos Financeiros
+    # --- CÁLCULOS FINANCEIROS (CORRIGIDO) ---
     faturamento_real = encomendas_entregues.aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
-    faturamento_ideal = encomendas_entregues.aggregate(Sum('valor_calculado'))['valor_calculado__sum'] or 0
     
-    if faturamento_ideal < faturamento_real:
-        faturamento_ideal = faturamento_real
-        
-    descontos_dados = faturamento_ideal - faturamento_real
+    # Lógica de Desconto Corrigida:
+    # Soma individualmente a diferença (Calculado - Cobrado) apenas quando houve desconto.
+    # Isso impede que encomendas com lucro (cobrado a mais) anulem os descontos na soma total.
+    descontos_dados = encomendas_entregues.filter(
+        valor_calculado__gt=F('valor_cobrado')
+    ).aggregate(
+        total_desconto=Sum(F('valor_calculado') - F('valor_cobrado'))
+    )['total_desconto'] or 0
     
     qtd_entregues = encomendas_entregues.count() 
     qtd_chegadas = encomendas_chegadas.count()   

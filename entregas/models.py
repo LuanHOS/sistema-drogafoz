@@ -116,3 +116,6 @@ class Encomenda(models.Model):
         ordering = ['cliente__nome']
         verbose_name = 'Encomenda'
         verbose_name_plural = 'Encomendas'
+        # Proteção contra duplicidade exata:
+        # Não permite criar outra encomenda com mesmo cliente, descrição e data exata (segundos)
+        unique_together = ('cliente', 'descricao', 'data_chegada')

@@ -22,24 +22,19 @@
                 });
             }
 
-            // 2. Proteção Contra Duplo Clique (ADICIONADO)
-            // Aplica o efeito visual e trava o formulário ao enviar
+            // 2. Proteção Contra Duplo Clique (MANTIDO ORIGINAL)
             const form = document.getElementById("{{ opts.model_name }}_form");
             if (form) {
                 form.addEventListener("submit", function(e) {
-                    // Seleciona todos os botões de submit da barra inferior
                     const submitButtons = form.querySelectorAll('.submit-row input[type="submit"]');
                     
-                    // Se já estiver enviando, bloqueia tudo
                     if (form.dataset.submitting === "true") {
                         e.preventDefault();
                         return false;
                     }
                     
-                    // Marca o form como enviando
                     form.dataset.submitting = "true";
                     
-                    // Altera visualmente os botões
                     submitButtons.forEach(btn => {
                         btn.style.opacity = "0.6";
                         btn.style.cursor = "wait";
@@ -76,7 +71,7 @@
             color: white !important; 
             padding: 0 20px;
             height: 35px;
-            line-height: 1; /* Garante centralização vertical exata */
+            line-height: 1; 
             border-radius: 4px; 
             text-decoration: none; 
             font-weight: bold; 
@@ -105,14 +100,14 @@
             align-items: center;
         }
 
-        /* Container flexível para os botões da direita (Alinhamento perfeito) */
+        /* Container flexível para os botões da direita */
         .submit-row-right {
             display: flex;
             align-items: center;
-            gap: 10px; /* Espaçamento uniforme entre os botões */
+            gap: 10px; 
         }
 
-        /* CLASSE COMUM PARA TODOS OS BOTÕES (LINKS E INPUTS) */
+        /* CLASSE COMUM PARA TODOS OS BOTÕES */
         .btn-admin-action {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -122,18 +117,16 @@
             align-items: center;
             justify-content: center;
             
-            height: 40px !important;    /* Altura idêntica */
+            height: 40px !important;    
             padding: 0 25px !important;
             min-width: 120px;
             box-sizing: border-box;
             
-            /* Borda transparente para igualar o box-model de inputs e links */
             border: 1px solid transparent !important;
             border-radius: 4px;
             
-            /* Tipografia EXATA */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-            font-size: 13px !important; /* Fonte ajustada para legibilidade */
+            font-size: 13px !important; 
             font-weight: 700 !important;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -142,7 +135,7 @@
             
             cursor: pointer;
             transition: background 0.3s;
-            margin: 0 !important; /* Removemos margens pois usamos gap no container */
+            margin: 0 !important; 
         }
 
         /* Cores Específicas */
@@ -242,9 +235,11 @@
         <div class="submit-row">
             
             <div class="submit-left">
-                {% if change and has_delete_permission %}
-                    {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
-                    <a href="{% add_preserved_filters delete_url %}" class="btn-admin-action deletelink">Apagar {{ opts.verbose_name }}</a>
+                {% if not is_popup %}
+                    {% if change and has_delete_permission %}
+                        {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
+                        <a href="{% add_preserved_filters delete_url %}" class="btn-admin-action deletelink">Apagar {{ opts.verbose_name }}</a>
+                    {% endif %}
                 {% endif %}
             </div>
 

@@ -71,6 +71,10 @@
                                title="Editar Cliente">
                                 {{ grupo.cliente.nome }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
                             </a>
+
+                            <span style="font-size: 13px; font-weight: normal; margin-left: 10px; color: rgba(255,255,255,0.8); border-left: 1px solid rgba(255,255,255,0.3); padding-left: 10px;">
+                                {{ grupo.itens|length }} encomenda(s)
+                            </span>
                         </div>
                         
                         <div style="display: flex; gap: 5px;">
@@ -134,7 +138,7 @@
                     </ul>
 
                     <div class="cliente-total">
-                        <span>Total a Receber:</span>
+                        <span>Total ({{ grupo.itens|length }} itens):</span>
                         <strong id="total-display-{{ grupo.cliente.id }}">R$ {{ grupo.total_sugerido|floatformat:2 }}</strong>
                     </div>
                 </div>
@@ -142,7 +146,7 @@
         </div>
 
         <div class="total-geral-bar">
-            <span>TOTAL GERAL DA ENTREGA:</span>
+            <span>TOTAL GERAL ({{ encomendas.count }} itens):</span>
             <span id="display-total-geral">R$ 0,00</span>
         </div>
 
@@ -234,15 +238,12 @@
 </div>
 
 <script>
-    // --- 2. CORREÇÃO DO POPUP (Função callback do Django) ---
-    // Esta função é chamada pelo popup quando o usuário clica em "Salvar" lá dentro.
+    // --- FUNÇÃO POPUP ---
     window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
         win.close();
-        // Recarrega a página para mostrar as alterações (ex: nome, cpf) que acabaram de ser salvas
         location.reload(); 
     };
 
-    // --- FUNÇÃO POPUP ---
     function abrirPopupCliente(url) {
         const w = 900;
         const h = 700;

@@ -272,6 +272,25 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         }),
     )
 
+    # --- CONFIGURAÇÃO ESPECIAL DA LISTA (PÁGINAS E BOTÃO MOSTRAR TUDO) ---
+    def get_changelist(self, request, **kwargs):
+        from django.contrib.admin.views.main import ChangeList
+        
+        class EncomendaChangeList(ChangeList):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                # LÓGICA DO BOTÃO "MOSTRAR TUDO":
+                # Se o filtro 'status' for 'PENDENTE' (Aguardando Retirada) OU não tiver filtro (None, que é o padrão PENDENTE),
+                # aumenta o limite para 10.000 para que o botão "Mostrar tudo" apareça.
+                # Se for 'ENTREGUE' ou outro status, mantém o limite de segurança padrão (200) para não travar o banco.
+                status = request.GET.get('status')
+                if status == 'PENDENTE' or status is None:
+                    self.list_max_show_all = 10000
+                else:
+                    self.list_max_show_all = 200
+                    
+        return EncomendaChangeList
+
     def _get_colored_text(self, obj, text):
         if obj.status == 'PENDENTE':
             dias = (timezone.now() - obj.data_chegada).days

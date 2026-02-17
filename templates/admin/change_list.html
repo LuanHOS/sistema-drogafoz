@@ -16,67 +16,37 @@
         min-width: 110px !important;
     }
 
-    /* 2. CORREÇÃO DO FUNDO AMARELO (REFORÇADO) */
-    /* Remove a cor amarela padrão do Django quando uma linha está selecionada */
+    /* 2. CORREÇÃO DO FUNDO AMARELO */
+    /* Garante que mesmo que o CSS do Django tente aplicar, nós forçamos a cor padrão */
+    tr.forced-clean { background-color: white !important; }
+    tr.forced-clean:hover { background-color: #f8f9fa !important; }
+    
+    /* Remove a cor amarela padrão de selecionado */
     #changelist-form .results table tbody tr.selected {
         background-color: inherit !important;
         color: inherit !important;
     }
-    /* Mantém o hover cinza claro padrão para não perder usabilidade */
+    /* Mantém o hover cinza claro padrão */
     #changelist-form .results table tbody tr:hover {
         background-color: #f8f9fa !important;
     }
 
     /* 3. BOTÃO VOLTAR */
-    .btn-voltar-container {
-        margin-bottom: 20px;
-    }
-    
-    .btn-voltar-topo {
-        text-decoration: none;
-        color: #666;
-        font-weight: bold;
-        font-size: 13px;
-        text-transform: uppercase;
-    }
-    .btn-voltar-topo:hover {
-        color: #333;
-    }
+    .btn-voltar-container { margin-bottom: 20px; }
+    .btn-voltar-topo { text-decoration: none; color: #666; font-weight: bold; font-size: 13px; text-transform: uppercase; }
+    .btn-voltar-topo:hover { color: #333; }
 
     /* 4. CONTADOR E BOTÃO LIMPAR (X) */
     .selection-counter-container {
-        margin-left: 10px;
-        display: inline-flex;
-        align-items: center;
-        background-color: #e9ecef;
-        padding: 2px 8px;
-        border-radius: 12px;
-        border: 1px solid #ced4da;
+        margin-left: 10px; display: inline-flex; align-items: center;
+        background-color: #e9ecef; padding: 2px 8px; border-radius: 12px; border: 1px solid #ced4da;
     }
-
-    .selection-counter-text {
-        font-size: 12px;
-        color: #123C65;
-        font-weight: bold;
-        margin-right: 6px;
-    }
-
+    .selection-counter-text { font-size: 12px; color: #123C65; font-weight: bold; margin-right: 6px; }
     .btn-limpar-x {
-        background: none;
-        border: none;
-        color: #C51625; /* Vermelho */
-        font-weight: bold;
-        font-size: 14px;
-        cursor: pointer;
-        padding: 0;
-        line-height: 1;
-        display: flex;
-        align-items: center;
+        background: none; border: none; color: #C51625; font-weight: bold;
+        font-size: 14px; cursor: pointer; padding: 0; line-height: 1; display: flex; align-items: center;
     }
-    .btn-limpar-x:hover {
-        color: #a71d2a;
-        transform: scale(1.1);
-    }
+    .btn-limpar-x:hover { color: #a71d2a; transform: scale(1.1); }
   </style>
 {% endblock %}
 
@@ -89,146 +59,218 @@
 {% block extrahead %}
 {{ block.super }}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const isEncomendaList = document.body.classList.contains('model-encomenda');
-        const form = document.getElementById('changelist-form');
-        
-        // Chaves de Memória
+    (function() {
+        // Chaves de Sessão
         const STORAGE_KEY = 'drogafoz_encomenda_selection'; 
         const KEEP_KEY = 'drogafoz_keep_selection'; // Bandeira de segurança
 
-        // --- 1. RESPONSIVIDADE DO BOTÃO DE AÇÃO (MOBILE) ---
-        function optimizeActionText() {
-            const isMobile = window.innerWidth < 768; 
-            const select = document.querySelector('select[name="action"]');
-            
-            if (!select) return;
-            
-            for (let i = 0; i < select.options.length; i++) {
-                const opt = select.options[i];
-                if (opt.value === 'marcar_entregue') {
-                    if (!opt.dataset.originalText) {
-                        opt.dataset.originalText = opt.text;
-                    }
-                    if (isMobile) {
-                        opt.text = "✅ Baixa (Entregue)";
-                    } else {
-                        opt.text = opt.dataset.originalText;
-                    }
-                }
-            }
-        }
-        window.addEventListener('resize', optimizeActionText);
-        optimizeActionText();
-
-        // SE NÃO FOR ENCOMENDA, SAI DAQUI
-        if (!isEncomendaList || !form) return;
-
-
-        // --- 2. LÓGICA DE LIMPEZA INTELIGENTE (CORREÇÃO DO VOLTAR) ---
-        // Verifica se a "bandeira de segurança" existe. 
-        if (!sessionStorage.getItem(KEEP_KEY)) {
-            // Se NÃO existir, limpa a memória
+        // ============================================================
+        // 1. FUNÇÃO DE LIMPEZA TOTAL (NUCLEAR)
+        // ============================================================
+        function nukeSelection() {
+            // 1. Limpa Storage
             sessionStorage.removeItem(STORAGE_KEY);
-            
-            // E FORÇA A LIMPEZA VISUAL (Para corrigir o problema do botão Voltar)
-            const allCheckboxes = form.querySelectorAll('input.action-select');
-            allCheckboxes.forEach(cb => {
-                cb.checked = false;
-                const row = cb.closest('tr');
-                if (row) row.classList.remove('selected'); // Remove o amarelo
-            });
-        } else {
-            // Se existir, consome a bandeira (apaga) para que o próximo refresh limpe.
             sessionStorage.removeItem(KEEP_KEY);
+
+            // 2. Desmarca checkboxes visualmente
+            const checkboxes = document.querySelectorAll('input.action-select');
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                cb.removeAttribute('checked'); 
+            });
+
+            // 3. Desmarca o "Selecionar Tudo"
+            const toggleAll = document.getElementById('action-toggle');
+            if (toggleAll) {
+                toggleAll.checked = false;
+                toggleAll.removeAttribute('checked');
+            }
+
+            // 4. Limpa classes CSS (o amarelo)
+            const rows = document.querySelectorAll('tr.selected');
+            rows.forEach(row => {
+                row.classList.remove('selected');
+                row.classList.add('forced-clean'); // Força branco
+            });
+
+            // 5. Remove contador da UI
+            const container = document.getElementById('selection-counter-container');
+            if (container) container.remove();
         }
 
-        // Função para ativar a bandeira (usada apenas em ações seguras)
+        // ============================================================
+        // 2. GERENCIAMENTO DE ESTADO (PAGESHOW - BACK/FORWARD)
+        // ============================================================
+        // Este evento roda sempre que a página aparece, inclusive via Voltar/Avançar
+        window.addEventListener('pageshow', function(event) {
+            const shouldKeep = sessionStorage.getItem(KEEP_KEY);
+
+            if (!shouldKeep) {
+                // Se não há bandeira de segurança, limpa tudo imediatamente
+                nukeSelection();
+            } else {
+                // Se há bandeira, consome-a (apaga) para que o próximo refresh limpe
+                sessionStorage.removeItem(KEEP_KEY);
+                restoreSelectionUI(); 
+            }
+        });
+
+        // ============================================================
+        // 3. BANDEIRAS DE SEGURANÇA (EXCEÇÕES)
+        // ============================================================
         function setKeepFlag() {
             sessionStorage.setItem(KEEP_KEY, 'true');
         }
 
-        // --- 3. LISTENERS PARA MANTER A SELEÇÃO (Apenas Filtros/Busca) ---
-        
-        // A. Pesquisa (Botão Search)
-        const searchForm = document.getElementById('changelist-search');
-        if (searchForm) {
-            searchForm.addEventListener('submit', setKeepFlag);
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('changelist-form');
+            if (!form) return;
 
-        // B. Cliques em Links Seguros (Filtros, Paginação, Ordenação)
-        document.addEventListener('click', function(e) {
-            const target = e.target.closest('a');
-            if (!target) return;
+            // RESPONSIVIDADE DO TEXTO DE AÇÃO (MOBILE)
+            function optimizeActionText() {
+                const isMobile = window.innerWidth < 768; 
+                const select = document.querySelector('select[name="action"]');
+                if (!select) return;
+                for (let i = 0; i < select.options.length; i++) {
+                    const opt = select.options[i];
+                    if (opt.value === 'marcar_entregue') {
+                        if (!opt.dataset.originalText) opt.dataset.originalText = opt.text;
+                        opt.text = isMobile ? "✅ Baixa (Entregue)" : opt.dataset.originalText;
+                    }
+                }
+            }
+            window.addEventListener('resize', optimizeActionText);
+            optimizeActionText();
 
-            // Se for link de Filtro lateral
-            if (target.closest('#changelist-filter')) {
-                setKeepFlag();
-                return;
-            }
-            
-            // Se for Paginação (1, 2, Próximo...)
-            if (target.closest('.paginator')) {
-                setKeepFlag();
-                return;
+            // A. Pesquisa (Botão Search) -> Manter seleção
+            const searchForm = document.getElementById('changelist-search');
+            if (searchForm) {
+                searchForm.addEventListener('submit', setKeepFlag);
             }
 
-            // Se for Ordenação de Coluna (Header da tabela)
-            if (target.closest('.result-headers')) {
-                setKeepFlag();
-                return;
+            // B. Filtros Laterais e Paginação -> Manter seleção
+            // Usamos 'mousedown' para garantir que pegamos antes da navegação
+            document.addEventListener('mousedown', function(e) {
+                const target = e.target.closest('a');
+                if (!target) return;
+
+                // Se clicou no Filtro Lateral ou Paginação ou Ordenação da Tabela
+                if (target.closest('#changelist-filter') || target.closest('.paginator') || target.closest('.sortable')) {
+                    setKeepFlag();
+                }
+                // Qualquer outro link (incluindo Voltar ao Início ou Menus) NÃO chama setKeepFlag,
+                // logo a seleção será destruída no próximo carregamento.
+            });
+
+            // ============================================================
+            // 4. LÓGICA DE SELEÇÃO (CHECKBOXES)
+            // ============================================================
+            function getSavedIds() {
+                const saved = sessionStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : [];
             }
-            
-            // Clicar em "Adicionar" ou "Voltar" NÃO chama setKeepFlag, então limpará tudo.
+
+            function saveId(id) {
+                let ids = getSavedIds();
+                if (!ids.includes(id)) {
+                    ids.push(id);
+                    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+                }
+                updateCounterUI();
+            }
+
+            function removeId(id) {
+                let ids = getSavedIds();
+                ids = ids.filter(item => item !== id);
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+                updateCounterUI();
+            }
+
+            function updateCounterUI() {
+                const ids = getSavedIds();
+                let container = document.getElementById('selection-counter-container');
+                
+                if (ids.length === 0) {
+                    if (container) container.remove();
+                    return;
+                }
+
+                if (!container) {
+                    const actionsDiv = document.querySelector('.actions');
+                    if (actionsDiv) {
+                        container = document.createElement('span');
+                        container.id = 'selection-counter-container';
+                        container.className = 'selection-counter-container';
+                        actionsDiv.appendChild(container);
+                    } else { return; }
+                }
+
+                container.innerHTML = `
+                    <span class="selection-counter-text">(${ids.length} selecionados)</span>
+                    <button type="button" id="btn-limpar-x" class="btn-limpar-x" title="Limpar seleção">✖</button>
+                `;
+                
+                document.getElementById('btn-limpar-x').onclick = function(e) {
+                    e.preventDefault();
+                    nukeSelection();
+                };
+            }
+
+            // Listeners nos Checkboxes
+            const checkboxes = form.querySelectorAll('input.action-select');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const row = this.closest('tr');
+                    if (this.checked) {
+                        saveId(this.value);
+                        if(row) row.classList.remove('selected'); // Remove o amarelo nativo do Django
+                    } else {
+                        removeId(this.value);
+                    }
+                });
+            });
+
+            // Envio do Formulário (Ação em Massa)
+            form.addEventListener('submit', function(e) {
+                const allSavedIds = getSavedIds();
+                if (allSavedIds.length === 0) return;
+
+                // Injeta IDs ocultos se necessário (para itens de outras páginas)
+                const visibleInputs = Array.from(form.querySelectorAll('input.action-select'));
+                const visibleIds = visibleInputs.map(input => input.value);
+                const hiddenIdsToAdd = allSavedIds.filter(id => !visibleIds.includes(id));
+
+                hiddenIdsToAdd.forEach(id => {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = '_selected_action';
+                    hiddenInput.value = id;
+                    form.appendChild(hiddenInput);
+                });
+
+                // A ação vai ocorrer, então limpamos a memória para a próxima vez
+                sessionStorage.removeItem(STORAGE_KEY);
+                sessionStorage.removeItem(KEEP_KEY);
+            });
         });
 
+        // Função auxiliar para restaurar visualmente (apenas se for Safe Action)
+        function restoreSelectionUI() {
+            const savedIds = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]');
+            if (savedIds.length === 0) return;
 
-        // --- 4. GERENCIAMENTO DA SELEÇÃO (IDs) ---
-
-        function getSavedIds() {
-            const saved = sessionStorage.getItem(STORAGE_KEY);
-            return saved ? JSON.parse(saved) : [];
-        }
-
-        function saveId(id) {
-            let ids = getSavedIds();
-            if (!ids.includes(id)) {
-                ids.push(id);
-                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-            }
-            updateCounterUI();
-        }
-
-        function removeId(id) {
-            let ids = getSavedIds();
-            ids = ids.filter(item => item !== id);
-            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-            updateCounterUI();
-        }
-
-        function clearStorage() {
-            sessionStorage.removeItem(STORAGE_KEY);
-            // Desmarca visualmente na hora
-            form.querySelectorAll('input.action-select').forEach(cb => {
-                cb.checked = false;
-                const row = cb.closest('tr');
-                if(row) row.classList.remove('selected');
+            const checkboxes = document.querySelectorAll('input.action-select');
+            checkboxes.forEach(cb => {
+                if (savedIds.includes(cb.value)) {
+                    cb.checked = true;
+                    const row = cb.closest('tr');
+                    if(row) row.classList.remove('selected'); 
+                }
             });
-            updateCounterUI();
-        }
-
-        // Atualiza a interface (Contador + Botão X)
-        function updateCounterUI() {
-            const ids = getSavedIds();
-            let container = document.getElementById('selection-counter-container');
             
-            // Se não tem nada selecionado, remove o container visual e retorna
-            if (ids.length === 0) {
-                if (container) container.remove();
-                return;
-            }
-
-            // Se tem seleção mas não tem container, cria ele
+            // Recria o contador
+            const ids = savedIds; 
+            let container = document.getElementById('selection-counter-container');
             if (!container) {
                 const actionsDiv = document.querySelector('.actions');
                 if (actionsDiv) {
@@ -236,72 +278,17 @@
                     container.id = 'selection-counter-container';
                     container.className = 'selection-counter-container';
                     actionsDiv.appendChild(container);
-                } else {
-                    return;
                 }
             }
-
-            // Atualiza conteúdo
-            container.innerHTML = `
-                <span class="selection-counter-text">(${ids.length} selecionados)</span>
-                <button type="button" id="btn-limpar-x" class="btn-limpar-x" title="Limpar seleção">✖</button>
-            `;
-            
-            // Re-anexa o evento do botão X
-            document.getElementById('btn-limpar-x').onclick = function(e) {
-                e.preventDefault();
-                clearStorage();
-            };
+            if (container) {
+                 container.innerHTML = `
+                    <span class="selection-counter-text">(${ids.length} selecionados)</span>
+                    <button type="button" id="btn-limpar-x" class="btn-limpar-x" title="Limpar seleção">✖</button>
+                `;
+                 document.getElementById('btn-limpar-x').onclick = function(e){ e.preventDefault(); nukeSelection(); };
+            }
         }
 
-        // --- 5. SINCRONIZAÇÃO AO CARREGAR ---
-        const savedIds = getSavedIds();
-        const checkboxes = form.querySelectorAll('input.action-select');
-        
-        checkboxes.forEach(cb => {
-            if (savedIds.includes(cb.value)) {
-                cb.checked = true;
-                // Garante que a linha não fique amarela via JS também
-                const row = cb.closest('tr');
-                if(row) row.classList.remove('selected'); 
-            }
-
-            cb.addEventListener('change', function() {
-                if (this.checked) {
-                    saveId(this.value);
-                    const row = this.closest('tr');
-                    if(row) row.classList.remove('selected'); // Remove amarelo instantaneamente ao clicar
-                } else {
-                    removeId(this.value);
-                }
-            });
-        });
-
-        // --- 6. ENVIO DO FORMULÁRIO (BOTÃO IR) ---
-        form.addEventListener('submit', function(e) {
-            const allSavedIds = getSavedIds();
-            if (allSavedIds.length === 0) return;
-
-            const visibleInputs = Array.from(form.querySelectorAll('input.action-select'));
-            const visibleIds = visibleInputs.map(input => input.value);
-            
-            // Injeta apenas os IDs que NÃO estão na tela (os da tela o Django já manda)
-            const hiddenIdsToAdd = allSavedIds.filter(id => !visibleIds.includes(id));
-
-            hiddenIdsToAdd.forEach(id => {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = '_selected_action';
-                hiddenInput.value = id;
-                form.appendChild(hiddenInput);
-            });
-
-            // Limpa a memória pois a ação foi executada
-            sessionStorage.removeItem(STORAGE_KEY);
-        });
-
-        // Inicializa UI
-        updateCounterUI();
-    });
+    })();
 </script>
 {% endblock %}

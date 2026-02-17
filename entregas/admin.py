@@ -56,9 +56,6 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
     # --- CORREÇÃO DE PERSISTÊNCIA (IGNORAR FILTRO DE BUSCA) ---
-    # Se estamos na primeira etapa (GET/Seleção), forçamos o queryset a olhar
-    # para TUDO que foi marcado via checkbox (inclusive itens ocultos pelo filtro de busca),
-    # e não apenas o que o Django filtrou na view atual.
     if 'post' not in request.POST:
         selected = request.POST.getlist(admin.helpers.ACTION_CHECKBOX_NAME)
         if selected:
@@ -240,7 +237,9 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         'get_valor_base_custom', 'get_valor_cobrado_custom'
     )
     
-    list_per_page = 25
+    # Este valor base será sobrescrito pelo método get_list_per_page abaixo
+    list_per_page = 25 
+    
     list_filter = (StatusFilter,) 
     search_fields = ('cliente__nome',)
     autocomplete_fields = ['cliente']
@@ -268,6 +267,15 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
             'description': '<span style="color: red; font-weight: bold;">Cuidado:</span> Encomendas descartadas somem da lista principal.'
         }),
     )
+
+    # --- NOVO MÉTODO: Controla itens por página dinamicamente ---
+    def get_list_per_page(self, request):
+        status = request.GET.get('status')
+        # Se for status PENDENTE ou se não tiver filtro (padrão é pendente), mostra 500
+        if status == 'PENDENTE' or status is None:
+            return 500
+        # Para status ENTREGUE, TODOS ou LIXEIRA, mantém 25 para não pesar
+        return 25
 
     def get_changelist(self, request, **kwargs):
         from django.contrib.admin.views.main import ChangeList

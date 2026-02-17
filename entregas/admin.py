@@ -237,7 +237,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         'get_valor_base_custom', 'get_valor_cobrado_custom'
     )
     
-    # Este valor base será sobrescrito pelo método get_list_per_page abaixo
+    # Valor padrão de segurança (será sobrescrito dinamicamente)
     list_per_page = 25 
     
     list_filter = (StatusFilter,) 
@@ -268,25 +268,35 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         }),
     )
 
-    # --- NOVO MÉTODO: Controla itens por página dinamicamente ---
+    # --- MÉTODO 1: Controla itens por página dinamicamente ---
     def get_list_per_page(self, request):
         status = request.GET.get('status')
-        # Se for status PENDENTE ou se não tiver filtro (padrão é pendente), mostra 500
+        # Se for "PENDENTE" (ou sem filtro, que é o padrão), mostra 500
         if status == 'PENDENTE' or status is None:
             return 500
-        # Para status ENTREGUE, TODOS ou LIXEIRA, mantém 25 para não pesar
+        # Outros status (ENTREGUE, LIXEIRA) mostram apenas 25
         return 25
 
+    # --- MÉTODO 2: Controla o "Mostrar Tudo" ---
     def get_changelist(self, request, **kwargs):
         from django.contrib.admin.views.main import ChangeList
         class EncomendaChangeList(ChangeList):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
+            def __init__(self, request, *args, **kwargs):
+                super().__init__(request, *args, **kwargs)
+                
+                # Captura o filtro para decidir o limite do "Mostrar Tudo"
                 status = request.GET.get('status')
+                
                 if status == 'PENDENTE' or status is None:
-                    self.list_max_show_all = 10000
+                    # Permite "Mostrar Tudo" se tiver até 10.000 itens
+                    # Como list_per_page é 500, o botão "Mostrar Tudo" só aparecerá
+                    # se o total de itens for > 500.
+                    self.list_max_show_all = 10000 
                 else:
+                    # Para outros status (limitados a 25), o "Mostrar Tudo" aparece
+                    # se tiver mais que 25 e menos que 200.
                     self.list_max_show_all = 200
+                    
         return EncomendaChangeList
 
     def _get_colored_text(self, obj, text):

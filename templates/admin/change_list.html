@@ -1,53 +1,246 @@
 {% extends "admin/change_list.html" %}
-{% load static admin_urls %}
+{% load i18n admin_urls static admin_list %}
 
 {% block extrastyle %}
   {{ block.super }}
+  
   <style>
-    /* CSS PARA AS COLUNAS (MANTIDO) */
-    
-    /* Aumenta a largura do Status */
-    .field-get_status_fmt {
-        min-width: 170px !important;
-        width: 170px !important;
-        text-align: center;
+    /* =========================================
+       1. CABEÇALHO FIXO DA TABELA
+       ========================================= */
+    thead th {
+        position: sticky;
+        top: 0;
+        background: white; 
+        z-index: 10;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); 
     }
     
-    /* Datas: Garante que fiquem em uma linha só */
-    .field-get_data_chegada_fmt, .field-get_data_saida_fmt {
-        white-space: nowrap !important;
-        min-width: 110px !important;
+    thead th.sortable {
+        background: #f8f9fa;
     }
 
-    /* Cliente: Deixa flexível */
-    .field-get_cliente_nome {
-        /* Padrão do Django */
-    }
-    
-    /* Ajuste para o botão voltar ficar bonito na lista */
-    .btn-voltar-container {
-        margin-bottom: 20px;
-    }
-    
-    .btn-voltar-topo {
-        text-decoration: none;
-        color: #666;
+    /* =========================================
+       2. CONTADOR DE SELEÇÃO (PERSISTÊNCIA)
+       ========================================= */
+    .selection-info-persistent {
+        display: inline-block;
+        margin-left: 15px;
+        color: #123C65;
         font-weight: bold;
         font-size: 13px;
+        white-space: nowrap; /* Não quebra linha */
+    }
+    
+    .btn-limpar-selecao {
+        background: none;
+        border: 1px solid #C51625;
+        color: #C51625;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 11px;
+        cursor: pointer;
+        margin-left: 5px;
         text-transform: uppercase;
     }
-    .btn-voltar-topo:hover {
-        color: #333;
+    .btn-limpar-selecao:hover {
+        background: #C51625;
+        color: white;
+    }
+
+    /* =========================================
+       3. RESPONSIVIDADE DA BARRA DE AÇÕES
+       ========================================= */
+    /* Força a barra de ações a ficar sempre em linha (horizontal) */
+    .actions {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto; /* Permite rolar se for muito pequeno, mas não quebra */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ajusta o label "Ação:" e o Select */
+    .actions label {
+        display: flex !important;
+        align-items: center !important;
+        white-space: nowrap;
+        margin-right: 5px;
+        font-size: 12px;
+    }
+
+    /* No celular, o select ocupa o espaço disponível, mas sem exagerar */
+    .actions select {
+        max-width: 180px; 
+        height: 30px;
+    }
+
+    /* Botão IR */
+    .actions .button {
+        height: 30px;
+        margin-left: 5px;
+    }
+
+    /* Esconde o texto "Action:" em telas muito pequenas para ganhar espaço */
+    @media (max-width: 480px) {
+        .actions label {
+            font-size: 0; /* Some com o texto "Ação" */
+        }
+        .actions label select {
+            font-size: 13px; /* Restaura o tamanho do select */
+            margin-left: 0;
+        }
     }
   </style>
 {% endblock %}
 
-{% block breadcrumbs %}
-<div class="btn-voltar-container">
-    <a href="{% url 'admin:index' %}" class="btn-voltar-topo">← Voltar ao Início</a>
-</div>
-{% endblock %}
-
 {% block extrahead %}
 {{ block.super }}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // ============================================================
+        // PARTE 1: RESPONSIVIDADE DO TEXTO (Mudar texto no Mobile)
+        // ============================================================
+        function optimizeActionText() {
+            const isMobile = window.innerWidth < 768; // Considera mobile abaixo de 768px
+            const select = document.querySelector('select[name="action"]');
+            
+            if (!select) return;
+            
+            for (let i = 0; i < select.options.length; i++) {
+                const opt = select.options[i];
+                
+                // Verifica se é a opção de "Marcar Entregue"
+                // O value 'marcar_entregue' vem do nome da função no admin.py
+                if (opt.value === 'marcar_entregue') {
+                    
+                    // Salva o texto original se ainda não salvou
+                    if (!opt.dataset.originalText) {
+                        opt.dataset.originalText = opt.text;
+                    }
+
+                    if (isMobile) {
+                        // Texto Curto para Mobile
+                        opt.text = "✅ Baixa (Entregue)";
+                    } else {
+                        // Restaura Texto Original no PC
+                        opt.text = opt.dataset.originalText;
+                    }
+                }
+            }
+        }
+
+        // Executa ao carregar e ao redimensionar a tela
+        optimizeActionText();
+        window.addEventListener('resize', optimizeActionText);
+
+
+        // ============================================================
+        // PARTE 2: PERSISTÊNCIA DE SELEÇÃO (MEMÓRIA DE CHECKBOX)
+        // ============================================================
+        const STORAGE_KEY = 'drogafoz_selected_ids';
+        const form = document.getElementById('changelist-form');
+        
+        if (!form) return;
+
+        function getSavedIds() {
+            const saved = sessionStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveId(id) {
+            let ids = getSavedIds();
+            if (!ids.includes(id)) {
+                ids.push(id);
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+            }
+            updateCounter();
+        }
+
+        function removeId(id) {
+            let ids = getSavedIds();
+            ids = ids.filter(item => item !== id);
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+            updateCounter();
+        }
+
+        function clearAllIds() {
+            sessionStorage.removeItem(STORAGE_KEY);
+            const checkboxes = form.querySelectorAll('input.action-select');
+            checkboxes.forEach(cb => cb.checked = false);
+            updateCounter();
+        }
+
+        function updateCounter() {
+            const ids = getSavedIds();
+            let display = document.getElementById('selection-counter-display');
+            
+            if (!display) {
+                const actionsDiv = document.querySelector('.actions');
+                if (actionsDiv) {
+                    const span = document.createElement('span');
+                    span.id = 'selection-counter-display';
+                    span.className = 'selection-info-persistent';
+                    actionsDiv.appendChild(span);
+                } else {
+                    return;
+                }
+                display = document.getElementById('selection-counter-display');
+            }
+
+            if (ids.length > 0) {
+                // Texto abreviado se for mobile
+                const textoItens = window.innerWidth < 600 ? `(${ids.length})` : `(${ids.length} na memória)`;
+                
+                display.innerHTML = `${textoItens} <button type="button" id="btn-limpar-memoria" class="btn-limpar-selecao">X</button>`;
+                
+                document.getElementById('btn-limpar-memoria').onclick = function(e) {
+                    e.preventDefault();
+                    clearAllIds();
+                };
+            } else {
+                display.innerHTML = '';
+            }
+        }
+
+        const savedIds = getSavedIds();
+        const checkboxes = form.querySelectorAll('input.action-select');
+        
+        checkboxes.forEach(cb => {
+            if (savedIds.includes(cb.value)) {
+                cb.checked = true;
+            }
+            cb.addEventListener('change', function() {
+                if (this.checked) {
+                    saveId(this.value);
+                } else {
+                    removeId(this.value);
+                }
+            });
+        });
+
+        form.addEventListener('submit', function(e) {
+            const allSavedIds = getSavedIds();
+            if (allSavedIds.length === 0) return;
+
+            const visibleInputs = Array.from(form.querySelectorAll('input.action-select'));
+            const visibleIds = visibleInputs.map(input => input.value);
+            const hiddenIdsToAdd = allSavedIds.filter(id => !visibleIds.includes(id));
+
+            hiddenIdsToAdd.forEach(id => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = '_selected_action';
+                hiddenInput.value = id;
+                form.appendChild(hiddenInput);
+            });
+        });
+
+        updateCounter();
+    });
+</script>
 {% endblock %}

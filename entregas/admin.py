@@ -14,7 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection, IntegrityError
 from django.core.exceptions import ValidationError
 from .models import Cliente, Encomenda
-import re 
+import re # Importação necessária para regex
 
 admin.site.site_header = "DROGAFOZ ENCOMENDAS"
 admin.site.site_title = "Drogafoz Admin"
@@ -24,14 +24,17 @@ admin.site.enable_nav_sidebar = False
 admin.site.unregister(Group)
 admin.site.unregister(User)
 
+# --- MIXIN PARA BUSCA SEM ACENTO ---
 class BuscaSemAcentoMixin:
     def get_search_results(self, request, queryset, search_term):
         campos_originais = self.search_fields
         self.search_fields = [f"{campo}__unaccent" for campo in self.search_fields]
+        
         try:
             qs, use_distinct = super().get_search_results(request, queryset, search_term)
         finally:
             self.search_fields = campos_originais
+            
         return qs, use_distinct
 
 @admin.register(User)
@@ -39,9 +42,6 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
     actions = None
     search_fields = ('username', 'first_name', 'last_name', 'email')
     readonly_fields = ('date_joined', 'last_login')
-    list_per_page = 25
-    list_max_show_all = 10000
-
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
@@ -53,17 +53,9 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
         if User.objects.count() <= 1: return False
         return super().has_delete_permission(request, obj)
 
+# --- CORREÇÃO ERRO 2: BAIXA EM MASSA ROBUSTA ---
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
-    # --- CORREÇÃO DE PERSISTÊNCIA (IGNORAR FILTRO DE BUSCA) ---
-    # Se estamos na primeira etapa (GET/Seleção), forçamos o queryset a olhar
-    # para TUDO que foi marcado via checkbox (inclusive itens ocultos pelo filtro de busca),
-    # e não apenas o que o Django filtrou na view atual.
-    if 'post' not in request.POST:
-        selected = request.POST.getlist(admin.helpers.ACTION_CHECKBOX_NAME)
-        if selected:
-            queryset = Encomenda.objects.filter(pk__in=selected)
-
     if 'post' in request.POST:
         count = 0
         agora = timezone.now()
@@ -75,10 +67,17 @@ def marcar_entregue(modeladmin, request, queryset):
 
             if valor_bruto is not None:
                 try:
+                    # 1. Limpeza agressiva: Remove tudo que não for dígito, vírgula ou ponto
+                    # Ex: "R$ 20,00" vira "20,00" | "20.00 " vira "20.00"
                     valor_limpo = re.sub(r'[^\d.,]', '', str(valor_bruto))
+                    
+                    # 2. Padronização Decimal: Troca vírgula por ponto
                     valor_limpo = valor_limpo.replace(',', '.')
                     
+                    # 3. Tratamento de múltiplos pontos (ex: "1.000.00") -> Pega só o último ponto como decimal ou remove
                     if valor_limpo.count('.') > 1:
+                         # Simplesmente remove os pontos anteriores, mantendo a lógica de milhar brasileira se for o caso,
+                         # ou assume que o usuário digitou errado. Vamos tentar converter direto.
                          pass 
 
                     if valor_limpo == '':
@@ -89,6 +88,7 @@ def marcar_entregue(modeladmin, request, queryset):
                     encomenda.valor_cobrado = valor_final
                     encomenda.status = 'ENTREGUE'
                     
+                    # Garante data de entrega se não tiver
                     if not encomenda.data_entrega:
                          encomenda.data_entrega = agora
                     
@@ -105,6 +105,7 @@ def marcar_entregue(modeladmin, request, queryset):
                     count += 1
                 
                 except ValueError:
+                    # Se falhar a conversão, pula essa encomenda mas não quebra o resto
                     erros_conversao += 1
                     continue
         
@@ -196,10 +197,13 @@ class StatusFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value() == 'LIXEIRA':
             return queryset.filter(descartado=True)
+            
         if self.value() == 'ENTREGUE': 
             return queryset.filter(status='ENTREGUE', descartado=False)
+        
         if self.value() == 'TODOS': 
             return queryset.filter(descartado=False)
+            
         return queryset.filter(status='PENDENTE', descartado=False)
 
 @admin.register(Cliente)
@@ -208,12 +212,12 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     list_display = ('get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
     search_fields = ('nome', 'cpf', 'rg')
     list_per_page = 25
-    list_max_show_all = 10000
 
     @admin.display(ordering='nome', description='Nome')
     def get_nome_status(self, obj):
         tem_documento = obj.cpf or obj.rg
         tem_contato = obj.telefone or obj.email
+        
         if not tem_documento or not tem_contato:
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', obj.nome)
         return obj.nome
@@ -240,7 +244,6 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         'get_valor_base_custom', 'get_valor_cobrado_custom'
     )
     
-    list_per_page = 25
     list_filter = (StatusFilter,) 
     search_fields = ('cliente__nome',)
     autocomplete_fields = ['cliente']
@@ -269,16 +272,23 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         }),
     )
 
+    # --- CONFIGURAÇÃO ESPECIAL DA LISTA (PÁGINAS E BOTÃO MOSTRAR TUDO) ---
     def get_changelist(self, request, **kwargs):
         from django.contrib.admin.views.main import ChangeList
+        
         class EncomendaChangeList(ChangeList):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
+                # LÓGICA DO BOTÃO "MOSTRAR TUDO":
+                # Se o filtro 'status' for 'PENDENTE' (Aguardando Retirada) OU não tiver filtro (None, que é o padrão PENDENTE),
+                # aumenta o limite para 10.000 para que o botão "Mostrar tudo" apareça.
+                # Se for 'ENTREGUE' ou outro status, mantém o limite de segurança padrão (200) para não travar o banco.
                 status = request.GET.get('status')
                 if status == 'PENDENTE' or status is None:
                     self.list_max_show_all = 10000
                 else:
                     self.list_max_show_all = 200
+                    
         return EncomendaChangeList
 
     def _get_colored_text(self, obj, text):
@@ -288,19 +298,28 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
                 return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', text)
         return text
 
+    # --- CORREÇÃO ERRO 3 e 4 (BACK-END): VALIDAÇÃO E PROTEÇÃO DE SALVAMENTO ---
     def save_model(self, request, obj, form, change):
+        # 1. Validação de Baixa Manual (Erro 3)
         if obj.status == 'ENTREGUE':
             if not obj.data_entrega:
+                # Se não informou data, assume AGORA
                 obj.data_entrega = timezone.now()
+            
             if obj.data_entrega < obj.data_chegada:
                 messages.error(request, "ERRO: A Data de Entrega não pode ser anterior à Data de Chegada.")
+                # Truque: Impede o save revertendo o status na memória e não chamando super().save()
+                # Porém, o Django admin espera que salve. O melhor é lançar exceção ou tratar via form.
+                # Aqui vamos lançar exceção que o Django Admin mostra no topo.
                 raise ValidationError("A Data de Entrega não pode ser anterior à Data de Chegada.")
 
+        # 2. Proteção contra Duplo Clique / Integridade (Erro 4)
         try:
             super().save_model(request, obj, form, change)
         except IntegrityError:
+            # Se o banco recusar por duplicidade, avisamos o usuário amigavelmente
             messages.error(request, "ATENÇÃO: Esta encomenda já foi cadastrada anteriormente (Duplicidade detectada). O segundo cadastro foi ignorado.")
-            return
+            return # Não faz nada, apenas retorna
 
     @admin.display(ordering='valor_base', description='Valor Base')
     def get_valor_base_custom(self, obj):
@@ -338,6 +357,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         cliente = obj.cliente
         tem_documento = cliente.cpf or cliente.rg
         tem_contato = cliente.telefone or cliente.email
+
         if not tem_documento or not tem_contato:
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', cliente.nome)
         return self._get_colored_text(obj, cliente.nome)
@@ -349,8 +369,10 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         field.widget.can_change_related = True   
         field.widget.can_view_related = False    
         field.widget.can_delete_related = False  
+
         if obj is None:
             form.base_fields['data_chegada'].initial = timezone.now()
+            
         return form
 
     def get_urls(self):

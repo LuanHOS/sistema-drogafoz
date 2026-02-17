@@ -18,10 +18,10 @@
 
 <div style="background: #fff; padding: 25px; border-radius: 8px; border-top: 5px solid #28a745; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; color: #333;">Confirmar Entrega e Valores</h2>
+    <div style="display: flex; flex-direction: column; margin-bottom: 20px;">
+        <h2 style="margin: 0 0 15px 0; color: #333; text-align: center; width: 100%;">Confirmar Entrega e Valores</h2>
         
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; justify-content: center;">
             <button type="button" onclick="prepararPDF('geral')" class="btn-acao-topo">
                 <i class="fas fa-file-export"></i> Relatório Geral (A4)
             </button>
@@ -38,7 +38,7 @@
         </div>
     {% endif %}
 
-    <p style="margin-bottom: 20px; color: #666;">Verifique os dias em estoque e ajuste os valores se necessário:</p>
+    <p style="margin-bottom: 20px; color: #666; text-align: center;">Verifique os dias em estoque e ajuste os valores se necessário:</p>
 
     <form action="" method="post" id="form-entrega">
         {% csrf_token %}
@@ -59,10 +59,15 @@
                     
                     <div class="cliente-header">
                         <div style="display: flex; align-items: center;">
-                            <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> 
+                            {% if not grupo.cliente.telefone or not grupo.cliente.cpf %}
+                                <i class="fas fa-user" style="color: #C51625; margin-right: 8px;" title="Cadastro Incompleto"></i> 
+                            {% else %}
+                                <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> 
+                            {% endif %}
+                            
                             <a href="{% url 'admin:entregas_cliente_change' grupo.cliente.id %}?_popup=1" 
                                onclick="return abrirPopupCliente(this.href);"
-                               style="color: white; text-decoration: none; border-bottom: 1px dashed rgba(255,255,255,0.5);"
+                               style="color: white; text-decoration: none;"
                                title="Editar Cliente">
                                 {{ grupo.cliente.nome }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7;"></i>
                             </a>
@@ -227,7 +232,7 @@
 </div>
 
 <script>
-    // --- FUNÇÃO POPUP (ADICIONADA) ---
+    // --- FUNÇÃO POPUP (MANTIDA) ---
     function abrirPopupCliente(url) {
         const w = 900;
         const h = 700;

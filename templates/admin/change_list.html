@@ -4,7 +4,7 @@
 {% block extrastyle %}
   {{ block.super }}
   <style>
-    /* 1. CORREÇÃO VISUAL DAS COLUNAS */
+    /* 1. CORREÇÃO VISUAL DAS COLUNAS (MANTIDO) */
     .field-get_status_fmt {
         min-width: 170px !important;
         width: 170px !important;
@@ -16,7 +16,7 @@
         min-width: 110px !important;
     }
 
-    /* 2. CORREÇÃO DO FUNDO AMARELO (SOLICITADO) */
+    /* 2. CORREÇÃO DO FUNDO AMARELO (REFORÇADO) */
     /* Remove a cor amarela padrão do Django quando uma linha está selecionada */
     #changelist-form .results table tbody tr.selected {
         background-color: inherit !important;
@@ -125,11 +125,19 @@
         if (!isEncomendaList || !form) return;
 
 
-        // --- 2. LÓGICA DE LIMPEZA INTELIGENTE ---
+        // --- 2. LÓGICA DE LIMPEZA INTELIGENTE (CORREÇÃO DO VOLTAR) ---
         // Verifica se a "bandeira de segurança" existe. 
-        // Se NÃO existir, significa que viemos de um Refresh, Voltar, ou Adicionar. Limpa tudo.
         if (!sessionStorage.getItem(KEEP_KEY)) {
+            // Se NÃO existir, limpa a memória
             sessionStorage.removeItem(STORAGE_KEY);
+            
+            // E FORÇA A LIMPEZA VISUAL (Para corrigir o problema do botão Voltar)
+            const allCheckboxes = form.querySelectorAll('input.action-select');
+            allCheckboxes.forEach(cb => {
+                cb.checked = false;
+                const row = cb.closest('tr');
+                if (row) row.classList.remove('selected'); // Remove o amarelo
+            });
         } else {
             // Se existir, consome a bandeira (apaga) para que o próximo refresh limpe.
             sessionStorage.removeItem(KEEP_KEY);
@@ -171,8 +179,7 @@
                 return;
             }
             
-            // Se clicar em "Adicionar Encomenda" ou "Voltar", NÃO chama setKeepFlag(),
-            // logo a seleção será limpa no próximo carregamento.
+            // Clicar em "Adicionar" ou "Voltar" NÃO chama setKeepFlag, então limpará tudo.
         });
 
 
@@ -202,7 +209,11 @@
         function clearStorage() {
             sessionStorage.removeItem(STORAGE_KEY);
             // Desmarca visualmente na hora
-            form.querySelectorAll('input.action-select').forEach(cb => cb.checked = false);
+            form.querySelectorAll('input.action-select').forEach(cb => {
+                cb.checked = false;
+                const row = cb.closest('tr');
+                if(row) row.classList.remove('selected');
+            });
             updateCounterUI();
         }
 
@@ -250,14 +261,16 @@
         checkboxes.forEach(cb => {
             if (savedIds.includes(cb.value)) {
                 cb.checked = true;
-                // Força a linha a não ficar amarela (garantia extra via JS além do CSS)
+                // Garante que a linha não fique amarela via JS também
                 const row = cb.closest('tr');
-                if(row) row.classList.add('selected-persistent'); // Classe fictícia só pra controle se precisar
+                if(row) row.classList.remove('selected'); 
             }
 
             cb.addEventListener('change', function() {
                 if (this.checked) {
                     saveId(this.value);
+                    const row = this.closest('tr');
+                    if(row) row.classList.remove('selected'); // Remove amarelo instantaneamente ao clicar
                 } else {
                     removeId(this.value);
                 }
@@ -283,7 +296,7 @@
                 form.appendChild(hiddenInput);
             });
 
-            // Limpa a memória pois a ação foi executada (vai mudar de página para a confirmação)
+            // Limpa a memória pois a ação foi executada
             sessionStorage.removeItem(STORAGE_KEY);
         });
 

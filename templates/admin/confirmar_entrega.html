@@ -14,6 +14,8 @@
 {% endblock %}
 
 {% block content %}
+<div style="max-width: 950px; margin: 0 auto;">
+
 <div style="background: #fff; padding: 25px; border-radius: 8px; border-top: 5px solid #28a745; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -57,7 +59,13 @@
                     
                     <div class="cliente-header">
                         <div style="display: flex; align-items: center;">
-                            <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> {{ grupo.cliente.nome }}
+                            <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> 
+                            <a href="{% url 'admin:entregas_cliente_change' grupo.cliente.id %}?_popup=1" 
+                               onclick="return abrirPopupCliente(this.href);"
+                               style="color: white; text-decoration: none; border-bottom: 1px dashed rgba(255,255,255,0.5);"
+                               title="Editar Cliente">
+                                {{ grupo.cliente.nome }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7;"></i>
+                            </a>
                         </div>
                         
                         <div style="display: flex; gap: 5px;">
@@ -87,6 +95,12 @@
                                 <div class="item-info">
                                     <div class="desc">
                                         📦 {{ item.descricao|linebreaksbr }}
+                                        {% if item.observacao %}
+                                            <div style="font-size: 12px; color: #666; font-style: italic; margin-top: 2px;">
+                                                Obs: {{ item.observacao }}
+                                            </div>
+                                        {% endif %}
+
                                         <span class="valor-original">(Base: R$ {{ item.valor_base|floatformat:2 }})</span>
                                         {% if item.status == 'ENTREGUE' %}
                                             <span class="badge-entregue">(JÁ ENTREGUE)</span>
@@ -134,7 +148,7 @@
     </form>
 </div>
 
-<div id="molde-original" style="display: none;">
+</div> <div id="molde-original" style="display: none;">
     <div class="receipt-box">
         <div class="receipt-header">
             <h1>DROGAFOZ ENCOMENDAS</h1>
@@ -213,20 +227,24 @@
 </div>
 
 <script>
-    // --- FUNÇÃO DO WHATSAPP ADICIONADA ---
+    // --- FUNÇÃO POPUP (ADICIONADA) ---
+    function abrirPopupCliente(url) {
+        const w = 900;
+        const h = 700;
+        const left = (screen.width / 2) - (w / 2);
+        const top = (screen.height / 2) - (h / 2);
+        window.open(url, 'EditarCliente', `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+        return false;
+    }
+
+    // --- FUNÇÃO DO WHATSAPP ---
     function abrirWhatsapp(telefone) {
-        // Remove tudo que não é número
         let nums = telefone.replace(/\D/g, '');
-        
-        // Se tiver 10 ou 11 dígitos, assume que é do Brasil e adiciona 55
-        // Se já tiver mais dígitos (ex: já tem 55), mantem.
         if (nums.length >= 10 && nums.length <= 11) {
             nums = '55' + nums;
         }
-
         const mensagem = "Olá! Em anexo a esta mensagem está a nota de retirada das suas encomendas do serviço de encomendas da farmácia Drogafoz.\nObrigado pela preferência!";
         const textoEncoded = encodeURIComponent(mensagem);
-        
         window.open(`https://wa.me/${nums}?text=${textoEncoded}`, '_blank');
     }
 
@@ -278,7 +296,7 @@
     }
 
     // ==========================================
-    // LÓGICA PDF A4 (ORIGINAL)
+    // LÓGICA PDF A4 (MANTIDA)
     // ==========================================
     function prepararPDF(tipo, clientId = null) {
         const molde = document.getElementById('molde-original').firstElementChild.cloneNode(true);
@@ -403,7 +421,7 @@
     }
 
     // ==========================================
-    // LÓGICA TÉRMICA 80mm (NOVA)
+    // LÓGICA TÉRMICA 80mm (MANTIDA)
     // ==========================================
     function prepararPDF80mmGeral() {
         const molde = document.getElementById('molde-80mm').firstElementChild.cloneNode(true);
@@ -505,7 +523,6 @@
             filename: filename,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-            // Configura para 80mm de largura e altura fixa de "cupom" (297mm é o max A4, serve como bobina longa)
             jsPDF: { unit: 'mm', format: [80, 297], orientation: 'portrait' }
         };
 
@@ -536,7 +553,7 @@
     }
     .btn-termica:hover { background: #e0a800 !important; }
 
-    /* ESTILO DO BOTÃO WHATSAPP (ADICIONADO) */
+    /* ESTILO DO BOTÃO WHATSAPP */
     .btn-whatsapp-mini {
         background: #25D366 !important; /* Verde WhatsApp */
         color: white !important;
@@ -557,7 +574,7 @@
         background: rgba(255,255,255,0.2); border: none; color: white; cursor: pointer;
         width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         transition: background 0.2s;
-        text-decoration: none; /* Adicionado para garantir que links <a> não tenham sublinhado */
+        text-decoration: none; 
     }
     .btn-export-mini:hover { background: rgba(255,255,255,0.4); }
     

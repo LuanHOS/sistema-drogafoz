@@ -4,27 +4,30 @@
 {% block extrastyle %}
   {{ block.super }}
   <style>
-    /* CSS PARA AS COLUNAS (MANTIDO 100% IGUAL AO SOLICITADO) */
-    
-    /* Aumenta a largura do Status */
+    /* 1. CORREÇÃO VISUAL DAS COLUNAS */
     .field-get_status_fmt {
         min-width: 170px !important;
         width: 170px !important;
         text-align: center;
     }
     
-    /* Datas: Garante que fiquem em uma linha só */
     .field-get_data_chegada_fmt, .field-get_data_saida_fmt {
         white-space: nowrap !important;
         min-width: 110px !important;
     }
 
-    /* Cliente: Deixa flexível */
-    .field-get_cliente_nome {
-        /* Padrão do Django */
+    /* 2. CORREÇÃO DO FUNDO AMARELO (SOLICITADO) */
+    /* Remove a cor amarela padrão do Django quando uma linha está selecionada */
+    #changelist-form .results table tbody tr.selected {
+        background-color: inherit !important;
+        color: inherit !important;
     }
-    
-    /* Ajuste para o botão voltar ficar bonito na lista */
+    /* Mantém o hover cinza claro padrão para não perder usabilidade */
+    #changelist-form .results table tbody tr:hover {
+        background-color: #f8f9fa !important;
+    }
+
+    /* 3. BOTÃO VOLTAR */
     .btn-voltar-container {
         margin-bottom: 20px;
     }
@@ -40,12 +43,39 @@
         color: #333;
     }
 
-    /* Estilo discreto para o contador da memória */
-    .selection-counter {
+    /* 4. CONTADOR E BOTÃO LIMPAR (X) */
+    .selection-counter-container {
         margin-left: 10px;
+        display: inline-flex;
+        align-items: center;
+        background-color: #e9ecef;
+        padding: 2px 8px;
+        border-radius: 12px;
+        border: 1px solid #ced4da;
+    }
+
+    .selection-counter-text {
         font-size: 12px;
         color: #123C65;
         font-weight: bold;
+        margin-right: 6px;
+    }
+
+    .btn-limpar-x {
+        background: none;
+        border: none;
+        color: #C51625; /* Vermelho */
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+    }
+    .btn-limpar-x:hover {
+        color: #a71d2a;
+        transform: scale(1.1);
     }
   </style>
 {% endblock %}
@@ -60,12 +90,14 @@
 {{ block.super }}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Verifica se estamos na lista de ENCOMENDAS (baseado na classe do body do Django Admin)
         const isEncomendaList = document.body.classList.contains('model-encomenda');
         const form = document.getElementById('changelist-form');
-        const STORAGE_KEY = 'drogafoz_encomenda_selection'; // Chave única para encomendas
+        
+        // Chaves de Memória
+        const STORAGE_KEY = 'drogafoz_encomenda_selection'; 
+        const KEEP_KEY = 'drogafoz_keep_selection'; // Bandeira de segurança
 
-        // --- 1. LÓGICA DE TEXTO RESPONSIVO (MOBILE) ---
+        // --- 1. RESPONSIVIDADE DO BOTÃO DE AÇÃO (MOBILE) ---
         function optimizeActionText() {
             const isMobile = window.innerWidth < 768; 
             const select = document.querySelector('select[name="action"]');
@@ -74,7 +106,6 @@
             
             for (let i = 0; i < select.options.length; i++) {
                 const opt = select.options[i];
-                // Verifica valor da action 'marcar_entregue'
                 if (opt.value === 'marcar_entregue') {
                     if (!opt.dataset.originalText) {
                         opt.dataset.originalText = opt.text;
@@ -90,18 +121,68 @@
         window.addEventListener('resize', optimizeActionText);
         optimizeActionText();
 
-        // SE NÃO FOR TELA DE ENCOMENDAS, PARA POR AQUI.
+        // SE NÃO FOR ENCOMENDA, SAI DAQUI
         if (!isEncomendaList || !form) return;
 
-        // --- 2. LÓGICA DE MEMÓRIA (PERSISTÊNCIA) ---
 
-        // Ler IDs salvos
+        // --- 2. LÓGICA DE LIMPEZA INTELIGENTE ---
+        // Verifica se a "bandeira de segurança" existe. 
+        // Se NÃO existir, significa que viemos de um Refresh, Voltar, ou Adicionar. Limpa tudo.
+        if (!sessionStorage.getItem(KEEP_KEY)) {
+            sessionStorage.removeItem(STORAGE_KEY);
+        } else {
+            // Se existir, consome a bandeira (apaga) para que o próximo refresh limpe.
+            sessionStorage.removeItem(KEEP_KEY);
+        }
+
+        // Função para ativar a bandeira (usada apenas em ações seguras)
+        function setKeepFlag() {
+            sessionStorage.setItem(KEEP_KEY, 'true');
+        }
+
+        // --- 3. LISTENERS PARA MANTER A SELEÇÃO (Apenas Filtros/Busca) ---
+        
+        // A. Pesquisa (Botão Search)
+        const searchForm = document.getElementById('changelist-search');
+        if (searchForm) {
+            searchForm.addEventListener('submit', setKeepFlag);
+        }
+
+        // B. Cliques em Links Seguros (Filtros, Paginação, Ordenação)
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a');
+            if (!target) return;
+
+            // Se for link de Filtro lateral
+            if (target.closest('#changelist-filter')) {
+                setKeepFlag();
+                return;
+            }
+            
+            // Se for Paginação (1, 2, Próximo...)
+            if (target.closest('.paginator')) {
+                setKeepFlag();
+                return;
+            }
+
+            // Se for Ordenação de Coluna (Header da tabela)
+            if (target.closest('.result-headers')) {
+                setKeepFlag();
+                return;
+            }
+            
+            // Se clicar em "Adicionar Encomenda" ou "Voltar", NÃO chama setKeepFlag(),
+            // logo a seleção será limpa no próximo carregamento.
+        });
+
+
+        // --- 4. GERENCIAMENTO DA SELEÇÃO (IDs) ---
+
         function getSavedIds() {
             const saved = sessionStorage.getItem(STORAGE_KEY);
             return saved ? JSON.parse(saved) : [];
         }
 
-        // Salvar ID
         function saveId(id) {
             let ids = getSavedIds();
             if (!ids.includes(id)) {
@@ -111,7 +192,6 @@
             updateCounterUI();
         }
 
-        // Remover ID
         function removeId(id) {
             let ids = getSavedIds();
             ids = ids.filter(item => item !== id);
@@ -119,47 +199,62 @@
             updateCounterUI();
         }
 
-        // Limpar Tudo
         function clearStorage() {
             sessionStorage.removeItem(STORAGE_KEY);
+            // Desmarca visualmente na hora
+            form.querySelectorAll('input.action-select').forEach(cb => cb.checked = false);
             updateCounterUI();
         }
 
-        // Atualizar Contador na Tela
+        // Atualiza a interface (Contador + Botão X)
         function updateCounterUI() {
             const ids = getSavedIds();
-            let counterSpan = document.getElementById('selection-counter-span');
+            let container = document.getElementById('selection-counter-container');
             
-            if (!counterSpan) {
+            // Se não tem nada selecionado, remove o container visual e retorna
+            if (ids.length === 0) {
+                if (container) container.remove();
+                return;
+            }
+
+            // Se tem seleção mas não tem container, cria ele
+            if (!container) {
                 const actionsDiv = document.querySelector('.actions');
                 if (actionsDiv) {
-                    counterSpan = document.createElement('span');
-                    counterSpan.id = 'selection-counter-span';
-                    counterSpan.className = 'selection-counter';
-                    actionsDiv.appendChild(counterSpan);
+                    container = document.createElement('span');
+                    container.id = 'selection-counter-container';
+                    container.className = 'selection-counter-container';
+                    actionsDiv.appendChild(container);
                 } else {
                     return;
                 }
             }
 
-            if (ids.length > 0) {
-                counterSpan.innerText = `(${ids.length} selecionados)`;
-            } else {
-                counterSpan.innerText = '';
-            }
+            // Atualiza conteúdo
+            container.innerHTML = `
+                <span class="selection-counter-text">(${ids.length} selecionados)</span>
+                <button type="button" id="btn-limpar-x" class="btn-limpar-x" title="Limpar seleção">✖</button>
+            `;
+            
+            // Re-anexa o evento do botão X
+            document.getElementById('btn-limpar-x').onclick = function(e) {
+                e.preventDefault();
+                clearStorage();
+            };
         }
 
-        // A. Restaurar Seleção ao Carregar a Página
+        // --- 5. SINCRONIZAÇÃO AO CARREGAR ---
         const savedIds = getSavedIds();
         const checkboxes = form.querySelectorAll('input.action-select');
         
         checkboxes.forEach(cb => {
-            // Se estiver na memória, marca visualmente
             if (savedIds.includes(cb.value)) {
                 cb.checked = true;
+                // Força a linha a não ficar amarela (garantia extra via JS além do CSS)
+                const row = cb.closest('tr');
+                if(row) row.classList.add('selected-persistent'); // Classe fictícia só pra controle se precisar
             }
 
-            // Ouve cliques para atualizar memória
             cb.addEventListener('change', function() {
                 if (this.checked) {
                     saveId(this.value);
@@ -169,44 +264,30 @@
             });
         });
 
-        // B. Interceptar Envio (Botão IR)
+        // --- 6. ENVIO DO FORMULÁRIO (BOTÃO IR) ---
         form.addEventListener('submit', function(e) {
             const allSavedIds = getSavedIds();
-            
-            // Se não tem nada na memória, segue o fluxo normal do Django
             if (allSavedIds.length === 0) return;
 
-            // Identifica IDs que já estão na tela (o Django envia esses sozinho)
             const visibleInputs = Array.from(form.querySelectorAll('input.action-select'));
             const visibleIds = visibleInputs.map(input => input.value);
-
-            // Pega IDs que estão na memória MAS NÃO estão nesta página (filtrados ou outra paginação)
+            
+            // Injeta apenas os IDs que NÃO estão na tela (os da tela o Django já manda)
             const hiddenIdsToAdd = allSavedIds.filter(id => !visibleIds.includes(id));
 
-            // Cria inputs invisíveis para esses itens perdidos
             hiddenIdsToAdd.forEach(id => {
                 const hiddenInput = document.createElement('input');
                 hiddenInput.type = 'hidden';
-                hiddenInput.name = '_selected_action'; // Nome padrão do Django
+                hiddenInput.name = '_selected_action';
                 hiddenInput.value = id;
                 form.appendChild(hiddenInput);
             });
 
-            // LIMPA A MEMÓRIA AO ENVIAR (Solicitação: Desfazer seleção ao ir para confirmação)
-            // Usamos setTimeout para garantir que o form pegue os dados antes de limpar, 
-            // embora sessionStorage seja síncrono, limpar aqui afeta carregamentos futuros.
+            // Limpa a memória pois a ação foi executada (vai mudar de página para a confirmação)
             sessionStorage.removeItem(STORAGE_KEY);
         });
 
-        // C. Limpar ao sair (Botão Voltar)
-        const btnVoltar = document.getElementById('btn-voltar-home');
-        if (btnVoltar) {
-            btnVoltar.addEventListener('click', function() {
-                clearStorage();
-            });
-        }
-
-        // Inicializa o contador visual
+        // Inicializa UI
         updateCounterUI();
     });
 </script>

@@ -8,6 +8,7 @@
     
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // 1. Alerta de Descarte (MANTIDO ORIGINAL)
             const checkboxDescarte = document.getElementById("id_descartado");
             if (checkboxDescarte) {
                 checkboxDescarte.addEventListener('click', function(e) {
@@ -18,6 +19,32 @@
                             this.checked = false;
                         }
                     }
+                });
+            }
+
+            // 2. Proteção Contra Duplo Clique (ADICIONADO)
+            // Aplica o efeito visual e trava o formulário ao enviar
+            const form = document.getElementById("{{ opts.model_name }}_form");
+            if (form) {
+                form.addEventListener("submit", function(e) {
+                    // Seleciona todos os botões de submit da barra inferior
+                    const submitButtons = form.querySelectorAll('.submit-row input[type="submit"]');
+                    
+                    // Se já estiver enviando, bloqueia tudo
+                    if (form.dataset.submitting === "true") {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Marca o form como enviando
+                    form.dataset.submitting = "true";
+                    
+                    // Altera visualmente os botões
+                    submitButtons.forEach(btn => {
+                        btn.style.opacity = "0.6";
+                        btn.style.cursor = "wait";
+                        btn.value = "Processando...";
+                    });
                 });
             }
         });
@@ -159,17 +186,17 @@
 
 {% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
 
-{# --- ALTERAÇÃO: Bloco adicionado para colocar o botão acima do título --- #}
 {% block content_title %}
+    {% if not is_popup %}
     <div class="btn-voltar-container">
         <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-voltar-topo">← Voltar para a lista</a>
     </div>
+    {% endif %}
+    
     {{ block.super }}
 {% endblock %}
 
 {% block content %}
-
-{# --- ALTERAÇÃO: Botão removido daqui de dentro --- #}
 
 <div id="content-main">
     {% block object-tools %}
@@ -222,7 +249,12 @@
             </div>
 
             <div class="submit-row-right">
-                <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-admin-action btn-cancelar">Cancelar</a>
+                
+                {% if is_popup %}
+                    <a href="#" onclick="window.close(); return false;" class="btn-admin-action btn-cancelar">Cancelar</a>
+                {% else %}
+                    <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-admin-action btn-cancelar">Cancelar</a>
+                {% endif %}
                 
                 {% if show_save_and_add_another %}
                     <input type="submit" value="{% translate 'Save and add another' %}" name="_addanother" class="btn-admin-action">

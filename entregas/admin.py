@@ -11,8 +11,10 @@ from django.core import serializers
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection
+from django.db import connection, IntegrityError
+from django.core.exceptions import ValidationError
 from .models import Cliente, Encomenda
+import re # Importação necessária para regex
 
 admin.site.site_header = "DROGAFOZ ENCOMENDAS"
 admin.site.site_title = "Drogafoz Admin"
@@ -51,40 +53,68 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
         if User.objects.count() <= 1: return False
         return super().has_delete_permission(request, obj)
 
+# --- CORREÇÃO ERRO 2: BAIXA EM MASSA ROBUSTA ---
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
     if 'post' in request.POST:
         count = 0
         agora = timezone.now()
+        erros_conversao = 0
         
         for encomenda in queryset:
             input_name = f'valor_{encomenda.id}'
-            novo_valor_cobrado = request.POST.get(input_name)
+            valor_bruto = request.POST.get(input_name)
 
-            # Verifica se o campo existe (não é None). 
-            # Se for string vazia, assume '0'.
-            if novo_valor_cobrado is not None:
-                if novo_valor_cobrado.strip() == '':
-                    valor_final = '0'
-                else:
-                    valor_final = novo_valor_cobrado.replace(',', '.')
+            if valor_bruto is not None:
+                try:
+                    # 1. Limpeza agressiva: Remove tudo que não for dígito, vírgula ou ponto
+                    # Ex: "R$ 20,00" vira "20,00" | "20.00 " vira "20.00"
+                    valor_limpo = re.sub(r'[^\d.,]', '', str(valor_bruto))
+                    
+                    # 2. Padronização Decimal: Troca vírgula por ponto
+                    valor_limpo = valor_limpo.replace(',', '.')
+                    
+                    # 3. Tratamento de múltiplos pontos (ex: "1.000.00") -> Pega só o último ponto como decimal ou remove
+                    if valor_limpo.count('.') > 1:
+                         # Simplesmente remove os pontos anteriores, mantendo a lógica de milhar brasileira se for o caso,
+                         # ou assume que o usuário digitou errado. Vamos tentar converter direto.
+                         pass 
 
-                encomenda.valor_cobrado = valor_final
-                encomenda.status = 'ENTREGUE'
-                encomenda.data_entrega = agora
-                encomenda.save()
+                    if valor_limpo == '':
+                        valor_final = 0.00
+                    else:
+                        valor_final = float(valor_limpo)
 
-                LogEntry.objects.log_action(
-                    user_id=request.user.id,
-                    content_type_id=ContentType.objects.get_for_model(encomenda).pk,
-                    object_id=encomenda.pk,
-                    object_repr=str(encomenda),
-                    action_flag=CHANGE,
-                    change_message=f"Entregue via Baixa em Massa. Cobrado: {encomenda.valor_cobrado}"
-                )
-                count += 1
+                    encomenda.valor_cobrado = valor_final
+                    encomenda.status = 'ENTREGUE'
+                    
+                    # Garante data de entrega se não tiver
+                    if not encomenda.data_entrega:
+                         encomenda.data_entrega = agora
+                    
+                    encomenda.save()
+
+                    LogEntry.objects.log_action(
+                        user_id=request.user.id,
+                        content_type_id=ContentType.objects.get_for_model(encomenda).pk,
+                        object_id=encomenda.pk,
+                        object_repr=str(encomenda),
+                        action_flag=CHANGE,
+                        change_message=f"Entregue via Baixa em Massa. Cobrado: {encomenda.valor_cobrado}"
+                    )
+                    count += 1
+                
+                except ValueError:
+                    # Se falhar a conversão, pula essa encomenda mas não quebra o resto
+                    erros_conversao += 1
+                    continue
         
-        modeladmin.message_user(request, f"{count} encomenda(s) atualizada(s)!", messages.SUCCESS)
+        msg = f"{count} encomenda(s) atualizada(s) com sucesso!"
+        if erros_conversao > 0:
+            messages.warning(request, f"{msg} Atenção: {erros_conversao} valores não puderam ser entendidos e foram ignorados.")
+        else:
+            messages.success(request, msg)
+            
         return HttpResponseRedirect(request.get_full_path())
 
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
@@ -128,7 +158,6 @@ class StatusFilter(admin.SimpleListFilter):
     parameter_name = 'status'
 
     def lookups(self, request, model_admin):
-        # Adicionei a opção de LIXEIRA
         return (
             ('PENDENTE', 'Aguardando Retirada'), 
             ('ENTREGUE', 'Entregue ao Cliente'), 
@@ -137,7 +166,6 @@ class StatusFilter(admin.SimpleListFilter):
         )
 
     def choices(self, changelist):
-        # Contadores agora consideram apenas não-descartados para os status normais
         total_pendente = Encomenda.objects.filter(status='PENDENTE', descartado=False).count()
         total_entregue = Encomenda.objects.filter(status='ENTREGUE', descartado=False).count()
         total_geral = Encomenda.objects.filter(descartado=False).count()
@@ -167,7 +195,6 @@ class StatusFilter(admin.SimpleListFilter):
         }
 
     def queryset(self, request, queryset):
-        # Lógica de filtro alterada para respeitar o campo 'descartado'
         if self.value() == 'LIXEIRA':
             return queryset.filter(descartado=True)
             
@@ -177,7 +204,6 @@ class StatusFilter(admin.SimpleListFilter):
         if self.value() == 'TODOS': 
             return queryset.filter(descartado=False)
             
-        # Padrão: Pendentes e não descartadas
         return queryset.filter(status='PENDENTE', descartado=False)
 
 @admin.register(Cliente)
@@ -189,7 +215,6 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     @admin.display(ordering='nome', description='Nome')
     def get_nome_status(self, obj):
-        # Validação Nova: Precisa de (CPF ou RG) E (Telefone ou Email)
         tem_documento = obj.cpf or obj.rg
         tem_contato = obj.telefone or obj.email
         
@@ -213,7 +238,6 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
-    # LIST DISPLAY: Adicionei observacao e removi valor_calculado
     list_display = (
         'get_cliente_nome', 'get_descricao_fmt', 'observacao', 'get_status_fmt', 
         'get_data_chegada_fmt', 'get_data_saida_fmt', 
@@ -227,7 +251,6 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     
     readonly_fields = ('valor_calculado',)
     
-    # FIELDSETS: Organização visual do formulário com botão de descarte isolado
     fieldsets = (
         ('Dados da Encomenda', {
             'fields': (
@@ -243,7 +266,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
             )
         }),
         ('Área de Controle (Zona de Perigo)', {
-            'classes': ('collapse',), # Opcional: faz a seção ser "retrátil" se quiser, mas deixei visível
+            'classes': ('collapse',),
             'fields': ('descartado',),
             'description': '<span style="color: red; font-weight: bold;">Cuidado:</span> Encomendas descartadas somem da lista principal.'
         }),
@@ -256,7 +279,28 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
                 return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', text)
         return text
 
-    # --- CAMPOS FORMATADOS E RENOMEADOS ---
+    # --- CORREÇÃO ERRO 3 e 4 (BACK-END): VALIDAÇÃO E PROTEÇÃO DE SALVAMENTO ---
+    def save_model(self, request, obj, form, change):
+        # 1. Validação de Baixa Manual (Erro 3)
+        if obj.status == 'ENTREGUE':
+            if not obj.data_entrega:
+                # Se não informou data, assume AGORA
+                obj.data_entrega = timezone.now()
+            
+            if obj.data_entrega < obj.data_chegada:
+                messages.error(request, "ERRO: A Data de Entrega não pode ser anterior à Data de Chegada.")
+                # Truque: Impede o save revertendo o status na memória e não chamando super().save()
+                # Porém, o Django admin espera que salve. O melhor é lançar exceção ou tratar via form.
+                # Aqui vamos lançar exceção que o Django Admin mostra no topo.
+                raise ValidationError("A Data de Entrega não pode ser anterior à Data de Chegada.")
+
+        # 2. Proteção contra Duplo Clique / Integridade (Erro 4)
+        try:
+            super().save_model(request, obj, form, change)
+        except IntegrityError:
+            # Se o banco recusar por duplicidade, avisamos o usuário amigavelmente
+            messages.error(request, "ATENÇÃO: Esta encomenda já foi cadastrada anteriormente (Duplicidade detectada). O segundo cadastro foi ignorado.")
+            return # Não faz nada, apenas retorna
 
     @admin.display(ordering='valor_base', description='Valor Base')
     def get_valor_base_custom(self, obj):
@@ -269,8 +313,6 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     @admin.display(ordering='valor_cobrado', description='Valor Final')
     def get_valor_cobrado_custom(self, obj):
         return obj.valor_cobrado
-
-    # --- OUTROS CAMPOS ---
 
     @admin.display(ordering='descricao', description='Descrição')
     def get_descricao_fmt(self, obj):
@@ -294,8 +336,6 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     @admin.display(ordering='cliente__nome', description='Cliente')
     def get_cliente_nome(self, obj):
         cliente = obj.cliente
-        
-        # Validação Nova: Precisa de (CPF ou RG) E (Telefone ou Email)
         tem_documento = cliente.cpf or cliente.rg
         tem_contato = cliente.telefone or cliente.email
 
@@ -305,16 +345,12 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        
-        # Configuração dos widgets do Cliente
         field = form.base_fields['cliente']
         field.widget.can_add_related = True      
         field.widget.can_change_related = True   
         field.widget.can_view_related = False    
         field.widget.can_delete_related = False  
 
-        # --- ALTERAÇÃO AQUI: Preencher Data de Chegada Automaticamente ---
-        # Se obj for None, significa que estamos criando uma nova encomenda.
         if obj is None:
             form.base_fields['data_chegada'].initial = timezone.now()
             

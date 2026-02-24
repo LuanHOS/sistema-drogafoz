@@ -104,15 +104,16 @@
                                 <div class="item-info">
                                     <div class="desc">
                                         📦 {{ item.descricao|linebreaksbr }}
+                                        
+                                        <span class="valor-original">(Base: R$ {{ item.valor_base|floatformat:2 }})</span>
+                                        {% if item.status == 'ENTREGUE' %}
+                                            <span class="badge-entregue">(JÁ ENTREGUE)</span>
+                                        {% endif %}
+
                                         {% if item.observacao %}
                                             <div style="font-size: 12px; color: #666; font-style: italic; margin-top: 2px;">
                                                 Obs: {{ item.observacao }}
                                             </div>
-                                        {% endif %}
-
-                                        <span class="valor-original">(Base: R$ {{ item.valor_base|floatformat:2 }})</span>
-                                        {% if item.status == 'ENTREGUE' %}
-                                            <span class="badge-entregue">(JÁ ENTREGUE)</span>
                                         {% endif %}
                                     </div>
                                     <div class="meta-info">

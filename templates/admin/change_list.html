@@ -230,6 +230,38 @@
                 });
             });
 
+            // Listener no "Selecionar Tudo" (action-toggle)
+            const toggleAllCheckbox = document.getElementById('action-toggle');
+            if (toggleAllCheckbox) {
+                toggleAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+                    let ids = getSavedIds();
+                    let atualizou = false;
+
+                    checkboxes.forEach(cb => {
+                        if (isChecked) {
+                            if (!ids.includes(cb.value)) {
+                                ids.push(cb.value);
+                                atualizou = true;
+                            }
+                            const row = cb.closest('tr');
+                            if(row) row.classList.remove('selected');
+                        } else {
+                            const index = ids.indexOf(cb.value);
+                            if (index !== -1) {
+                                ids.splice(index, 1);
+                                atualizou = true;
+                            }
+                        }
+                    });
+
+                    if (atualizou) {
+                        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+                        updateCounterUI();
+                    }
+                });
+            }
+
             // Envio do Formulário (Ação em Massa)
             form.addEventListener('submit', function(e) {
                 const allSavedIds = getSavedIds();

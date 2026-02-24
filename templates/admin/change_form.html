@@ -42,6 +42,31 @@
                     });
                 });
             }
+
+            // 3. Centralizar e redimensionar Pop-up de Cliente
+            document.addEventListener("click", function(e) {
+                const link = e.target.closest('.related-widget-wrapper-link');
+                if (link && link.href) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation(); // Impede o comportamento de pop-up nativo e pequeno do Django
+                    
+                    const w = 900;
+                    const h = 700;
+                    const left = (screen.width / 2) - (w / 2);
+                    const top = (screen.height / 2) - (h / 2);
+                    
+                    let href = link.href;
+                    if (href.indexOf('_popup=1') === -1) {
+                        href += (href.indexOf('?') === -1 ? '?' : '&') + '_popup=1';
+                    }
+                    
+                    let winName = link.id ? link.id.replace(/^(change|add|delete)_/, '') : 'popup_window';
+                    // Mantém a nomenclatura nativa para garantir que os dados voltem para o select original
+                    winName = winName.replace(/\./g, '__gi__').replace(/\-/g, '__dash__').replace(/\[/g, '__ob__').replace(/\]/g, '__cb__');
+                    
+                    window.open(href, winName, `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+                }
+            }, true); // true garante prioridade sobre os scripts do Django (fase de captura)
         });
     </script>
 {% endblock %}

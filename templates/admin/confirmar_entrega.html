@@ -363,7 +363,7 @@
             const desc = row.dataset.desc;
             const dias = row.dataset.dias;
             const baseValStr = row.dataset.baseVal; 
-            const inputVal = row.querySelector('input').value; 
+            const inputVal = row.querySelector('.input-valor').value; 
             
             const valFloat = parseFloat(inputVal.replace(',', '.'));
             const baseFloat = parseFloat(baseValStr.replace(',', '.'));
@@ -414,7 +414,7 @@
                 const desc = row.dataset.desc;
                 const dias = row.dataset.dias;
                 const baseValStr = row.dataset.baseVal;
-                const inputVal = row.querySelector('input').value;
+                const inputVal = row.querySelector('.input-valor').value;
                 
                 const valFloat = parseFloat(inputVal.replace(',', '.'));
                 const baseFloat = parseFloat(baseValStr.replace(',', '.'));
@@ -466,7 +466,7 @@
                 const desc = row.dataset.desc;
                 const dias = row.dataset.dias;
                 const baseValStr = row.dataset.baseVal;
-                const inputVal = row.querySelector('input').value;
+                const inputVal = row.querySelector('.input-valor').value;
                 const valFloat = parseFloat(inputVal.replace(',', '.'));
                 const baseFloat = parseFloat(baseValStr.replace(',', '.'));
                 totalGeral += (isNaN(valFloat) ? 0 : valFloat);
@@ -513,7 +513,7 @@
             const desc = row.dataset.desc;
             const dias = row.dataset.dias;
             const baseValStr = row.dataset.baseVal;
-            const inputVal = row.querySelector('input').value;
+            const inputVal = row.querySelector('.input-valor').value;
             const valFloat = parseFloat(inputVal.replace(',', '.'));
             const baseFloat = parseFloat(baseValStr.replace(',', '.'));
             totalVal += (isNaN(valFloat) ? 0 : valFloat);

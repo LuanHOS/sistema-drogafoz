@@ -35,6 +35,8 @@
         .text-blue { color: #17a2b8 !important; }
         .border-orange { border-bottom: 3px solid #fd7e14; }
         .text-orange { color: #fd7e14 !important; }
+        .border-black { border-bottom: 3px solid #333; }
+        .text-black { color: #333 !important; }
 
         /* TABELAS E GRÁFICOS */
         .content-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
@@ -55,6 +57,18 @@
         /* CHART WRAPPER */
         .chart-container-box { position: relative; height: 300px; width: 100%; overflow: hidden; }
 
+        /* CSS ESPECÍFICO DA ABA CLIENTES */
+        .dropdown-check-list { display: inline-block; position: relative; }
+        .dropdown-check-list .anchor { min-width: 250px; width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; display: block; font-size: 13px; color: #333; }
+        .dropdown-check-list .items { display: none; position: absolute; background: #fff; border: 1px solid #ccc; width: 350px; max-height: 250px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 10px; border-radius: 4px; top: 100%; left: 0;}
+        .dropdown-check-list.visible .items { display: block; }
+        .dropdown-check-list .items input[type="text"] { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .dropdown-check-list .items label { display: block; padding: 6px 5px; font-size: 13px; font-weight: normal; color: #333; cursor: pointer; transition: background 0.2s;}
+        .dropdown-check-list .items label:hover { background-color: #f8f9fa; }
+        .cli-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        .cli-table th, .cli-table td { padding: 12px 10px; border-bottom: 1px solid #eee; text-align: left; }
+        .cli-table th { background: #f8f9fa; font-weight: bold; color: #555; }
+
         @media (max-width: 768px) { .content-row { grid-template-columns: 1fr; } }
     </style>
 {% endblock %}
@@ -71,6 +85,13 @@
 
     <div class="filter-bar">
         <form method="get" class="filter-form">
+            {% for cid in cliente_ids_selecionados %}
+                <input type="hidden" name="cliente_ids" value="{{ cid }}">
+            {% endfor %}
+            <input type="hidden" name="data_inicial_cliente" value="{{ data_inicial_cliente|default:'' }}">
+            <input type="hidden" name="data_final_cliente" value="{{ data_final_cliente|default:'' }}">
+            {% if ignorar_periodo_cliente %}<input type="hidden" name="ignorar_periodo_cliente" value="on">{% endif %}
+
             <div class="form-group">
                 <label>Início</label>
                 <input type="date" name="data_inicial" value="{{ data_inicial }}" class="form-control" id="dt_ini" {% if ignorar_periodo %}disabled{% endif %}>
@@ -81,7 +102,7 @@
             </div>
             <div class="form-group" style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
                 <input type="checkbox" name="ignorar_periodo" id="chk_ignorar" {% if ignorar_periodo %}checked{% endif %} onchange="toggleDates()">
-                <label for="chk_ignorar" style="cursor: pointer; margin: 0; color: #333;">Ver Todo Histórico</label>
+                <label for="chk_ignorar" style="cursor: pointer; margin: 0; color: #333;">Analisar todo o histórico</label>
             </div>
             <div class="form-group">
                 <button type="submit" class="btn-filtrar">Atualizar</button>
@@ -184,18 +205,190 @@
         </div>
     </div>
 
+    <div class="section-header" style="margin-top: 50px;">
+        <h2>👥 Análise Detalhada por Cliente</h2>
+    </div>
+
+    <div class="filter-bar">
+        <form method="get" class="filter-form">
+            <input type="hidden" name="data_inicial" value="{{ data_inicial|default:'' }}">
+            <input type="hidden" name="data_final" value="{{ data_final|default:'' }}">
+            {% if ignorar_periodo %}<input type="hidden" name="ignorar_periodo" value="on">{% endif %}
+
+            <div class="form-group">
+                <label>Início (Cliente)</label>
+                <input type="date" name="data_inicial_cliente" value="{{ data_inicial_cliente }}" class="form-control" id="dt_ini_cli" {% if ignorar_periodo_cliente %}disabled{% endif %}>
+            </div>
+            <div class="form-group">
+                <label>Fim (Cliente)</label>
+                <input type="date" name="data_final_cliente" value="{{ data_final_cliente }}" class="form-control" id="dt_fim_cli" {% if ignorar_periodo_cliente %}disabled{% endif %}>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
+                <input type="checkbox" name="ignorar_periodo_cliente" id="chk_ignorar_cli" {% if ignorar_periodo_cliente %}checked{% endif %} onchange="toggleDatesCli()">
+                <label for="chk_ignorar_cli" style="cursor: pointer; margin: 0; color: #333;">Analisar todo o histórico</label>
+            </div>
+            
+            <div class="form-group" style="position: relative;">
+                <label>Selecionar Clientes</label>
+                <div id="cli-dropdown" class="dropdown-check-list" tabindex="100">
+                    <span class="anchor" id="cli-anchor">Selecionar Clientes <i class="fas fa-chevron-down" style="float:right; margin-top: 3px;"></i></span>
+                    <div class="items">
+                        <input type="text" id="cli-search" placeholder="Pesquisar cliente por nome..." onkeyup="filterClients()">
+                        <div id="cli-list">
+                            {% for c in clientes_todos %}
+                            <label>
+                                <input type="checkbox" name="cliente_ids" value="{{ c.id }}" {% if c.id in cliente_ids_selecionados %}checked{% endif %}> 
+                                {{ c.nome }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn-filtrar" style="background-color: #17a2b8;">Filtrar Clientes</button>
+            </div>
+        </form>
+    </div>
+
+    {% if cli_dados %}
+    <div class="stats-grid">
+        <div class="stat-card border-green">
+            <h3>Total Recebido</h3>
+            <div class="value text-green">{{ cli_dados.qtd_recebidas }}</div>
+            <div class="sub">Encomendas recebidas no período</div>
+        </div>
+        <div class="stat-card border-blue">
+            <h3>Total Retirado</h3>
+            <div class="value text-blue">{{ cli_dados.qtd_retiradas }}</div>
+            <div class="sub">Encomendas baixadas no período</div>
+        </div>
+        <div class="stat-card border-green">
+            <h3>Total Pago</h3>
+            <div class="value text-green">R$ {{ cli_dados.total_pago|floatformat:2 }}</div>
+            <div class="sub">Em retiradas no período</div>
+        </div>
+        <div class="stat-card border-red">
+            <h3>Descontos Concedidos</h3>
+            <div class="value text-red">R$ {{ cli_dados.descontos|floatformat:2 }}</div>
+            <div class="sub">Nas retiradas do período</div>
+        </div>
+        <div class="stat-card">
+            <h3>Tempo Médio</h3>
+            <div class="value">{{ cli_dados.tempo_medio }} Dias</div>
+            <div class="sub">De retiradas no período selecionado</div>
+        </div>
+        <div class="stat-card border-orange">
+            <h3>Aguardando Retirada</h3>
+            <div class="value text-orange">{{ cli_dados.aguardando }}</div>
+            <div class="sub">Status atual (Pendente)</div>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+        <h4>📋 Histórico de Encomendas dos Clientes Selecionados</h4>
+        <div style="overflow-x: auto;">
+            <table class="cli-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Descrição</th>
+                        <th>Status</th>
+                        <th>Data Chegada</th>
+                        <th>Data Saída</th>
+                        <th style="text-align: right;">Valor Final (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enc in cli_dados.encomendas %}
+                    <tr>
+                        <td style="font-weight: bold;">{{ enc.cliente.nome }}</td>
+                        <td>{{ enc.descricao }}</td>
+                        <td>
+                            {% if enc.status == 'PENDENTE' %}
+                                <span class="badge-alert" style="background:#fff3cd; color:#856404; padding: 4px 8px;">Pendente</span>
+                            {% else %}
+                                <span class="badge-alert" style="background:#d4edda; color:#155724; padding: 4px 8px;">Entregue</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ enc.data_chegada|date:"d/m/Y" }}</td>
+                        <td>{% if enc.data_entrega %}{{ enc.data_entrega|date:"d/m/Y" }}{% else %}-{% endif %}</td>
+                        <td style="text-align: right; font-weight: bold;">{{ enc.valor_cobrado|default:enc.valor_base|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">Nenhuma encomenda encontrada no período para os clientes selecionados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="panel" style="margin-top: 20px; text-align: center; color: #888;">
+        Selecione um ou mais clientes e aplique o filtro para visualizar os dados detalhados da conta.
+    </div>
+    {% endif %}
+
 </div>
 
 <script>
+    // Funções Originais
     function toggleDates() {
         var chk = document.getElementById('chk_ignorar');
         document.getElementById('dt_ini').disabled = chk.checked;
         document.getElementById('dt_fim').disabled = chk.checked;
     }
 
+    // Funções da Nova Aba de Clientes
+    function toggleDatesCli() {
+        var chk = document.getElementById('chk_ignorar_cli');
+        if(chk) {
+            document.getElementById('dt_ini_cli').disabled = chk.checked;
+            document.getElementById('dt_fim_cli').disabled = chk.checked;
+        }
+    }
+
+    function filterClients() {
+        var input, filter, div, labels, txtValue;
+        input = document.getElementById('cli-search');
+        filter = input.value.toUpperCase();
+        div = document.getElementById("cli-list");
+        labels = div.getElementsByTagName('label');
+        for (var i = 0; i < labels.length; i++) {
+            txtValue = labels[i].textContent || labels[i].innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                labels[i].style.display = "";
+            } else {
+                labels[i].style.display = "none";
+            }
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         toggleDates();
+        toggleDatesCli();
 
+        // Lógica do Dropdown Customizado de Clientes
+        var checkList = document.getElementById('cli-dropdown');
+        var anchor = document.getElementById('cli-anchor');
+        if (checkList && anchor) {
+            anchor.onclick = function(evt) {
+                if (checkList.classList.contains('visible')) {
+                    checkList.classList.remove('visible');
+                } else {
+                    checkList.classList.add('visible');
+                    document.getElementById('cli-search').focus(); // Auto foco ao abrir
+                }
+            }
+            // Fechar ao clicar fora
+            document.addEventListener('click', function(event) {
+                if (!checkList.contains(event.target)) {
+                    checkList.classList.remove('visible');
+                }
+            });
+        }
+
+        // Gráfico Original (Intacto)
         const ctx = document.getElementById('revenueChart').getContext('2d');
         const labels = JSON.parse('{{ grafico_labels|safe }}');
         const data = JSON.parse('{{ grafico_dados|safe }}');

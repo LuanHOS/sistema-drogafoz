@@ -106,6 +106,62 @@ def relatorio_entregas(request):
         grafico_labels.append(inicio_mes.strftime('%b/%Y'))
         grafico_dados.append(float(soma_mes))
 
+    # --- 5. ANÁLISE DETALHADA POR CLIENTE ---
+    clientes_todos = Cliente.objects.all().order_by('nome')
+    cliente_ids = request.GET.getlist('cliente_ids')
+    
+    data_inicial_cli_str = request.GET.get('data_inicial_cliente')
+    data_final_cli_str = request.GET.get('data_final_cliente')
+    ignorar_periodo_cli = request.GET.get('ignorar_periodo_cliente') == 'on'
+
+    if not data_final_cli_str:
+        data_final_cli_str = hoje.strftime('%Y-%m-%d')
+    if not data_inicial_cli_str:
+        data_inicial_cli_str = hoje.replace(day=1).strftime('%Y-%m-%d')
+
+    try:
+        dt_ini_cli = make_aware(datetime.strptime(data_inicial_cli_str, '%Y-%m-%d'))
+        dt_fim_cli = make_aware(datetime.strptime(data_final_cli_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
+    except ValueError:
+        dt_ini_cli = hoje.replace(day=1)
+        dt_fim_cli = hoje
+        
+    cli_dados = None
+    if cliente_ids:
+        qs_cli = qs_todas.filter(cliente_id__in=cliente_ids)
+        
+        if ignorar_periodo_cli:
+            cli_recebidas = qs_cli
+            cli_retiradas = qs_cli.filter(status='ENTREGUE')
+            cli_lista = qs_cli.order_by('-data_chegada')
+        else:
+            cli_recebidas = qs_cli.filter(data_chegada__range=(dt_ini_cli, dt_fim_cli))
+            cli_retiradas = qs_cli.filter(status='ENTREGUE', data_entrega__range=(dt_ini_cli, dt_fim_cli))
+            cli_lista = qs_cli.filter(
+                Q(data_chegada__range=(dt_ini_cli, dt_fim_cli)) | 
+                Q(status='ENTREGUE', data_entrega__range=(dt_ini_cli, dt_fim_cli))
+            ).order_by('-data_chegada')
+            
+        cli_aguardando = qs_cli.filter(status='PENDENTE')
+        
+        cli_total_pago = cli_retiradas.aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
+        cli_descontos = cli_retiradas.filter(valor_calculado__gt=F('valor_cobrado')).aggregate(
+            total=Sum(F('valor_calculado') - F('valor_cobrado'))
+        )['total'] or 0
+        
+        cli_media_td = cli_retiradas.aggregate(media=Avg(F('data_entrega') - F('data_chegada')))['media']
+        cli_tempo_medio = cli_media_td.days if cli_media_td else 0
+        
+        cli_dados = {
+            'qtd_recebidas': cli_recebidas.count(),
+            'qtd_retiradas': cli_retiradas.count(),
+            'total_pago': cli_total_pago,
+            'descontos': cli_descontos,
+            'tempo_medio': cli_tempo_medio,
+            'aguardando': cli_aguardando.count(),
+            'encomendas': cli_lista,
+        }
+
     context = {
         'site_header': 'DROGAFOZ ENCOMENDAS',
         'title': 'Dashboard de Gestão',
@@ -132,6 +188,14 @@ def relatorio_entregas(request):
         
         'grafico_labels': json.dumps(grafico_labels),
         'grafico_dados': json.dumps(grafico_dados),
+
+        # Variáveis da Aba de Clientes
+        'clientes_todos': clientes_todos,
+        'cliente_ids_selecionados': [int(i) for i in cliente_ids if i.isdigit()],
+        'data_inicial_cliente': data_inicial_cli_str,
+        'data_final_cliente': data_final_cli_str,
+        'ignorar_periodo_cliente': ignorar_periodo_cli,
+        'cli_dados': cli_dados,
     }
     
     return render(request, 'admin/relatorio_ganhos.html', context)

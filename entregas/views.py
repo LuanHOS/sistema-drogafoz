@@ -140,10 +140,14 @@ def consulta_publica(request):
     query = request.GET.get('q')
     resultados = []
     total_geral = 0.0
+    cliente_existe = False
     
     if query:
         # Remove caracteres especiais para comparar apenas números
         termo_limpo = query.replace('.', '').replace('-', '').strip()
+        
+        # Verifica se o cliente existe no banco independentemente de ter encomendas pendentes
+        cliente_existe = Cliente.objects.filter(Q(cpf=termo_limpo) | Q(rg=termo_limpo)).exists()
         
         # Busca EXATA pelo CPF ou RG. 
         # Não usa 'icontains' para evitar matches parciais.
@@ -180,7 +184,8 @@ def consulta_publica(request):
     return render(request, 'publica/consulta.html', {
         'resultados': resultados, 
         'query': query,
-        'total_geral': total_geral
+        'total_geral': total_geral,
+        'cliente_existe': cliente_existe
     })
 
 def home(request):

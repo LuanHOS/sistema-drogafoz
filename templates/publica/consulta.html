@@ -130,8 +130,13 @@
                 </div>
             {% else %}
                 <div class="empty-msg">
-                    <p>Nenhuma encomenda encontrada para o documento informado.</p>
-                    <p style="font-size: 12px; color: #666; font-weight: normal;">Verifique se digitou corretamente ou tente outro documento (CPF ou RG).</p>
+                    {% if cliente_existe %}
+                        <p style="color: #28a745;">Cliente encontrado em nosso sistema.</p>
+                        <p style="font-size: 13px; color: #666; font-weight: normal;">No entanto, para este cliente, não há nenhuma encomenda para retirada no momento.</p>
+                    {% else %}
+                        <p>CPF/RG não cadastrado em nosso sistema.</p>
+                        <p style="font-size: 13px; color: #666; font-weight: normal;">Instruímos você a entrar em contato através do botão do WhatsApp logo abaixo para cadastrar seus dados no sistema.</p>
+                    {% endif %}
                 </div>
             {% endif %}
         {% endif %}

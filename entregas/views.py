@@ -88,22 +88,40 @@ def relatorio_entregas(request):
     
     clientes_incompletos = Cliente.objects.filter(Q(telefone__isnull=True) | Q(telefone='')).count()
 
-    # --- 4. DADOS PARA O GRÁFICO ---
+    # --- 4. DADOS PARA O GRÁFICO (CORRIGIDO PARA IGNORAR FILTROS E MÊS EXATO) ---
     grafico_labels = []
     grafico_dados = []
+    meses_pt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     
     for i in range(5, -1, -1):
-        mes_ref = hoje - timedelta(days=i*30)
-        inicio_mes = make_aware(datetime(mes_ref.year, mes_ref.month, 1))
-        prox_mes = inicio_mes + timedelta(days=32)
-        fim_mes = make_aware(datetime(prox_mes.year, prox_mes.month, 1)) - timedelta(seconds=1)
+        mes_calculado = hoje.month - i
+        ano_calculado = hoje.year
         
-        soma_mes = qs_todas.filter(
+        # Ajusta caso o mês calculado caia em um ano anterior (ex: subtrair 3 meses de Janeiro)
+        while mes_calculado <= 0:
+            mes_calculado += 12
+            ano_calculado -= 1
+            
+        inicio_mes = make_aware(datetime(ano_calculado, mes_calculado, 1))
+        
+        if mes_calculado == 12:
+            prox_mes_calc = 1
+            prox_ano_calc = ano_calculado + 1
+        else:
+            prox_mes_calc = mes_calculado + 1
+            prox_ano_calc = ano_calculado
+            
+        fim_mes = make_aware(datetime(prox_ano_calc, prox_mes_calc, 1)) - timedelta(seconds=1)
+        
+        # Filtra direto no banco ignorando qualquer data do formulário principal
+        soma_mes = Encomenda.objects.filter(
             status='ENTREGUE', 
             data_entrega__range=(inicio_mes, fim_mes)
         ).aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
         
-        grafico_labels.append(inicio_mes.strftime('%b/%Y'))
+        label_mes = f"{meses_pt[mes_calculado-1]}/{ano_calculado}"
+        
+        grafico_labels.append(label_mes)
         grafico_dados.append(float(soma_mes))
 
     # --- 5. ANÁLISE DETALHADA POR CLIENTE ---

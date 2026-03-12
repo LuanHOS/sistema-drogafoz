@@ -139,6 +139,30 @@ def marcar_entregue(modeladmin, request, queryset):
         resumo_agrupado[c_id]['itens'].append(enc)
         resumo_agrupado[c_id]['total_sugerido'] += valor_sugerido
 
+    # --- LÓGICA DE VERIFICAÇÃO DE ENCOMENDAS ESQUECIDAS ---
+    clientes_ids = list(resumo_agrupado.keys())
+    selecionados_ids = list(queryset.values_list('id', flat=True))
+    
+    encomendas_esquecidas_qs = Encomenda.objects.filter(
+        cliente_id__in=clientes_ids,
+        status='PENDENTE',
+        descartado=False
+    ).exclude(id__in=selecionados_ids).select_related('cliente').order_by('cliente__nome', 'data_chegada')
+
+    esquecidas_agrupadas = {}
+    todas_esquecidas_ids = []
+
+    for enc in encomendas_esquecidas_qs:
+        c_nome = enc.cliente.nome
+        if c_nome not in esquecidas_agrupadas:
+            esquecidas_agrupadas[c_nome] = []
+        esquecidas_agrupadas[c_nome].append({
+            'descricao': enc.descricao,
+            'remetente': enc.remetente,
+            'observacao': enc.observacao
+        })
+        todas_esquecidas_ids.append(enc.pk)
+
     context = {
         'encomendas': queryset,
         'resumo_agrupado': resumo_agrupado.values(),
@@ -146,6 +170,8 @@ def marcar_entregue(modeladmin, request, queryset):
         'title': 'Confirmação de Entrega e Pagamento',
         'opts': modeladmin.model._meta,
         'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
+        'esquecidas_agrupadas': esquecidas_agrupadas,
+        'todas_esquecidas_ids': todas_esquecidas_ids,
     }
     return render(request, 'admin/confirmar_entrega.html', context)
 

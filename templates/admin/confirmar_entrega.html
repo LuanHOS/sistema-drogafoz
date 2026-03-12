@@ -275,6 +275,43 @@
     </div>
 </div>
 
+{% if esquecidas_agrupadas %}
+<div id="modal-esquecidas" class="modal-overlay" style="display: flex;">
+    <div class="modal-box" style="max-width: 500px; width: 90%;">
+        <div class="modal-icon" style="color: #C51625;"><i class="fas fa-exclamation-circle"></i></div>
+        <h3 class="modal-title">Atenção: Encomendas Esquecidas!</h3>
+        <p class="modal-text" style="text-align: left; margin-top: 20px;">
+            Os seguintes clientes possuem outras encomendas <strong>aguardando retirada</strong> que não foram incluídas nesta lista de baixa:
+        </p>
+        
+        <div style="max-height: 250px; overflow-y: auto; text-align: left; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #eee;">
+            {% for cliente_nome, itens in esquecidas_agrupadas.items %}
+                <h4 style="margin: 0 0 8px 0; color: #123C65; font-size: 15px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">{{ cliente_nome }}</h4>
+                <ul style="list-style-type: none; padding-left: 0; margin-top: 0; margin-bottom: 15px; color: #C51625; font-size: 13px;">
+                    {% for item in itens %}
+                        <li style="margin-bottom: 6px; padding-left: 18px; position: relative;">
+                            <i class="fas fa-box" style="position: absolute; left: 0; top: 2px; font-size: 11px;"></i>
+                            <strong>{{ item.descricao }}</strong>
+                            {% if item.remetente and item.remetente != '-' %}
+                                <br><span style="color: #a71d2a; font-size: 11.5px;">Remetente: {{ item.remetente }}</span>
+                            {% endif %}
+                            {% if item.observacao %}
+                                <br><span style="color: #a71d2a; font-style: italic; font-size: 11.5px;">Obs: {{ item.observacao }}</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        </div>
+
+        <div class="modal-buttons" style="flex-direction: column; gap: 10px;">
+            <button type="button" class="btn-modal-success" onclick="adicionarEsquecidas()">Adicionar Encomendas Restantes</button>
+            <button type="button" class="btn-modal-cancel" style="width: 100%;" onclick="fecharModalEsquecidas()">Manter como está (Ignorar)</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <script>
     // --- FUNÇÃO POPUP ---
     window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
@@ -398,6 +435,37 @@
 
         // Fecha o Modal
         fecharModalRemover();
+    }
+
+    // --- FUNÇÕES DO NOVO MODAL DE ESQUECIDAS ---
+    function fecharModalEsquecidas() {
+        const modal = document.getElementById('modal-esquecidas');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function adicionarEsquecidas() {
+        const form = document.getElementById('form-entrega');
+        // Remove o input 'post' para que a action não salve no banco, apenas recarregue a tela
+        const postInput = form.querySelector('input[name="post"]');
+        if (postInput) postInput.remove();
+        
+        // CORREÇÃO: Utiliza JSON.parse com aspas simples para blindar contra erros de sintaxe no editor/navegador
+        let missingIds = [];
+        try {
+            missingIds = JSON.parse('{{ todas_esquecidas_ids|safe|default:"[]" }}');
+        } catch (e) {
+            console.error('Nenhum ID adicional encontrado.', e);
+        }
+        
+        missingIds.forEach(function(id) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '{{ action_checkbox_name }}';
+            input.value = id;
+            form.appendChild(input);
+        });
+        
+        form.submit();
     }
 
     // --- CÁLCULOS ---
@@ -689,7 +757,7 @@
 
 <style>
     /* ==========================================
-       CSS DO MODAL POP-UP DE REMOÇÃO
+       CSS DOS MODAIS (POP-UPS)
        ========================================== */
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -722,11 +790,18 @@
         border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px;
     }
     .btn-modal-cancel:hover { background: #5a6268; }
+    
     .btn-modal-confirm {
         background: #C51625; color: white; border: none; padding: 10px 20px;
         border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px;
     }
     .btn-modal-confirm:hover { background: #a71d2a; }
+
+    .btn-modal-success {
+        background: #28a745; color: white; border: none; padding: 10px 20px;
+        border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px; width: 100%;
+    }
+    .btn-modal-success:hover { background: #218838; }
 
     /* BOTÕES TOPO */
     .btn-acao-topo {

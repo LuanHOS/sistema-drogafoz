@@ -72,7 +72,7 @@
                                 {{ grupo.cliente.nome }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
                             </a>
 
-                            <span style="font-size: 13px; font-weight: normal; margin-left: 10px; color: rgba(255,255,255,0.8); border-left: 1px solid rgba(255,255,255,0.3); padding-left: 10px;">
+                            <span id="header-count-{{ grupo.cliente.id }}" style="font-size: 13px; font-weight: normal; margin-left: 10px; color: rgba(255,255,255,0.8); border-left: 1px solid rgba(255,255,255,0.3); padding-left: 10px;">
                                 {{ grupo.itens|length }} encomenda(s)
                             </span>
                         </div>
@@ -161,7 +161,7 @@
                     </ul>
 
                     <div class="cliente-total">
-                        <span>Total ({{ grupo.itens|length }} itens):</span>
+                        <span id="footer-count-{{ grupo.cliente.id }}">Total ({{ grupo.itens|length }} itens):</span>
                         <strong id="total-display-{{ grupo.cliente.id }}">R$ {{ grupo.total_sugerido|floatformat:2 }}</strong>
                     </div>
                 </div>
@@ -169,7 +169,7 @@
         </div>
 
         <div class="total-geral-bar">
-            <span>TOTAL GERAL ({{ encomendas.count }} itens):</span>
+            <span id="total-geral-text">TOTAL GERAL ({{ encomendas.count }} itens):</span>
             <span id="display-total-geral">R$ 0,00</span>
         </div>
 
@@ -414,19 +414,38 @@
         // Recalcula totais do cliente
         recalcularTudo(clienteId);
 
-        // Se o cliente ficar sem itens na tela, remove o card inteiro do cliente
-        if (lista && lista.querySelectorAll('.item-linha').length === 0) {
-            const card = document.getElementById('card-cliente-' + clienteId);
-            if (card) card.remove();
+        // Atualização dos contadores na tela em tempo real
+        let remainingItems = 0;
+        if (lista) {
+            remainingItems = lista.querySelectorAll('.item-linha').length;
+            if (remainingItems === 0) {
+                // Se o cliente ficar sem itens na tela, remove o card inteiro do cliente
+                const card = document.getElementById('card-cliente-' + clienteId);
+                if (card) card.remove();
+            } else {
+                // Atualiza contadores na UI para este cliente específico
+                const headerCount = document.getElementById('header-count-' + clienteId);
+                if (headerCount) headerCount.innerText = remainingItems + ' encomenda(s)';
+                
+                const footerCount = document.getElementById('footer-count-' + clienteId);
+                if (footerCount) footerCount.innerText = 'Total (' + remainingItems + ' itens):';
+            }
         }
 
         // Atualiza meta-dados (importante para os relatórios gerais e PDFs saberem a qtde correta nova)
         const meta = document.getElementById('meta-dados');
+        let totalItensGlobal = 0;
         if (meta) {
-            const qtdItensAtuais = document.querySelectorAll('.item-linha').length;
+            totalItensGlobal = document.querySelectorAll('.item-linha').length;
             const qtdClientesAtuais = document.querySelectorAll('.cliente-card').length;
-            meta.dataset.qtdItens = qtdItensAtuais;
+            meta.dataset.qtdItens = totalItensGlobal;
             meta.dataset.qtdClientes = qtdClientesAtuais;
+        }
+
+        // Atualiza texto do Total Geral no rodapé
+        const spanTotalGeral = document.getElementById('total-geral-text');
+        if (spanTotalGeral && totalItensGlobal !== undefined) {
+            spanTotalGeral.innerText = 'TOTAL GERAL (' + totalItensGlobal + ' itens):';
         }
 
         // Verifica estado do botão novamente e recalcula o totalzão da tela

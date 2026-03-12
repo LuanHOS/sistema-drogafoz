@@ -77,6 +77,9 @@ class Encomenda(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     descricao = models.CharField(max_length=200, verbose_name="Descrição da Encomenda")
     
+    # CAMPO NOVO: Remetente
+    remetente = models.CharField(max_length=255, default="-", verbose_name="Remetente")
+    
     # CAMPO NOVO: Observação
     observacao = models.CharField(max_length=150, blank=True, null=True, verbose_name="Observação")
     

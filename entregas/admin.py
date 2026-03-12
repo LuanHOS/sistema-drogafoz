@@ -249,6 +249,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
             'fields': (
                 'cliente', 
                 'descricao', 
+                'remetente',
                 'observacao', 
                 'status', 
                 'data_chegada', 

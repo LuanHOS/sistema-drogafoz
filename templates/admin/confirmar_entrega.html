@@ -111,6 +111,12 @@
                                             <span class="badge-entregue">(JÁ ENTREGUE)</span>
                                         {% endif %}
 
+                                        {% if item.remetente and item.remetente != '-' %}
+                                            <div style="font-size: 13.5px; color: #444; margin-top: 4px;">
+                                                <strong>Remetente:</strong> {{ item.remetente }}
+                                            </div>
+                                        {% endif %}
+
                                         {% if item.observacao %}
                                             <div style="font-size: 12px; color: #666; font-style: italic; margin-top: 2px;">
                                                 Obs: {{ item.observacao }}

@@ -15,6 +15,16 @@
         min-width: 110px !important;
     }
 
+    /* Adicionado para suportar a nova coluna Remetente sem quebrar o layout */
+    th.column-get_remetente_fmt { 
+        width: 15% !important; 
+    }
+    td.field-get_remetente_fmt {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
+    }
+
     /* 2. CORREÇÃO DO FUNDO AMARELO */
     /* Garante que mesmo que o CSS do Django tente aplicar, nós forçamos a cor padrão */
     tr.forced-clean { background-color: white !important; }

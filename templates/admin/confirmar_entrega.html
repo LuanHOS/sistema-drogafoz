@@ -44,7 +44,7 @@
         {% csrf_token %}
         
         {% for obj in encomendas %}
-            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}">
+            <input type="hidden" id="hidden_item_{{ obj.pk|unlocalize }}" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}">
         {% endfor %}
         <input type="hidden" name="action" value="marcar_entregue">
         <input type="hidden" name="post" value="yes">
@@ -139,9 +139,14 @@
                                 </div>
                                 
                                 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                                    <span style="font-size: 12px; color: #888; font-weight: 600;">
-                                        Valor Base: R$ {{ item.valor_base|floatformat:2 }}
-                                    </span>
+                                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 100%;">
+                                        <span style="font-size: 12px; color: #888; font-weight: 600;">
+                                            Valor Base: R$ {{ item.valor_base|floatformat:2 }}
+                                        </span>
+                                        <button type="button" class="btn-remover-item" onclick="removerItemLista(this, '{{ item.id|unlocalize }}', '{{ grupo.cliente.id }}')" title="Remover da lista de confirmação">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
                                     <div class="item-valor-editavel">
                                         <span class="moeda">R$</span>
                                         <input type="number" step="0.01" 
@@ -170,7 +175,7 @@
 
         <div class="submit-row">
             <a href="{% url 'admin:entregas_encomenda_changelist' %}" class="btn-cancelar">Cancelar</a>
-            <input type="submit" value="Confirmar Entrega" class="btn-confirmar">
+            <input type="submit" value="Confirmar Entrega" class="btn-confirmar" id="btn-confirmar-entrega" disabled>
         </div>
     </form>
 </div>
@@ -255,6 +260,21 @@
      data-qtd-itens="{{ encomendas.count }}">
 </div>
 
+<div id="custom-confirm-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+        <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3 class="modal-title">Remover da Lista?</h3>
+        <p class="modal-text">
+            Tem certeza que deseja remover esta encomenda da lista de baixa atual?<br><br>
+            <span style="font-size: 12px; color: #888;">Isso apenas a retira desta tela, a encomenda continuará pendente no sistema.</span>
+        </p>
+        <div class="modal-buttons">
+            <button type="button" class="btn-modal-cancel" onclick="fecharModalRemover()">Não, Manter</button>
+            <button type="button" class="btn-modal-confirm" onclick="confirmarRemoverItem()">Sim, Remover</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // --- FUNÇÃO POPUP ---
     window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
@@ -303,6 +323,83 @@
         return `${dd}-${mm}-${yyyy}`;
     }
 
+    // --- VERIFICAÇÃO CHECKBOX OBRIGATÓRIO E BOTÃO REMOVER ---
+    function verificarCheckboxes() {
+        const checkboxes = document.querySelectorAll('.check-encontrado');
+        const btn = document.getElementById('btn-confirmar-entrega');
+        if (!btn) return;
+        
+        if (checkboxes.length === 0) {
+            btn.disabled = true;
+            return;
+        }
+        
+        let todosMarcados = true;
+        checkboxes.forEach(function(cb) {
+            if (!cb.checked) {
+                todosMarcados = false;
+            }
+        });
+        
+        btn.disabled = !todosMarcados;
+    }
+
+    // Variável global para armazenar qual item será apagado
+    let itemParaRemover = null;
+
+    function removerItemLista(btn, itemId, clienteId) {
+        // Abre o modal personalizado
+        itemParaRemover = { btn: btn, itemId: itemId, clienteId: clienteId };
+        document.getElementById('custom-confirm-modal').style.display = 'flex';
+    }
+
+    function fecharModalRemover() {
+        document.getElementById('custom-confirm-modal').style.display = 'none';
+        itemParaRemover = null;
+    }
+
+    function confirmarRemoverItem() {
+        if (!itemParaRemover) return;
+
+        const btn = itemParaRemover.btn;
+        const itemId = itemParaRemover.itemId;
+        const clienteId = itemParaRemover.clienteId;
+
+        // Remove a linha visual
+        const linha = btn.closest('.item-linha');
+        const lista = btn.closest('.itens-lista');
+        if (linha) linha.remove();
+
+        // Remove o input oculto para não registrar baixa no backend
+        const hiddenInput = document.getElementById('hidden_item_' + itemId);
+        if (hiddenInput) hiddenInput.remove();
+
+        // Recalcula totais do cliente
+        recalcularTudo(clienteId);
+
+        // Se o cliente ficar sem itens na tela, remove o card inteiro do cliente
+        if (lista && lista.querySelectorAll('.item-linha').length === 0) {
+            const card = document.getElementById('card-cliente-' + clienteId);
+            if (card) card.remove();
+        }
+
+        // Atualiza meta-dados (importante para os relatórios gerais e PDFs saberem a qtde correta nova)
+        const meta = document.getElementById('meta-dados');
+        if (meta) {
+            const qtdItensAtuais = document.querySelectorAll('.item-linha').length;
+            const qtdClientesAtuais = document.querySelectorAll('.cliente-card').length;
+            meta.dataset.qtdItens = qtdItensAtuais;
+            meta.dataset.qtdClientes = qtdClientesAtuais;
+        }
+
+        // Verifica estado do botão novamente e recalcula o totalzão da tela
+        verificarCheckboxes();
+        recalcularTotalGeral();
+
+        // Fecha o Modal
+        fecharModalRemover();
+    }
+
     // --- CÁLCULOS ---
     function recalcularTudo(clientId) {
         let inputsCliente = document.querySelectorAll(`.valor-cliente-${clientId}`);
@@ -313,7 +410,9 @@
             if (!isNaN(val)) totalCliente += val;
         });
 
-        document.getElementById(`total-display-${clientId}`).innerText = formatCurrency(totalCliente);
+        const displayTotal = document.getElementById(`total-display-${clientId}`);
+        if(displayTotal) displayTotal.innerText = formatCurrency(totalCliente);
+        
         recalcularTotalGeral();
     }
 
@@ -326,7 +425,8 @@
             if (!isNaN(val)) totalGeral += val;
         });
 
-        document.getElementById('display-total-geral').innerText = formatCurrency(totalGeral);
+        const displayGeral = document.getElementById('display-total-geral');
+        if(displayGeral) displayGeral.innerText = formatCurrency(totalGeral);
     }
 
     // ==========================================
@@ -579,12 +679,55 @@
                 } else {
                     linha.classList.remove('encontrado');
                 }
+                verificarCheckboxes();
             });
         });
+
+        verificarCheckboxes(); // Aplica a trava assim que a página carrega
     });
 </script>
 
 <style>
+    /* ==========================================
+       CSS DO MODAL POP-UP DE REMOÇÃO
+       ========================================== */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); z-index: 9999;
+        display: flex; justify-content: center; align-items: center;
+    }
+    .modal-box {
+        background: #fff; width: 400px; padding: 30px; border-radius: 8px;
+        text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        animation: modalFadeIn 0.3s ease;
+    }
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-icon {
+        font-size: 45px; color: #ffc107; margin-bottom: 15px;
+    }
+    .modal-title {
+        margin: 0 0 10px 0; color: #333; font-size: 22px; font-weight: bold;
+    }
+    .modal-text {
+        color: #555; font-size: 15px; margin-bottom: 25px; line-height: 1.5;
+    }
+    .modal-buttons {
+        display: flex; justify-content: center; gap: 15px;
+    }
+    .btn-modal-cancel {
+        background: #6c757d; color: white; border: none; padding: 10px 20px;
+        border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px;
+    }
+    .btn-modal-cancel:hover { background: #5a6268; }
+    .btn-modal-confirm {
+        background: #C51625; color: white; border: none; padding: 10px 20px;
+        border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; font-size: 14px;
+    }
+    .btn-modal-confirm:hover { background: #a71d2a; }
+
     /* BOTÕES TOPO */
     .btn-acao-topo {
         background: #17a2b8; color: white; border: none; padding: 8px 15px; 
@@ -643,10 +786,10 @@
     .item-info { display: flex; flex-direction: column; gap: 5px; width: 65%; } 
     .desc { font-weight: bold; color: #333; font-size: 15px; word-break: break-word; }
     .valor-original { font-weight: normal; font-size: 12px; color: #888; margin-left: 8px; }
-    .meta-info { display: flex; gap: 10px; align-items: center; font-size: 12px; }
+    .meta-info { display: flex; align-items: center; font-size: 12px; }
     .badge-dias { background: #e2e3e5; color: #383d41; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
     .badge-dias.atrasado { background: #C51625; color: white; }
-    .aviso-taxa { color: #C51625; font-weight: bold; font-size: 11px; text-transform: uppercase; }
+    .aviso-taxa { color: #C51625; font-weight: bold; font-size: 11px; text-transform: uppercase; margin-left: 8px;}
 
     .item-valor-editavel { display: flex; align-items: center; gap: 5px; }
     .moeda { font-weight: bold; color: #555; }
@@ -655,6 +798,15 @@
         border: 1px solid #ccc; border-radius: 4px; text-align: right; color: #333;
     }
     .input-valor:focus { border-color: #123C65; outline: none; }
+
+    /* BOTÃO REMOVER ITEM */
+    .btn-remover-item {
+        background: #C51625; color: white; border: none; padding: 4px 8px; 
+        border-radius: 4px; cursor: pointer; font-size: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: background 0.2s, transform 0.1s;
+    }
+    .btn-remover-item:hover { background: #a71d2a; transform: scale(1.05); }
 
     .cliente-total {
         background: #e9ecef; padding: 15px 20px; text-align: right;
@@ -692,6 +844,11 @@
         transition: background 0.2s;
     }
     .btn-confirmar:hover { background: #218838 !important; }
+    .btn-confirmar:disabled {
+        background: #6c757d !important;
+        cursor: not-allowed !important;
+        opacity: 0.65;
+    }
 
 
     /* --- CSS DA NOTA FISCAL A4 (Mantida Original) --- */

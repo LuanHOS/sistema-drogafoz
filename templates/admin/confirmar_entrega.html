@@ -313,9 +313,20 @@
 {% endif %}
 
 <script>
+    // --- PREVENIR SAÍDA ACIDENTAL ---
+    let safeToLeaveConfirm = false;
+
+    window.addEventListener('beforeunload', function (e) {
+        if (!safeToLeaveConfirm) {
+            e.preventDefault();
+            e.returnValue = ''; // Exigência dos navegadores modernos para abrir o pop-up
+        }
+    });
+
     // --- FUNÇÃO POPUP ---
     window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
         win.close();
+        safeToLeaveConfirm = true; // Liberar saída para poder recarregar a página com os dados novos
         location.reload(); 
     };
 
@@ -463,6 +474,7 @@
     }
 
     function adicionarEsquecidas() {
+        safeToLeaveConfirm = true; // Liberar saída pois o JavaScript vai dar submit sozinho aqui
         const form = document.getElementById('form-entrega');
         // Remove o input 'post' para que a action não salve no banco, apenas recarregue a tela
         const postInput = form.querySelector('input[name="post"]');
@@ -755,6 +767,14 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
+        // --- LIBERAR SAÍDA SE FOR CONFIRMAR ENTREGA ---
+        const formEntrega = document.getElementById('form-entrega');
+        if (formEntrega) {
+            formEntrega.addEventListener('submit', function() {
+                safeToLeaveConfirm = true;
+            });
+        }
+
         recalcularTotalGeral();
 
         // Check visual de encontrados no estoque

@@ -7,7 +7,33 @@
     {{ media }}
     
     <script>
+        // --- PREVENIR SAÍDA ACIDENTAL ---
+        let formSafeToLeave = false;
+
+        window.addEventListener('beforeunload', function (e) {
+            if (!formSafeToLeave) {
+                e.preventDefault();
+                e.returnValue = ''; // Exigência dos navegadores modernos para abrir o pop-up
+            }
+        });
+
         document.addEventListener("DOMContentLoaded", function() {
+            // Permite a saída se o usuário clicar em "Salvar"
+            const formToSubmit = document.getElementById("{{ opts.model_name }}_form");
+            if (formToSubmit) {
+                formToSubmit.addEventListener("submit", function() {
+                    formSafeToLeave = true;
+                });
+            }
+
+            // Permite a saída se clicar em "Apagar" (para ele poder ir para a tela de confirmação de exclusão sem 2 popups)
+            const deleteLink = document.querySelector('.deletelink');
+            if (deleteLink) {
+                deleteLink.addEventListener('click', function() {
+                    formSafeToLeave = true;
+                });
+            }
+
             // 1. Alerta de Descarte (MANTIDO ORIGINAL)
             const checkboxDescarte = document.getElementById("id_descartado");
             if (checkboxDescarte) {

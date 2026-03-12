@@ -232,7 +232,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
     list_display = (
-        'get_cliente_nome', 'get_descricao_fmt', 'observacao', 'get_status_fmt', 
+        'get_cliente_nome', 'get_descricao_fmt', 'get_remetente_fmt', 'observacao', 'get_status_fmt', 
         'get_data_chegada_fmt', 'get_data_saida_fmt', 
         'get_valor_base_custom', 'get_valor_cobrado_custom'
     )
@@ -326,6 +326,10 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     @admin.display(ordering='descricao', description='Descrição')
     def get_descricao_fmt(self, obj):
         return self._get_colored_text(obj, obj.descricao)
+
+    @admin.display(ordering='remetente', description='Remetente')
+    def get_remetente_fmt(self, obj):
+        return self._get_colored_text(obj, obj.remetente)
 
     @admin.display(ordering='status', description='Status')
     def get_status_fmt(self, obj):

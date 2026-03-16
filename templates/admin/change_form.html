@@ -348,7 +348,9 @@
 
             <div class="submit-row-right">
                 
-                {% if not is_popup %}
+                {% if is_popup %}
+                    <a href="#" onclick="formSafeToLeave = true; window.close(); return false;" class="btn-admin-action btn-cancelar">Cancelar</a>
+                {% else %}
                     <a href="{% url opts|admin_urlname:'changelist' %}" class="btn-admin-action btn-cancelar">Cancelar</a>
                 {% endif %}
                 

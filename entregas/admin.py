@@ -258,7 +258,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
     list_display = (
-        'get_cliente_nome', 'get_descricao_fmt', 'get_remetente_fmt', 'observacao', 'get_status_fmt', 
+        'get_cliente_nome', 'id', 'get_descricao_fmt', 'get_remetente_fmt', 'observacao', 'get_status_fmt', 
         'get_data_chegada_fmt', 'get_data_saida_fmt', 
         'get_valor_base_custom', 'get_valor_cobrado_custom'
     )
@@ -268,11 +268,12 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     
-    readonly_fields = ('valor_calculado',)
+    readonly_fields = ('id', 'valor_calculado',)
     
     fieldsets = (
         ('Dados da Encomenda', {
             'fields': (
+                'id',
                 'cliente', 
                 'descricao', 
                 'remetente',
@@ -336,6 +337,14 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         except IntegrityError:
             messages.error(request, "ATENÇÃO: Esta encomenda já foi cadastrada anteriormente (Duplicidade detectada). O segundo cadastro foi ignorado.")
             return
+
+    def response_add(self, request, obj, post_url_continue=None):
+        """ Sobrescreve redirecionamento pós-criação para forçar o pop-up com o ID """
+        if not request.GET.get('_popup') and not request.POST.get('_popup'):
+            from django.urls import reverse
+            url = reverse('admin:entregas_encomenda_add')
+            return HttpResponseRedirect(f"{url}?saved_id={obj.pk}")
+        return super().response_add(request, obj, post_url_continue)
 
     @admin.display(ordering='valor_base', description='Valor Base')
     def get_valor_base_custom(self, obj):

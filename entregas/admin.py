@@ -258,7 +258,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
     list_display = (
-        'get_cliente_nome', 'id', 'get_descricao_fmt', 'get_remetente_fmt', 'observacao', 'get_status_fmt', 
+        'id', 'get_cliente_nome', 'get_descricao_fmt', 'get_remetente_fmt', 'observacao', 'get_status_fmt', 
         'get_data_chegada_fmt', 'get_data_saida_fmt', 
         'get_valor_base_custom', 'get_valor_cobrado_custom'
     )
@@ -339,8 +339,8 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
             return
 
     def response_add(self, request, obj, post_url_continue=None):
-        """ Sobrescreve redirecionamento pós-criação para forçar o pop-up com o ID """
-        if not request.GET.get('_popup') and not request.POST.get('_popup'):
+        """ Sobrescreve o redirecionamento para exibir o pop-up com o ID na mesma tela de formulário em branco. """
+        if not request.GET.get('_popup') and ('_save' in request.POST or '_addanother' in request.POST):
             from django.urls import reverse
             url = reverse('admin:entregas_encomenda_add')
             return HttpResponseRedirect(f"{url}?saved_id={obj.pk}")

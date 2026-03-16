@@ -24,6 +24,13 @@
         overflow-wrap: break-word !important;
         white-space: normal !important;
     }
+    
+    /* Adicionado para suportar a coluna ID sem quebrar a linha */
+    th.column-id, td.field-id {
+        min-width: 70px !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+    }
 
     /* 2. CORREÇÃO DO FUNDO AMARELO */
     /* Garante que mesmo que o CSS do Django tente aplicar, nós forçamos a cor padrão */

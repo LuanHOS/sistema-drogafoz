@@ -293,6 +293,7 @@
                 <thead>
                     <tr>
                         <th>Cliente</th>
+                        <th>ID</th>
                         <th>Descrição</th>
                         <th>Status</th>
                         <th>Data Chegada</th>
@@ -304,6 +305,7 @@
                     {% for enc in cli_dados.encomendas %}
                     <tr>
                         <td style="font-weight: bold;">{{ enc.cliente.nome }}</td>
+                        <td>#{{ enc.id }}</td>
                         <td>{{ enc.descricao }}</td>
                         <td>
                             {% if enc.status == 'PENDENTE' %}
@@ -317,7 +319,7 @@
                         <td style="text-align: right; font-weight: bold;">{{ enc.valor_cobrado|default:enc.valor_base|floatformat:2 }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">Nenhuma encomenda encontrada no período para os clientes selecionados.</td></tr>
+                    <tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">Nenhuma encomenda encontrada no período para os clientes selecionados.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

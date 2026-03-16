@@ -97,7 +97,7 @@
                     <ul class="itens-lista">
                         {% for item in grupo.itens %}
                             <li class="item-linha" 
-                                data-desc="{{ item.descricao }}" 
+                                data-desc="#{{ item.id }} - {{ item.descricao }}" 
                                 data-dias="{{ item.dias_estoque }}"
                                 data-base-val="{{ item.valor_base|unlocalize }}">
                                 
@@ -109,7 +109,7 @@
                                            onclick="return abrirPopupEncomenda(this.href);"
                                            style="color: inherit; text-decoration: none;"
                                            title="Editar Encomenda">
-                                            📦 {{ item.descricao|linebreaksbr }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
+                                            📦 #{{ item.id }} - {{ item.descricao|linebreaksbr }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
                                         </a>
                                         
                                         {% if item.status == 'ENTREGUE' %}
@@ -297,7 +297,7 @@
                     {% for item in itens %}
                         <li style="margin-bottom: 6px; padding-left: 18px; position: relative;">
                             <i class="fas fa-box" style="position: absolute; left: 0; top: 2px; font-size: 11px;"></i>
-                            <strong>{{ item.descricao }}</strong>
+                            <strong>#{{ item.id }} - {{ item.descricao }}</strong>
                             {% if item.remetente and item.remetente != '-' %}
                                 <br><span style="color: #a71d2a; font-size: 11.5px;">Remetente: {{ item.remetente }}</span>
                             {% endif %}

@@ -157,6 +157,7 @@ def marcar_entregue(modeladmin, request, queryset):
         if c_nome not in esquecidas_agrupadas:
             esquecidas_agrupadas[c_nome] = []
         esquecidas_agrupadas[c_nome].append({
+            'id': enc.id,
             'descricao': enc.descricao,
             'remetente': enc.remetente,
             'observacao': enc.observacao
@@ -339,8 +340,8 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
             return
 
     def response_add(self, request, obj, post_url_continue=None):
-        """ Sobrescreve o redirecionamento para exibir o pop-up com o ID na mesma tela de formulário em branco. """
-        if not request.GET.get('_popup') and ('_save' in request.POST or '_addanother' in request.POST):
+        """ Sobrescreve redirecionamento pós-criação para forçar o pop-up com o ID """
+        if not request.GET.get('_popup') and not request.POST.get('_popup'):
             from django.urls import reverse
             url = reverse('admin:entregas_encomenda_add')
             return HttpResponseRedirect(f"{url}?saved_id={obj.pk}")

@@ -61,7 +61,8 @@ class Cliente(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.nome} ({self.cpf})" if self.cpf else self.nome
+        base = f"#{self.id} - {self.nome}" if self.id else self.nome
+        return f"{base} ({self.cpf})" if self.cpf else base
     
     class Meta:
         ordering = ['nome']

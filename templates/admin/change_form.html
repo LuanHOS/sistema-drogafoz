@@ -94,13 +94,17 @@
                 }
             }, true); // true garante prioridade sobre os scripts do Django (fase de captura)
 
-            // --- LÓGICA DO MODAL DE SUCESSO (ID DA ENCOMENDA) ---
+            // --- LÓGICA DO MODAL DE SUCESSO (ID DA ENCOMENDA E CLIENTE) ---
             const urlParams = new URLSearchParams(window.location.search);
             const savedId = urlParams.get('saved_id');
+            const savedClientId = urlParams.get('saved_client_id');
             if (savedId) {
                 // Preenche o ID e exibe o modal
                 const spanId = document.getElementById('span-saved-id');
                 if(spanId) spanId.innerText = '#' + savedId;
+                
+                const spanClientId = document.getElementById('span-saved-client-id');
+                if(spanClientId && savedClientId) spanClientId.innerText = '#' + savedClientId;
                 
                 const modal = document.getElementById('modal-sucesso-encomenda');
                 if(modal) modal.style.display = 'flex';
@@ -389,7 +393,10 @@
         <h3 class="modal-title">Encomenda Salva!</h3>
         <div class="modal-text">
             A encomenda foi registrada com sucesso.<br>
-            <span style="font-size: 16px; color: #555; display: inline-block; margin-top: 15px;">Código da Encomenda (ID):</span>
+            <span style="font-size: 16px; color: #555; display: inline-block; margin-top: 15px;">Código do Cliente:</span>
+            <span id="span-saved-client-id" style="font-size: 65px; color: #123C65; font-weight: 900; display: block; margin: 10px 0; letter-spacing: -2px;"></span>
+            
+            <span style="font-size: 16px; color: #555; display: inline-block; margin-top: 15px;">Código da Encomenda:</span>
             <span id="span-saved-id" style="font-size: 65px; color: #123C65; font-weight: 900; display: block; margin: 10px 0; letter-spacing: -2px;"></span>
         </div>
         <div class="modal-buttons">

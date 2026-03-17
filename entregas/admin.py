@@ -346,7 +346,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         if not request.GET.get('_popup') and not request.POST.get('_popup'):
             from django.urls import reverse
             url = reverse('admin:entregas_encomenda_add')
-            return HttpResponseRedirect(f"{url}?saved_id={obj.pk}")
+            return HttpResponseRedirect(f"{url}?saved_id={obj.pk}&saved_client_id={obj.cliente.pk}")
         return super().response_add(request, obj, post_url_continue)
 
     @admin.display(ordering='valor_base', description='Valor Base')

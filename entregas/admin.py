@@ -229,10 +229,12 @@ class StatusFilter(admin.SimpleListFilter):
 @admin.register(Cliente)
 class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     actions = None
-    list_display = ('get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
+    list_display = ('id', 'get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
     search_fields = ('nome', 'cpf', 'rg')
     list_per_page = 25
     list_max_show_all = 10000
+    readonly_fields = ('id',)
+    fields = ('id', 'nome', 'cpf', 'rg', 'genero', 'telefone', 'email')
 
     @admin.display(ordering='nome', description='Nome')
     def get_nome_status(self, obj):

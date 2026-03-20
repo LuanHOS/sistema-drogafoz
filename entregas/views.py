@@ -29,7 +29,8 @@ def relatorio_entregas(request):
         dt_inicial = hoje.replace(day=1)
         dt_final = hoje
 
-    qs_todas = Encomenda.objects.all()
+    # Aplica o filtro de descartado=False globalmente para não entrar em nenhum cálculo do Dashboard
+    qs_todas = Encomenda.objects.filter(descartado=False)
 
     # --- 2. DADOS DO PERÍODO ---
     if ignorar_periodo:
@@ -116,6 +117,7 @@ def relatorio_entregas(request):
         # Filtra direto no banco ignorando qualquer data do formulário principal
         soma_mes = Encomenda.objects.filter(
             status='ENTREGUE', 
+            descartado=False,
             data_entrega__range=(inicio_mes, fim_mes)
         ).aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
         
@@ -237,7 +239,8 @@ def consulta_publica(request):
         qs = Encomenda.objects.filter(
             Q(cliente__cpf=termo_limpo) | 
             Q(cliente__rg=termo_limpo),
-            status='PENDENTE'
+            status='PENDENTE',
+            descartado=False
         ).order_by('-data_chegada')
 
         agora = timezone.now()

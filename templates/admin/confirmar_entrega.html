@@ -910,6 +910,9 @@
     }
 
     // --- NOVA LÓGICA: ATUALIZA RESUMO DO RETIRANTE ---
+    // Carregamos a lista completa de clientes via JSON com total segurança e performance
+    const clientesData = JSON.parse('{{ clientes_dados_json|escapejs }}');
+
     function atualizarResumoRetirante() {
         const select = django.jQuery('#id_retirante');
         const box = document.getElementById('resumo-retirante');
@@ -925,33 +928,17 @@
         // Mostra o botão de editar
         btnEdit.style.display = 'inline-flex';
 
-        // Tenta buscar dados do card correspondente se existir na tela para ser instantâneo
-        const card = document.getElementById('card-cliente-' + clientId);
-        if (card) {
-            const nome = card.dataset.clientName.replace(/#\d+ - /, "");
-            const cpf = card.dataset.clientCpf;
-            const rg = card.dataset.clientRg;
-            const tel = card.dataset.clientTel;
-            const email = card.dataset.clientEmail;
-
-            document.getElementById('resumo-nome').innerText = nome;
-            // Regra 3: CPF se tiver, se não RG.
-            document.getElementById('resumo-doc').innerText = cpf ? "CPF: " + cpf : (rg ? "RG: " + rg : "Não informado");
-            // Regra 3: Telefone se tiver, se não E-mail.
-            document.getElementById('resumo-contato').innerText = tel || email || "Não informado";
+        // Puxa as informações do dicionário pre-carregado com todos os clientes
+        const cli = clientesData[clientId];
+        if (cli) {
+            document.getElementById('resumo-nome').innerText = cli.nome;
+            document.getElementById('resumo-doc').innerText = cli.cpf ? "CPF: " + cli.cpf : (cli.rg ? "RG: " + cli.rg : "Não informado");
+            document.getElementById('resumo-contato').innerText = cli.telefone ? cli.telefone : (cli.email ? cli.email : "Não Informado");
         } else {
-            // Caso o cliente tenha sido adicionado via popup (não tem card na tela ainda)
-            const data = select.select2('data');
-            if (data && data.length > 0) {
-                const fullText = data[0].text;
-                // Exemplo: "#5 - Maria (CPF: 123...)"
-                const nomeMatch = fullText.match(/#\d+ - ([^(]+)/);
-                const docMatch = fullText.match(/\(([^)]+)\)/);
-                
-                document.getElementById('resumo-nome').innerText = nomeMatch ? nomeMatch[1].trim() : "-";
-                document.getElementById('resumo-doc').innerText = docMatch ? docMatch[1].trim() : "Não informado";
-                document.getElementById('resumo-contato').innerText = "Consulte no botão Alterar Dados";
-            }
+            // Apenas para caso de segurança máxima contra bugs de sincronia
+            document.getElementById('resumo-nome').innerText = "-";
+            document.getElementById('resumo-doc').innerText = "Não informado";
+            document.getElementById('resumo-contato').innerText = "Não Informado";
         }
         
         box.style.display = 'block';
@@ -990,6 +977,7 @@
 
         // LÓGICA DE PRÉ-PREENCHIMENTO
         let idParaSelecionar = null;
+        let reprParaSelecionar = null;
 
         // 1. Prioridade absoluta: Se houve recarregamento após adicionar/editar um cliente
         const idPersistido = sessionStorage.getItem('retirante_persist_id');
@@ -997,26 +985,28 @@
         
         if (idPersistido) {
             idParaSelecionar = idPersistido;
-            // Se o ID não existe no select ainda (novo cliente), adiciona a opção manualmente
-            if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
-                const newOption = new Option(reprPersistido, idParaSelecionar, true, true);
-                $select.append(newOption).trigger('change');
-            }
+            reprParaSelecionar = reprPersistido;
             sessionStorage.removeItem('retirante_persist_id');
             sessionStorage.removeItem('retirante_persist_repr');
         } else {
-            // 2. Lógica de quem tem mais itens
+            // 2. Lógica de quem tem mais itens na lista
             let maxItens = -1;
             document.querySelectorAll('.cliente-card').forEach(card => {
                 let count = parseInt(card.dataset.itemCount);
                 if (count > maxItens) {
                     maxItens = count;
                     idParaSelecionar = card.dataset.clientId;
+                    reprParaSelecionar = card.dataset.clientName; // Usado para criar a tag <option>
                 }
             });
         }
 
         if (idParaSelecionar) {
+            // Cria e insere o option se ele ainda não estiver lá, garantindo que o jQuery dispare corretamente o select
+            if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
+                const newOption = new Option(reprParaSelecionar, idParaSelecionar, true, true);
+                $select.append(newOption);
+            }
             $select.val(idParaSelecionar).trigger('change');
         }
 

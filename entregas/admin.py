@@ -17,6 +17,7 @@ from django import forms
 from django.contrib.admin.widgets import AutocompleteSelect
 from .models import Cliente, Encomenda, Retirada
 import re 
+import json
 
 admin.site.site_header = "DROGAFOZ ENCOMENDAS"
 admin.site.site_title = "Drogafoz Admin"
@@ -212,6 +213,17 @@ def marcar_entregue(modeladmin, request, queryset):
         })
         todas_esquecidas_ids.append(enc.pk)
 
+    # --- DICIONÁRIO COMPLETO DE CLIENTES PARA O JS ---
+    clientes_dados = {
+        str(c.id): {
+            'nome': c.nome,
+            'cpf': c.cpf or '',
+            'rg': c.rg or '',
+            'telefone': c.telefone or '',
+            'email': c.email or ''
+        } for c in Cliente.objects.all()
+    }
+
     context = {
         'encomendas': queryset,
         'resumo_agrupado': resumo_agrupado.values(),
@@ -222,6 +234,7 @@ def marcar_entregue(modeladmin, request, queryset):
         'esquecidas_agrupadas': esquecidas_agrupadas,
         'todas_esquecidas_ids': todas_esquecidas_ids,
         'retirante_form': RetiranteForm(),
+        'clientes_dados_json': json.dumps(clientes_dados),
     }
     return render(request, 'admin/confirmar_entrega.html', context)
 

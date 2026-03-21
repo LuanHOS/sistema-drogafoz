@@ -20,6 +20,29 @@
         }
         .resumo-retirante p { margin: 5px 0; font-size: 13px; color: #333; }
         .resumo-retirante strong { color: #123C65; }
+
+        /* Estilo dos Novos Botões de Cliente */
+        .btn-cliente-acao {
+            background: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-cliente-acao:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        .btn-cliente-add { color: #28a745; }
+        .btn-cliente-edit { color: #123C65; }
     </style>
 {% endblock %}
 
@@ -205,6 +228,15 @@
             <div>
                 {{ retirante_form.retirante }}
             </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn-cliente-acao btn-cliente-add" onclick="abrirPopupNovoCliente();">
+                    <i class="fas fa-plus-circle"></i> Novo Cliente
+                </button>
+                <button type="button" id="btn-editar-retirante" class="btn-cliente-acao btn-cliente-edit" style="display: none;" onclick="editarRetiranteSelecionado();">
+                    <i class="fas fa-edit"></i> Alterar Dados
+                </button>
+            </div>
             
             <div id="resumo-retirante" class="resumo-retirante">
                 <p><strong>Nome:</strong> <span id="resumo-nome">-</span></p>
@@ -383,8 +415,23 @@
         const h = 700;
         const left = (screen.width / 2) - (w / 2);
         const top = (screen.height / 2) - (h / 2);
-        window.open(url, 'EditarCliente', `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+        window.open(url, "EditarCliente", `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
         return false;
+    }
+
+    // Função para abrir pop-up de novo cliente sem usar tags de URL do Django inline para evitar erros
+    function abrirPopupNovoCliente() {
+        const url = "/admin/entregas/cliente/add/?_popup=1";
+        abrirPopupCliente(url);
+    }
+
+    // Função para editar o retirante atualmente selecionado no select
+    function editarRetiranteSelecionado() {
+        const id = django.jQuery('#id_retirante').val();
+        if (id) {
+            const url = "/admin/entregas/cliente/" + id + "/change/?_popup=1";
+            abrirPopupCliente(url);
+        }
     }
 
     // --- NOVA FUNÇÃO: POPUP PARA ENCOMENDAS ---
@@ -393,7 +440,7 @@
         const h = 700;
         const left = (screen.width / 2) - (w / 2);
         const top = (screen.height / 2) - (h / 2);
-        window.open(url, 'EditarEncomenda', `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+        window.open(url, "EditarEncomenda", `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
         return false;
     }
 
@@ -857,31 +904,34 @@
     function atualizarResumoRetirante() {
         const select = django.jQuery('#id_retirante');
         const box = document.getElementById('resumo-retirante');
+        const btnEdit = document.getElementById('btn-editar-retirante');
         
         if (!select.val()) {
             box.style.display = 'none';
+            btnEdit.style.display = 'none';
             return;
         }
 
-        // Obtém o texto do item selecionado no Select2 (Ex: "#1 - João (12345678901)")
-        const fullText = select.select2('data')[0].text;
-        
-        // Extraímos os dados usando Regex simples baseada no padrão de __str__ do modelo Cliente
-        // Nome: Tudo após o código #id - e antes do parênteses
-        const nomeMatch = fullText.match(/#\d+ - ([^(]+)/);
-        const nome = nomeMatch ? nomeMatch[1].trim() : "-";
-        
-        // CPF: Tudo dentro do parênteses
-        const cpfMatch = fullText.match(/\(([^)]+)\)/);
-        const doc = cpfMatch ? cpfMatch[1].trim() : "Não informado";
+        // Mostra o botão de editar
+        btnEdit.style.display = 'inline-flex';
 
-        // Como o Autocomplete do Django não traz telefone/email nativamente no texto do Select2,
-        // informamos que os dados básicos foram validados.
-        document.getElementById('resumo-nome').innerText = nome;
-        document.getElementById('resumo-doc').innerText = doc;
-        document.getElementById('resumo-contato').innerText = "Verifique no cadastro ao lado (✏️)";
-        
-        box.style.display = 'block';
+        // Obtém o texto do item selecionado no Select2 (Ex: "#1 - João (12345678901)")
+        const data = select.select2('data');
+        if (data && data.length > 0) {
+            const fullText = data[0].text;
+            
+            const nomeMatch = fullText.match(/#\d+ - ([^(]+)/);
+            const nome = nomeMatch ? nomeMatch[1].trim() : "-";
+            
+            const cpfMatch = fullText.match(/\(([^)]+)\)/);
+            const doc = cpfMatch ? cpfMatch[1].trim() : "Não informado";
+
+            document.getElementById('resumo-nome').innerText = nome;
+            document.getElementById('resumo-doc').innerText = doc;
+            document.getElementById('resumo-contato').innerText = "Verifique no cadastro ao lado (✏️)";
+            
+            box.style.display = 'block';
+        }
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -919,7 +969,7 @@
 
 <style>
     /* ==========================================
-       CSS DOS MODAIS (POP-UPS)
+        CSS DOS MODAIS (POP-UPS)
        ========================================== */
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;

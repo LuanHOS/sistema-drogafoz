@@ -179,6 +179,19 @@
             <span id="display-total-geral">R$ 0,00</span>
         </div>
 
+        <div style="background: #f1f8ff; border: 1px solid #cce5ff; padding: 15px 20px; border-radius: 8px; margin-top: 25px;">
+            <label for="retirante_id" style="font-weight: bold; color: #123C65; font-size: 15px; display: block; margin-bottom: 8px;">
+                <i class="fas fa-user-check"></i> Quem está retirando as encomendas no balcão? (Obrigatório)
+            </label>
+            <select name="retirante_id" id="retirante_id" required style="width: 100%; padding: 12px; border-radius: 5px; border: 1px solid #b8daff; font-size: 14px;">
+                <option value="">-- Pesquise ou selecione quem veio buscar --</option>
+                {% for cli in clientes_todos %}
+                    <option value="{{ cli.id }}">#{{ cli.id }} - {{ cli.nome }} ({{ cli.cpf|default:cli.rg|default:'Sem Documento' }})</option>
+                {% endfor %}
+            </select>
+            <p style="font-size: 12px; color: #666; margin-top: 5px; margin-bottom: 0;">O nome selecionado constará no recibo (Retirada) e nos registros de auditoria.</p>
+        </div>
+
         <div class="submit-row">
             <a href="{% url 'admin:entregas_encomenda_changelist' %}" class="btn-cancelar">Cancelar</a>
             <input type="submit" value="Confirmar Entrega" class="btn-confirmar" id="btn-confirmar-entrega" disabled>
@@ -548,15 +561,23 @@
     // LÓGICA PDF A4 (MANTIDA)
     // ==========================================
     function prepararPDF(tipo, clientId = null) {
+        const selectRetirante = document.getElementById('retirante_id');
+        if (selectRetirante && !selectRetirante.value) {
+            alert("Por favor, selecione quem está retirando as encomendas no balcão antes de imprimir a nota.");
+            selectRetirante.focus();
+            return;
+        }
+        const retiranteNome = selectRetirante ? selectRetirante.options[selectRetirante.selectedIndex].text : '';
+
         const molde = document.getElementById('molde-original').firstElementChild.cloneNode(true);
         const renderZone = document.getElementById('render-zone');
         renderZone.innerHTML = ''; 
         
         let filename = '';
         if (tipo === 'individual') {
-            filename = preencherIndividualA4(molde, clientId);
+            filename = preencherIndividualA4(molde, clientId, retiranteNome);
         } else {
-            filename = preencherGeralA4(molde);
+            filename = preencherGeralA4(molde, retiranteNome);
         }
 
         renderZone.appendChild(molde);
@@ -574,7 +595,7 @@
         }, 100);
     }
 
-    function preencherIndividualA4(el, clientId) {
+    function preencherIndividualA4(el, clientId, retiranteNome) {
         const card = document.getElementById(`card-cliente-${clientId}`);
         const nome = card.dataset.clientName;
         const cpf = card.dataset.clientCpf;
@@ -585,6 +606,8 @@
         
         let infoHtml = `<strong>Cliente:</strong> ${nome}`;
         if(cpf) infoHtml += `<br><strong>CPF:</strong> ${cpf}`;
+        infoHtml += `<br><strong style="color:#C51625;">Retirado por:</strong> ${retiranteNome}`;
+
         el.querySelector('.receipt-client-info').innerHTML = infoHtml;
 
         let tbodyHtml = '';
@@ -617,7 +640,7 @@
         return `${nome.trim()}_${qtdItens}itens_${getFilenameDate()}.pdf`;
     }
 
-    function preencherGeralA4(el) {
+    function preencherGeralA4(el, retiranteNome) {
         const clientesCards = document.querySelectorAll('.cliente-card');
         const meta = document.getElementById('meta-dados');
 
@@ -625,7 +648,8 @@
         el.querySelector('.receipt-client-info').innerHTML = `
             <strong>RELATÓRIO GERAL DE BAIXA</strong><br>
             Quantidade de Clientes: ${meta.dataset.qtdClientes}<br>
-            Quantidade de Itens: ${meta.dataset.qtdItens}
+            Quantidade de Itens: ${meta.dataset.qtdItens}<br>
+            <strong style="color:#C51625;">Retirado por:</strong> ${retiranteNome}
         `;
 
         let tbodyHtml = '';
@@ -673,6 +697,14 @@
     // LÓGICA TÉRMICA 80mm (MANTIDA)
     // ==========================================
     function prepararPDF80mmGeral() {
+        const selectRetirante = document.getElementById('retirante_id');
+        if (selectRetirante && !selectRetirante.value) {
+            alert("Por favor, selecione quem está retirando as encomendas no balcão antes de imprimir a nota.");
+            selectRetirante.focus();
+            return;
+        }
+        const retiranteNome = selectRetirante ? selectRetirante.options[selectRetirante.selectedIndex].text : '';
+
         const molde = document.getElementById('molde-80mm').firstElementChild.cloneNode(true);
         const renderZone = document.getElementById('render-zone');
         renderZone.innerHTML = '';
@@ -681,7 +713,7 @@
         
         // Cabeçalho Geral
         molde.querySelector('.thermal-date').innerText = `Data: ${getFormattedDate()}`;
-        molde.querySelector('.thermal-client-info').innerHTML = `RELATÓRIO DE BAIXA<br>Clientes: ${meta.dataset.qtdClientes} | Itens: ${meta.dataset.qtdItens}`;
+        molde.querySelector('.thermal-client-info').innerHTML = `RELATÓRIO DE BAIXA<br>Retirado por:<br>${retiranteNome}<br>Clientes: ${meta.dataset.qtdClientes} | Itens: ${meta.dataset.qtdItens}`;
 
         let itemsHtml = '';
         let totalGeral = 0;
@@ -722,6 +754,14 @@
     }
 
     function prepararPDF80mmIndividual(clientId) {
+        const selectRetirante = document.getElementById('retirante_id');
+        if (selectRetirante && !selectRetirante.value) {
+            alert("Por favor, selecione quem está retirando as encomendas no balcão antes de imprimir a nota.");
+            selectRetirante.focus();
+            return;
+        }
+        const retiranteNome = selectRetirante ? selectRetirante.options[selectRetirante.selectedIndex].text : '';
+
         const molde = document.getElementById('molde-80mm').firstElementChild.cloneNode(true);
         const renderZone = document.getElementById('render-zone');
         renderZone.innerHTML = '';
@@ -735,6 +775,8 @@
         
         let clientTxt = `CLIENTE: ${nome}`;
         if(cpf) clientTxt += `<br>CPF: ${cpf}`;
+        clientTxt += `<br>RETIRADO POR:<br>${retiranteNome}`;
+        
         molde.querySelector('.thermal-client-info').innerHTML = clientTxt;
 
         let itemsHtml = '';

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 # --- VALIDADOR DE CPF ---
 def validar_cpf_algoritmo(value):
@@ -60,6 +61,14 @@ class Cliente(models.Model):
         if not self.rg: self.rg = None
         super().save(*args, **kwargs)
 
+    # TRAVA: Proíbe deletar clientes ligados a retiradas passadas
+    def delete(self, *args, **kwargs):
+        if hasattr(self, 'retiradas_feitas') and self.retiradas_feitas.exists():
+            raise ValidationError("Este cliente não pode ser apagado pois é responsável por uma ou mais Retiradas no histórico.")
+        if self.encomenda_set.filter(retirada__isnull=False).exists():
+            raise ValidationError("Este cliente possui encomendas vinculadas a uma Retirada financeira. Ele não pode ser apagado.")
+        return super().delete(*args, **kwargs)
+
     def __str__(self):
         base = f"#{self.id} - {self.nome}" if self.id else self.nome
         return f"{base} ({self.cpf})" if self.cpf else base
@@ -68,6 +77,27 @@ class Cliente(models.Model):
         ordering = ['nome']
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
+
+# NOVA CLASSE: O RECIBO BLINDADO
+class Retirada(models.Model):
+    STATUS_CHOICES = [
+        ('ATIVA', 'Ativa'),
+        ('CANCELADA', 'Cancelada'),
+    ]
+    
+    retirado_por = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name='retiradas_feitas', verbose_name="Retirado por")
+    operador = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Operador (Caixa)")
+    data_retirada = models.DateTimeField(auto_now_add=True, verbose_name="Data e Hora da Retirada")
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor Total Cobrado")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ATIVA', verbose_name="Status da Retirada")
+
+    def __str__(self):
+        return f"Retirada #{self.id} - {self.retirado_por.nome}"
+
+    class Meta:
+        ordering = ['-data_retirada']
+        verbose_name = 'Retirada'
+        verbose_name_plural = 'Histórico de Retiradas'
 
 class Encomenda(models.Model):
     STATUS_CHOICES = [
@@ -98,12 +128,33 @@ class Encomenda(models.Model):
     # CAMPO NOVO: Switch de Descarte
     descartado = models.BooleanField(default=False, verbose_name="Descartar Encomenda")
 
+    # NOVO: Vínculo da caixa com o Recibo
+    retirada = models.ForeignKey(Retirada, on_delete=models.PROTECT, blank=True, null=True, related_name='encomendas', verbose_name="Retirada Vinculada")
+
+    def clean(self):
+        if self.pk:
+            try:
+                old_obj = Encomenda.objects.get(pk=self.pk)
+                if old_obj.retirada_id and self.retirada_id:
+                    if self.descartado:
+                        raise ValidationError({'descartado': 'Uma encomenda vinculada a uma Retirada não pode ser descartada.'})
+                    if self.status == 'PENDENTE':
+                        raise ValidationError({'status': 'Uma encomenda entregue não pode ser alterada manualmente. Cancele a Retirada associada na tela de Auditoria.'})
+                    
+                    if (old_obj.data_chegada != self.data_chegada or old_obj.descricao != self.descricao or 
+                        old_obj.valor_base != self.valor_base or old_obj.remetente != self.remetente or 
+                        old_obj.valor_cobrado != self.valor_cobrado):
+                        raise ValidationError('Os dados logísticos e financeiros de uma encomenda vinculada a uma Retirada são blindados (Somente Leitura).')
+            except Encomenda.DoesNotExist:
+                pass
+
     def save(self, *args, **kwargs):
         # Se voltar para Pendente, limpa TUDO (incluindo o cobrado)
         if self.status == 'PENDENTE':
             self.data_entrega = None
             self.valor_calculado = None
             self.valor_cobrado = None 
+            self.retirada = None
         
         elif self.data_entrega and self.valor_base:
             dias_estoque = (self.data_entrega - self.data_chegada).days
@@ -112,6 +163,12 @@ class Encomenda(models.Model):
             self.valor_calculado = self.valor_base * multiplicador
 
         super().save(*args, **kwargs)
+
+    # NOVO: Impede deletar encomendas já finalizadas
+    def delete(self, *args, **kwargs):
+        if self.retirada_id:
+            raise ValidationError("Esta encomenda não pode ser apagada pois faz parte de uma Retirada histórica.")
+        return super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"{self.descricao} - {self.cliente.nome}"

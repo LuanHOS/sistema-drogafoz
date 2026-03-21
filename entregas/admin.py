@@ -4,16 +4,16 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.utils.html import format_html
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import path
+from django.urls import path, reverse
 from django.core import serializers
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, IntegrityError
+from django.db import connection, IntegrityError, transaction
 from django.core.exceptions import ValidationError
-from .models import Cliente, Encomenda
+from .models import Cliente, Encomenda, Retirada
 import re 
 
 admin.site.site_header = "DROGAFOZ ENCOMENDAS"
@@ -62,55 +62,80 @@ def marcar_entregue(modeladmin, request, queryset):
             queryset = Encomenda.objects.filter(pk__in=selected)
 
     if 'post' in request.POST:
-        count = 0
-        agora = timezone.now()
-        erros_conversao = 0
+        retirante_id = request.POST.get('retirante_id')
         
-        for encomenda in queryset:
-            input_name = f'valor_{encomenda.id}'
-            valor_bruto = request.POST.get(input_name)
-
-            if valor_bruto is not None:
-                try:
-                    valor_limpo = re.sub(r'[^\d.,]', '', str(valor_bruto))
-                    valor_limpo = valor_limpo.replace(',', '.')
-                    
-                    if valor_limpo.count('.') > 1:
-                         pass 
-
-                    if valor_limpo == '':
-                        valor_final = 0.00
-                    else:
-                        valor_final = float(valor_limpo)
-
-                    encomenda.valor_cobrado = valor_final
-                    encomenda.status = 'ENTREGUE'
-                    
-                    if not encomenda.data_entrega:
-                         encomenda.data_entrega = agora
-                    
-                    encomenda.save()
-
-                    LogEntry.objects.log_action(
-                        user_id=request.user.id,
-                        content_type_id=ContentType.objects.get_for_model(encomenda).pk,
-                        object_id=encomenda.pk,
-                        object_repr=str(encomenda),
-                        action_flag=CHANGE,
-                        change_message=f"Entregue via Baixa em Massa. Cobrado: {encomenda.valor_cobrado}"
-                    )
-                    count += 1
+        try:
+            with transaction.atomic():
+                if not retirante_id:
+                    raise ValueError("Você precisa selecionar quem está retirando no balcão.")
                 
-                except ValueError:
-                    erros_conversao += 1
-                    continue
-        
-        msg = f"{count} encomenda(s) atualizada(s) com sucesso!"
-        if erros_conversao > 0:
-            messages.warning(request, f"{msg} Atenção: {erros_conversao} valores não puderam ser entendidos e foram ignorados.")
-        else:
-            messages.success(request, msg)
-            
+                retirante = Cliente.objects.get(pk=retirante_id)
+                agora = timezone.now()
+                
+                retirada = Retirada.objects.create(
+                    retirado_por=retirante,
+                    operador=request.user,
+                    valor_total=0,
+                    data_retirada=agora
+                )
+                
+                count = 0
+                erros_conversao = 0
+                total_cobrado = 0.0
+                
+                for encomenda in queryset:
+                    input_name = f'valor_{encomenda.id}'
+                    valor_bruto = request.POST.get(input_name)
+
+                    if valor_bruto is not None:
+                        try:
+                            valor_limpo = re.sub(r'[^\d.,]', '', str(valor_bruto))
+                            valor_limpo = valor_limpo.replace(',', '.')
+                            
+                            if valor_limpo.count('.') > 1:
+                                 pass 
+
+                            if valor_limpo == '':
+                                valor_final = 0.00
+                            else:
+                                valor_final = float(valor_limpo)
+
+                            encomenda.valor_cobrado = valor_final
+                            encomenda.status = 'ENTREGUE'
+                            encomenda.retirada = retirada
+                            
+                            if not encomenda.data_entrega:
+                                 encomenda.data_entrega = agora
+                            
+                            encomenda.save()
+                            total_cobrado += valor_final
+
+                            LogEntry.objects.log_action(
+                                user_id=request.user.id,
+                                content_type_id=ContentType.objects.get_for_model(encomenda).pk,
+                                object_id=encomenda.pk,
+                                object_repr=str(encomenda),
+                                action_flag=CHANGE,
+                                change_message=f"Baixado na Retirada #{retirada.id}. Cobrado: {encomenda.valor_cobrado}"
+                            )
+                            count += 1
+                        
+                        except ValueError:
+                            erros_conversao += 1
+                            continue
+                
+                retirada.valor_total = total_cobrado
+                retirada.save()
+
+                msg = f"{count} encomenda(s) baixadas com sucesso! Retirada #{retirada.id} registrada."
+                if erros_conversao > 0:
+                    messages.warning(request, f"{msg} Atenção: {erros_conversao} valores ignorados.")
+                else:
+                    messages.success(request, msg)
+
+        except Exception as e:
+            messages.error(request, f"Erro ao processar a baixa: {str(e)}")
+
         return HttpResponseRedirect(request.get_full_path())
 
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
@@ -173,6 +198,7 @@ def marcar_entregue(modeladmin, request, queryset):
         'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
         'esquecidas_agrupadas': esquecidas_agrupadas,
         'todas_esquecidas_ids': todas_esquecidas_ids,
+        'clientes_todos': Cliente.objects.all().order_by('nome'),
     }
     return render(request, 'admin/confirmar_entrega.html', context)
 
@@ -226,6 +252,81 @@ class StatusFilter(admin.SimpleListFilter):
             return queryset.filter(descartado=False)
         return queryset.filter(status='PENDENTE', descartado=False)
 
+@admin.register(Retirada)
+class RetiradaAdmin(admin.ModelAdmin):
+    list_display = ('id', 'retirado_por', 'data_retirada', 'valor_total', 'status', 'operador')
+    list_filter = ('status', 'data_retirada', 'operador')
+    search_fields = ('retirado_por__nome', 'retirado_por__cpf')
+    
+    def has_add_permission(self, request):
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        return False 
+        
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('<int:object_id>/cancelar/', self.admin_site.admin_view(self.cancelar_retirada), name='entregas_retirada_cancelar'),
+        ]
+        return my_urls + urls
+
+    def cancelar_retirada(self, request, object_id):
+        retirada = get_object_or_404(Retirada, pk=object_id)
+        if retirada.status == 'ATIVA':
+            try:
+                with transaction.atomic():
+                    retirada.status = 'CANCELADA'
+                    retirada.save()
+                    
+                    for enc in retirada.encomendas.all():
+                        enc.status = 'PENDENTE'
+                        enc.save() 
+                        
+                    messages.success(request, f"Retirada #{retirada.id} cancelada com sucesso. As encomendas voltaram ao estoque.")
+                    
+                    LogEntry.objects.log_action(
+                        user_id=request.user.id, 
+                        content_type_id=ContentType.objects.get_for_model(retirada).pk,
+                        object_id=retirada.pk, 
+                        object_repr=str(retirada), 
+                        action_flag=CHANGE, 
+                        change_message=f"Rollback manual efetuado"
+                    )
+            except Exception as e:
+                messages.error(request, f"Erro ao cancelar retirada: {e}")
+        return HttpResponseRedirect(reverse('admin:entregas_retirada_changelist'))
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        retirada = get_object_or_404(Retirada, pk=object_id)
+        encomendas = retirada.encomendas.all().select_related('cliente')
+        
+        resumo_agrupado = {}
+        for enc in encomendas:
+            c_id = enc.cliente.id
+            if c_id not in resumo_agrupado:
+                resumo_agrupado[c_id] = {'cliente': enc.cliente, 'itens': [], 'subtotal': 0.0}
+            
+            dias_estoque = (enc.data_entrega - enc.data_chegada).days if enc.data_entrega else 0
+            if dias_estoque < 0: dias_estoque = 0
+            enc.dias_estoque_calculado = dias_estoque
+            
+            resumo_agrupado[c_id]['itens'].append(enc)
+            if enc.valor_cobrado:
+                resumo_agrupado[c_id]['subtotal'] += float(enc.valor_cobrado)
+                
+        extra_context = extra_context or {}
+        extra_context['retirada'] = retirada
+        extra_context['resumo_agrupado'] = resumo_agrupado.values()
+        extra_context['show_save'] = False
+        extra_context['show_save_and_continue'] = False
+        extra_context['show_delete'] = False
+        
+        return render(request, 'admin/visualizar_retirada.html', extra_context)
+
 @admin.register(Cliente)
 class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     actions = None
@@ -271,7 +372,11 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     
-    readonly_fields = ('id', 'valor_calculado',)
+    def get_readonly_fields(self, request, obj=None):
+        # AQUI FOI CORRIGIDO O ERRO PARA GARANTIR SEGURANÇA
+        if obj and hasattr(obj, 'retirada_id') and obj.retirada_id:
+            return [f.name for f in self.model._meta.fields]
+        return ('id', 'valor_calculado')
     
     fieldsets = (
         ('Dados da Encomenda', {
@@ -286,7 +391,8 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
                 'data_entrega', 
                 'valor_base', 
                 'valor_calculado', 
-                'valor_cobrado'
+                'valor_cobrado',
+                'retirada'
             )
         }),
         ('Área de Controle (Zona de Perigo)', {

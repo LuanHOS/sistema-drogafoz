@@ -63,6 +63,14 @@ class RetiranteForm(forms.Form):
         required=True,
         label="Quem está retirando as encomendas no balcão? (Obrigatório)"
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Habilita os botões de Adicionar e Alterar no widget
+        self.fields['retirante'].widget.can_add_related = True
+        self.fields['retirante'].widget.can_change_related = True
+        self.fields['retirante'].widget.can_view_related = False
+        self.fields['retirante'].widget.can_delete_related = False
 # --- FIM CORREÇÃO 5 ---
 
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')

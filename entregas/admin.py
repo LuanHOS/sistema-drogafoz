@@ -213,7 +213,7 @@ def marcar_entregue(modeladmin, request, queryset):
         'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
         'esquecidas_agrupadas': esquecidas_agrupadas,
         'todas_esquecidas_ids': todas_esquecidas_ids,
-        'retirante_form': RetiranteForm(), # Injeta o form do Autocomplete na tela
+        'retirante_form': RetiranteForm(),
     }
     return render(request, 'admin/confirmar_entrega.html', context)
 
@@ -387,12 +387,9 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     
-    # --- CORREÇÃO 2, 3 e 4: Trava de Campos Segura ---
     def get_readonly_fields(self, request, obj=None):
-        # Se for Entregue (vinculado a uma retirada), trava explicitamente TODOS os campos
         if obj and hasattr(obj, 'retirada_id') and obj.retirada_id:
             return ('id', 'cliente', 'descricao', 'remetente', 'observacao', 'status', 'data_chegada', 'data_entrega', 'valor_base', 'valor_calculado', 'valor_cobrado', 'descartado', 'retirada')
-        # Em cadastros e edições normais, trava ID, calculado, status e retirada
         return ('id', 'valor_calculado', 'status', 'retirada')
     
     fieldsets = (
@@ -512,13 +509,18 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        field = form.base_fields['cliente']
-        field.widget.can_add_related = True      
-        field.widget.can_change_related = True   
-        field.widget.can_view_related = False    
-        field.widget.can_delete_related = False  
-        if obj is None:
+        
+        # PREVENÇÃO ERRO 500: Verifica se o campo 'cliente' existe antes de interagir com o widget
+        if 'cliente' in form.base_fields:
+            field = form.base_fields['cliente']
+            field.widget.can_add_related = True      
+            field.widget.can_change_related = True   
+            field.widget.can_view_related = False    
+            field.widget.can_delete_related = False  
+            
+        if obj is None and 'data_chegada' in form.base_fields:
             form.base_fields['data_chegada'].initial = timezone.now()
+            
         return form
 
     def get_urls(self):

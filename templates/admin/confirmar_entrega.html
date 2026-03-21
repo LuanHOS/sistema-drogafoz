@@ -94,6 +94,9 @@
                      data-client-id="{{ grupo.cliente.id }}"
                      data-client-name="#{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}" 
                      data-client-cpf="{{ grupo.cliente.cpf|default:'' }}"
+                     data-client-rg="{{ grupo.cliente.rg|default:'' }}"
+                     data-client-tel="{{ grupo.cliente.telefone|default:'' }}"
+                     data-client-email="{{ grupo.cliente.email|default:'' }}"
                      data-item-count="{{ grupo.itens|length }}">
                     
                     <div class="cliente-header">
@@ -400,13 +403,19 @@
     // --- FUNÇÃO POPUP ---
     window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
         win.close();
-        safeToLeaveConfirm = true; // Liberar saída para poder recarregar a página com os dados novos
+        safeToLeaveConfirm = true; 
+        // LÓGICA DE PERSISTÊNCIA: Salva o ID no storage para pré-selecionar após o reload
+        sessionStorage.setItem('retirante_persist_id', newId);
+        sessionStorage.setItem('retirante_persist_repr', newRepr);
         location.reload(); 
     };
 
     window.dismissAddRelatedObjectPopup = function(win, newId, newRepr) {
         win.close();
         safeToLeaveConfirm = true; 
+        // LÓGICA DE PERSISTÊNCIA: Salva o ID no storage para pré-selecionar após o reload
+        sessionStorage.setItem('retirante_persist_id', newId);
+        sessionStorage.setItem('retirante_persist_repr', newRepr);
         location.reload(); 
     };
 
@@ -905,8 +914,9 @@
         const select = django.jQuery('#id_retirante');
         const box = document.getElementById('resumo-retirante');
         const btnEdit = document.getElementById('btn-editar-retirante');
+        const clientId = select.val();
         
-        if (!select.val()) {
+        if (!clientId) {
             box.style.display = 'none';
             btnEdit.style.display = 'none';
             return;
@@ -915,23 +925,36 @@
         // Mostra o botão de editar
         btnEdit.style.display = 'inline-flex';
 
-        // Obtém o texto do item selecionado no Select2 (Ex: "#1 - João (12345678901)")
-        const data = select.select2('data');
-        if (data && data.length > 0) {
-            const fullText = data[0].text;
-            
-            const nomeMatch = fullText.match(/#\d+ - ([^(]+)/);
-            const nome = nomeMatch ? nomeMatch[1].trim() : "-";
-            
-            const cpfMatch = fullText.match(/\(([^)]+)\)/);
-            const doc = cpfMatch ? cpfMatch[1].trim() : "Não informado";
+        // Tenta buscar dados do card correspondente se existir na tela para ser instantâneo
+        const card = document.getElementById('card-cliente-' + clientId);
+        if (card) {
+            const nome = card.dataset.clientName.replace(/#\d+ - /, "");
+            const cpf = card.dataset.clientCpf;
+            const rg = card.dataset.clientRg;
+            const tel = card.dataset.clientTel;
+            const email = card.dataset.clientEmail;
 
             document.getElementById('resumo-nome').innerText = nome;
-            document.getElementById('resumo-doc').innerText = doc;
-            document.getElementById('resumo-contato').innerText = "Verifique no cadastro ao lado (✏️)";
-            
-            box.style.display = 'block';
+            // Regra 3: CPF se tiver, se não RG.
+            document.getElementById('resumo-doc').innerText = cpf ? "CPF: " + cpf : (rg ? "RG: " + rg : "Não informado");
+            // Regra 3: Telefone se tiver, se não E-mail.
+            document.getElementById('resumo-contato').innerText = tel || email || "Não informado";
+        } else {
+            // Caso o cliente tenha sido adicionado via popup (não tem card na tela ainda)
+            const data = select.select2('data');
+            if (data && data.length > 0) {
+                const fullText = data[0].text;
+                // Exemplo: "#5 - Maria (CPF: 123...)"
+                const nomeMatch = fullText.match(/#\d+ - ([^(]+)/);
+                const docMatch = fullText.match(/\(([^)]+)\)/);
+                
+                document.getElementById('resumo-nome').innerText = nomeMatch ? nomeMatch[1].trim() : "-";
+                document.getElementById('resumo-doc').innerText = docMatch ? docMatch[1].trim() : "Não informado";
+                document.getElementById('resumo-contato').innerText = "Consulte no botão Alterar Dados";
+            }
         }
+        
+        box.style.display = 'block';
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -959,10 +982,45 @@
         });
 
         // Evento de mudança no Select2 (usando jQuery do Django para garantir compatibilidade)
-        django.jQuery('#id_retirante').on('change', function() {
+        const $select = django.jQuery('#id_retirante');
+        
+        $select.on('change', function() {
             atualizarResumoRetirante();
         });
 
+        // LÓGICA DE PRÉ-PREENCHIMENTO
+        let idParaSelecionar = null;
+
+        // 1. Prioridade absoluta: Se houve recarregamento após adicionar/editar um cliente
+        const idPersistido = sessionStorage.getItem('retirante_persist_id');
+        const reprPersistido = sessionStorage.getItem('retirante_persist_repr');
+        
+        if (idPersistido) {
+            idParaSelecionar = idPersistido;
+            // Se o ID não existe no select ainda (novo cliente), adiciona a opção manualmente
+            if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
+                const newOption = new Option(reprPersistido, idParaSelecionar, true, true);
+                $select.append(newOption).trigger('change');
+            }
+            sessionStorage.removeItem('retirante_persist_id');
+            sessionStorage.removeItem('retirante_persist_repr');
+        } else {
+            // 2. Lógica de quem tem mais itens
+            let maxItens = -1;
+            document.querySelectorAll('.cliente-card').forEach(card => {
+                let count = parseInt(card.dataset.itemCount);
+                if (count > maxItens) {
+                    maxItens = count;
+                    idParaSelecionar = card.dataset.clientId;
+                }
+            });
+        }
+
+        if (idParaSelecionar) {
+            $select.val(idParaSelecionar).trigger('change');
+        }
+
+        atualizarResumoRetirante();
         verificarCheckboxes(); // Aplica a trava assim que a página carrega
     });
 </script>

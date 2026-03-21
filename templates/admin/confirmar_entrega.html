@@ -5,6 +5,9 @@
     {{ block.super }}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .select2-container { width: 100% !important; }
+    </style>
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -180,16 +183,16 @@
         </div>
 
         <div style="background: #f1f8ff; border: 1px solid #cce5ff; padding: 15px 20px; border-radius: 8px; margin-top: 25px;">
-            <label for="retirante_id" style="font-weight: bold; color: #123C65; font-size: 15px; display: block; margin-bottom: 8px;">
-                <i class="fas fa-user-check"></i> Quem está retirando as encomendas no balcão? (Obrigatório)
-            </label>
-            <select name="retirante_id" id="retirante_id" required style="width: 100%; padding: 12px; border-radius: 5px; border: 1px solid #b8daff; font-size: 14px;">
-                <option value="">-- Pesquise ou selecione quem veio buscar --</option>
-                {% for cli in clientes_todos %}
-                    <option value="{{ cli.id }}">#{{ cli.id }} - {{ cli.nome }} ({{ cli.cpf|default:cli.rg|default:'Sem Documento' }})</option>
-                {% endfor %}
-            </select>
-            <p style="font-size: 12px; color: #666; margin-top: 5px; margin-bottom: 0;">O nome selecionado constará no recibo (Retirada) e nos registros de auditoria.</p>
+            {{ retirante_form.media }}
+            <div style="margin-bottom: 5px;">
+                <label for="id_retirante" style="font-weight: bold; color: #123C65; font-size: 15px; display: block;">
+                    <i class="fas fa-user-check"></i> Quem está retirando as encomendas no balcão? (Obrigatório)
+                </label>
+            </div>
+            <div>
+                {{ retirante_form.retirante }}
+            </div>
+            <p style="font-size: 12px; color: #666; margin-top: 8px; margin-bottom: 0;">Use o botão <i class="fas fa-plus-circle" style="color:#28a745;"></i> para cadastrar um novo retirante na hora.</p>
         </div>
 
         <div class="submit-row">
@@ -561,7 +564,8 @@
     // LÓGICA PDF A4 (MANTIDA)
     // ==========================================
     function prepararPDF(tipo, clientId = null) {
-        const selectRetirante = document.getElementById('retirante_id');
+        // Usa o id gerado pelo Form do Django
+        const selectRetirante = document.getElementById('id_retirante');
         if (selectRetirante && !selectRetirante.value) {
             alert("Por favor, selecione quem está retirando as encomendas no balcão antes de imprimir a nota.");
             selectRetirante.focus();
@@ -604,7 +608,7 @@
 
         el.querySelector('.receipt-date').innerText = `Data: ${getFormattedDate()}`;
         
-        let infoHtml = `<strong>Cliente:</strong> ${nome}`;
+        let infoHtml = `<strong>Titular Encomenda:</strong> ${nome}`;
         if(cpf) infoHtml += `<br><strong>CPF:</strong> ${cpf}`;
         infoHtml += `<br><strong style="color:#C51625;">Retirado por:</strong> ${retiranteNome}`;
 
@@ -697,7 +701,7 @@
     // LÓGICA TÉRMICA 80mm (MANTIDA)
     // ==========================================
     function prepararPDF80mmGeral() {
-        const selectRetirante = document.getElementById('retirante_id');
+        const selectRetirante = document.getElementById('id_retirante');
         if (selectRetirante && !selectRetirante.value) {
             alert("Por favor, selecione quem está retirando as encomendas no balcão antes de imprimir a nota.");
             selectRetirante.focus();
@@ -754,7 +758,7 @@
     }
 
     function prepararPDF80mmIndividual(clientId) {
-        const selectRetirante = document.getElementById('retirante_id');
+        const selectRetirante = document.getElementById('id_retirante');
         if (selectRetirante && !selectRetirante.value) {
             alert("Por favor, selecione quem está retirando as encomendas no balcão antes de imprimir a nota.");
             selectRetirante.focus();

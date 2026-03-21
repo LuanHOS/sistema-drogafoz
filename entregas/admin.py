@@ -13,6 +13,8 @@ from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, IntegrityError, transaction
 from django.core.exceptions import ValidationError
+from django import forms
+from django.contrib.admin.widgets import AutocompleteSelect
 from .models import Cliente, Encomenda, Retirada
 import re 
 
@@ -53,6 +55,16 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
         if User.objects.count() <= 1: return False
         return super().has_delete_permission(request, obj)
 
+# --- INÍCIO CORREÇÃO 5 (FORM DO RETIRANTE) ---
+class RetiranteForm(forms.Form):
+    retirante = forms.ModelChoiceField(
+        queryset=Cliente.objects.all(),
+        widget=AutocompleteSelect(Retirada._meta.get_field('retirado_por'), admin.site),
+        required=True,
+        label="Quem está retirando as encomendas no balcão? (Obrigatório)"
+    )
+# --- FIM CORREÇÃO 5 ---
+
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
     # --- CORREÇÃO DE PERSISTÊNCIA (IGNORAR FILTRO DE BUSCA) ---
@@ -62,7 +74,8 @@ def marcar_entregue(modeladmin, request, queryset):
             queryset = Encomenda.objects.filter(pk__in=selected)
 
     if 'post' in request.POST:
-        retirante_id = request.POST.get('retirante_id')
+        # Puxa o campo 'retirante' gerado pelo Autocomplete
+        retirante_id = request.POST.get('retirante')
         
         try:
             with transaction.atomic():
@@ -78,6 +91,8 @@ def marcar_entregue(modeladmin, request, queryset):
                     valor_total=0,
                     data_retirada=agora
                 )
+                # Força atualizar a data caso o auto_now_add bugue a transação atômica
+                Retirada.objects.filter(pk=retirada.pk).update(data_retirada=agora)
                 
                 count = 0
                 erros_conversao = 0
@@ -198,7 +213,7 @@ def marcar_entregue(modeladmin, request, queryset):
         'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
         'esquecidas_agrupadas': esquecidas_agrupadas,
         'todas_esquecidas_ids': todas_esquecidas_ids,
-        'clientes_todos': Cliente.objects.all().order_by('nome'),
+        'retirante_form': RetiranteForm(), # Injeta o form do Autocomplete na tela
     }
     return render(request, 'admin/confirmar_entrega.html', context)
 
@@ -372,11 +387,13 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     
+    # --- CORREÇÃO 2, 3 e 4: Trava de Campos Segura ---
     def get_readonly_fields(self, request, obj=None):
-        # AQUI FOI CORRIGIDO O ERRO PARA GARANTIR SEGURANÇA
+        # Se for Entregue (vinculado a uma retirada), trava explicitamente TODOS os campos
         if obj and hasattr(obj, 'retirada_id') and obj.retirada_id:
-            return [f.name for f in self.model._meta.fields]
-        return ('id', 'valor_calculado')
+            return ('id', 'cliente', 'descricao', 'remetente', 'observacao', 'status', 'data_chegada', 'data_entrega', 'valor_base', 'valor_calculado', 'valor_cobrado', 'descartado', 'retirada')
+        # Em cadastros e edições normais, trava ID, calculado, status e retirada
+        return ('id', 'valor_calculado', 'status', 'retirada')
     
     fieldsets = (
         ('Dados da Encomenda', {
@@ -402,14 +419,10 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         }),
     )
 
-    # --- CONTROLE DINÂMICO DE ITENS POR PÁGINA ---
     def get_list_per_page(self, request):
         status = request.GET.get('status')
-        # Se for status PENDENTE ou se não tiver filtro (padrão),
-        # definimos 10.000 para GARANTIR que não haverá paginação visual.
         if status == 'PENDENTE' or status is None:
             return 10000 
-        # Para status ENTREGUE, TODOS ou LIXEIRA, mantém 25.
         return 25
 
     def get_changelist(self, request, **kwargs):
@@ -419,7 +432,6 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
                 super().__init__(*args, **kwargs)
                 status = request.GET.get('status')
                 
-                # Sincronizamos o "Mostrar Tudo" com a lógica acima
                 if status == 'PENDENTE' or status is None:
                     self.list_max_show_all = 10000
                 else:
@@ -448,7 +460,6 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
             return
 
     def response_add(self, request, obj, post_url_continue=None):
-        """ Sobrescreve redirecionamento pós-criação para forçar o pop-up com o ID """
         if not request.GET.get('_popup') and not request.POST.get('_popup'):
             from django.urls import reverse
             url = reverse('admin:entregas_encomenda_add')

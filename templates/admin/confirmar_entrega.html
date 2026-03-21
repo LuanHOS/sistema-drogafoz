@@ -6,8 +6,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        .select2-container { width: 100% !important; flex-grow: 1; }
-        .related-widget-wrapper { display: flex; align-items: center; width: 100%; gap: 5px; }
+        .select2-container { width: 100% !important; flex: 1; }
+        .related-widget-wrapper { display: flex; align-items: center; width: 100%; gap: 8px; }
+        .related-widget-wrapper-link { margin-bottom: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #ccc; border-radius: 4px; background: #f8f9fa; }
+        .related-widget-wrapper-link img { width: 16px !important; height: 16px !important; }
         
         /* Estilo do Resumo do Retirante */
         .resumo-retirante {
@@ -196,13 +198,13 @@
         </div>
 
         <div style="background: #f1f8ff; border: 1px solid #cce5ff; padding: 15px 20px; border-radius: 8px; margin-top: 25px;">
-            {{ retirante_form.media }}
             <div style="margin-bottom: 5px;">
                 <label for="id_retirante" style="font-weight: bold; color: #123C65; font-size: 15px; display: block;">
                     <i class="fas fa-user-check"></i> Quem está retirando as encomendas no balcão? (Obrigatório)
                 </label>
             </div>
-            <div>
+            
+            <div class="related-widget-wrapper">
                 {{ retirante_form.retirante }}
             </div>
             
@@ -863,23 +865,19 @@
             return;
         }
 
-        // Obtém o texto do item selecionado no Select2 (Ex: "#1 - João (12345678901)")
+        // Obtém o texto do item selecionado no Select2
         const fullText = select.select2('data')[0].text;
         
-        // Extraímos os dados usando Regex simples baseada no padrão de __str__ do modelo Cliente
-        // Nome: Tudo após o código #id - e antes do parênteses
+        // Extraímos os dados usando Regex baseado no padrão do modelo Cliente
         const nomeMatch = fullText.match(/#\d+ - ([^(]+)/);
         const nome = nomeMatch ? nomeMatch[1].trim() : "-";
         
-        // CPF: Tudo dentro do parênteses
         const cpfMatch = fullText.match(/\(([^)]+)\)/);
         const doc = cpfMatch ? cpfMatch[1].trim() : "Não informado";
 
-        // Como o Autocomplete do Django não traz telefone/email nativamente no texto do Select2,
-        // informamos que os dados básicos foram validados.
         document.getElementById('resumo-nome').innerText = nome;
         document.getElementById('resumo-doc').innerText = doc;
-        document.getElementById('resumo-contato').innerText = "Verifique no cadastro ao lado (✏️)";
+        document.getElementById('resumo-contato').innerText = "Verifique clicando no botão (✏️) acima";
         
         box.style.display = 'block';
     }
@@ -908,7 +906,7 @@
             });
         });
 
-        // Evento de mudança no Select2 (usando jQuery do Django para garantir compatibilidade)
+        // Evento de mudança no Select2
         django.jQuery('#id_retirante').on('change', function() {
             atualizarResumoRetirante();
         });

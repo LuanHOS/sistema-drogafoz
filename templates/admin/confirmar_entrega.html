@@ -145,7 +145,7 @@
                                 
                                 <div class="item-info">
                                     <div class="desc">
-                                        <input type="checkbox" class="check-encontrado" title="Marcar como encontrado no estoque" style="width: 18px; height: 18px; cursor: pointer; vertical-align: middle; margin-right: 8px; position: relative; top: -2px;">
+                                        <input type="checkbox" class="check-encontrado" data-id="{{ item.id|unlocalize }}" title="Marcar como encontrado no estoque" style="width: 18px; height: 18px; cursor: pointer; vertical-align: middle; margin-right: 8px; position: relative; top: -2px;">
                                         
                                         <a href="{% url 'admin:entregas_encomenda_change' item.id %}?_popup=1" 
                                            onclick="return abrirPopupEncomenda(this.href);"
@@ -400,6 +400,17 @@
         }
     });
 
+    // --- FUNÇÕES PARA SALVAR CHECKBOXES ---
+    function salvarEstadoCheckboxes() {
+        const marcados = [];
+        document.querySelectorAll('.check-encontrado').forEach(function(check) {
+            if (check.checked) {
+                marcados.push(check.dataset.id);
+            }
+        });
+        sessionStorage.setItem('checkboxes_marcados', JSON.stringify(marcados));
+    }
+
     // --- FUNÇÃO POPUP ---
     window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
         win.close();
@@ -407,6 +418,7 @@
         // LÓGICA DE PERSISTÊNCIA: Salva o ID no storage para pré-selecionar após o reload
         sessionStorage.setItem('retirante_persist_id', newId);
         sessionStorage.setItem('retirante_persist_repr', newRepr);
+        salvarEstadoCheckboxes();
         location.reload(); 
     };
 
@@ -416,6 +428,7 @@
         // LÓGICA DE PERSISTÊNCIA: Salva o ID no storage para pré-selecionar após o reload
         sessionStorage.setItem('retirante_persist_id', newId);
         sessionStorage.setItem('retirante_persist_repr', newRepr);
+        salvarEstadoCheckboxes();
         location.reload(); 
     };
 
@@ -967,6 +980,22 @@
                 verificarCheckboxes();
             });
         });
+
+        // RESTAURAR CHECKBOXES ANTES DE VERIFICAR ESTADO FINAL
+        const marcadosSalvos = sessionStorage.getItem('checkboxes_marcados');
+        if (marcadosSalvos) {
+            try {
+                const marcados = JSON.parse(marcadosSalvos);
+                marcados.forEach(function(id) {
+                    const check = document.querySelector('.check-encontrado[data-id="' + id + '"]');
+                    if (check) {
+                        check.checked = true;
+                        check.closest('.item-linha').classList.add('encontrado');
+                    }
+                });
+            } catch (e) { console.error('Erro ao recuperar checkboxes', e); }
+            sessionStorage.removeItem('checkboxes_marcados');
+        }
 
         // Evento de mudança no Select2 (usando jQuery do Django para garantir compatibilidade)
         const $select = django.jQuery('#id_retirante');

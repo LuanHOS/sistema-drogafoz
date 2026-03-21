@@ -88,6 +88,35 @@
         <input type="hidden" name="action" value="marcar_entregue">
         <input type="hidden" name="post" value="yes">
 
+        <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+            {{ retirante_form.media }}
+            <div style="margin-bottom: 10px;">
+                <label for="id_retirante" style="font-weight: bold; color: #123C65; font-size: 18px; display: block;">
+                    <i class="fas fa-user-check"></i> Quem está retirando as encomendas no balcão? (Obrigatório)
+                </label>
+            </div>
+            <div>
+                {{ retirante_form.retirante }}
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn-cliente-acao btn-cliente-add" onclick="abrirPopupNovoCliente();">
+                    <i class="fas fa-plus-circle"></i> Novo Cliente
+                </button>
+                <button type="button" id="btn-editar-retirante" class="btn-cliente-acao btn-cliente-edit" style="display: none;" onclick="editarRetiranteSelecionado();">
+                    <i class="fas fa-edit"></i> Alterar Dados
+                </button>
+            </div>
+            
+            <div id="resumo-retirante" class="resumo-retirante">
+                <p><strong>Nome:</strong> <span id="resumo-nome">-</span></p>
+                <p><strong>Documento:</strong> <span id="resumo-doc">-</span></p>
+                <p><strong>Contato:</strong> <span id="resumo-contato">-</span></p>
+            </div>
+            
+            <p style="font-size: 12px; color: #666; margin-top: 8px; margin-bottom: 0;">Dica: Verifique se os dados do retirante estão atualizados.</p>
+        </div>
+
         <div id="lista-clientes-wrapper">
             {% for grupo in resumo_agrupado %}
                 <div class="cliente-card" id="card-cliente-{{ grupo.cliente.id }}" 
@@ -219,35 +248,6 @@
         <div class="total-geral-bar">
             <span id="total-geral-text">TOTAL GERAL ({{ encomendas.count }} itens):</span>
             <span id="display-total-geral">R$ 0,00</span>
-        </div>
-
-        <div style="background: #f1f8ff; border: 1px solid #cce5ff; padding: 15px 20px; border-radius: 8px; margin-top: 25px;">
-            {{ retirante_form.media }}
-            <div style="margin-bottom: 5px;">
-                <label for="id_retirante" style="font-weight: bold; color: #123C65; font-size: 15px; display: block;">
-                    <i class="fas fa-user-check"></i> Quem está retirando as encomendas no balcão? (Obrigatório)
-                </label>
-            </div>
-            <div>
-                {{ retirante_form.retirante }}
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button type="button" class="btn-cliente-acao btn-cliente-add" onclick="abrirPopupNovoCliente();">
-                    <i class="fas fa-plus-circle"></i> Novo Cliente
-                </button>
-                <button type="button" id="btn-editar-retirante" class="btn-cliente-acao btn-cliente-edit" style="display: none;" onclick="editarRetiranteSelecionado();">
-                    <i class="fas fa-edit"></i> Alterar Dados
-                </button>
-            </div>
-            
-            <div id="resumo-retirante" class="resumo-retirante">
-                <p><strong>Nome:</strong> <span id="resumo-nome">-</span></p>
-                <p><strong>Documento:</strong> <span id="resumo-doc">-</span></p>
-                <p><strong>Contato:</strong> <span id="resumo-contato">-</span></p>
-            </div>
-            
-            <p style="font-size: 12px; color: #666; margin-top: 8px; margin-bottom: 0;">Dica: Verifique se os dados do retirante estão atualizados.</p>
         </div>
 
         <div class="submit-row">

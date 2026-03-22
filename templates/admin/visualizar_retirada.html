@@ -105,8 +105,6 @@
             font-weight: bold;
         }
         .btn-acao:hover { background: #138496; }
-        .btn-termica { background: #ffc107; color: #212529; }
-        .btn-termica:hover { background: #e0a800; }
         
         .btn-cancelar-ret {
             background: #dc3545;
@@ -130,19 +128,24 @@
             opacity: 0;
             width: 800px;
         }
-        .receipt-box { width: 700px; font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; padding: 20px; }
+
+        /* --- CSS DA NOTA FISCAL A4 --- */
+        .receipt-box { width: 700px; max-width: 700px; font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; padding: 20px; box-sizing: border-box; }
         .receipt-header { text-align: center; margin-bottom: 30px; }
         .receipt-header h1 { font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
         .receipt-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: normal; border-bottom: 1px dashed #000; display: inline-block; padding-bottom: 5px;}
+        .receipt-header p { font-size: 14px; margin-top: 10px; }
+        .receipt-section { margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
         .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px; table-layout: fixed; }
-        .receipt-table th { border-bottom: 2px solid #000; padding: 8px 5px; text-align: left; }
-        .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 5px; }
+        .receipt-table th { border-bottom: 2px solid #000; padding: 8px 5px; text-align: left; text-transform: uppercase; }
+        .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 5px; vertical-align: top; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; white-space: normal; }
+        .col-desc { width: 40%; } .col-dias { width: 15%; text-align: center; } .col-base { width: 20%; text-align: right; } .col-valor { width: 25%; text-align: right; }
+        .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
         .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
-        
-        .thermal-box { width: 72mm; font-family: 'Courier New', monospace; color: #000; background: #fff; padding: 2mm; font-size: 12px; font-weight: 900; }
-        .thermal-header { text-align: center; }
-        .thermal-dashed-line { text-align: center; overflow: hidden; white-space: nowrap; margin: 5px 0; letter-spacing: -2px; }
-        .thermal-total-row { display: flex; justify-content: space-between; font-size: 16px; margin: 10px 0; border-top: 2px solid #000; padding-top: 5px; }
+        .receipt-note { font-size: 11px; font-style: italic; margin-top: 5px; margin-bottom: 40px; }
+        .receipt-footer { margin-top: 30px; text-align: center; font-size: 12px; }
+        .signature-line { margin-top: 40px; border-top: 1px solid #000; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; }
+
     </style>
 {% endblock %}
 
@@ -189,10 +192,7 @@
         {% if retirada.status == 'ATIVA' %}
         <div style="margin-top: 20px; display: flex; gap: 10px;">
             <button type="button" class="btn-acao" onclick="imprimirA4()">
-                <i class="fas fa-file-pdf"></i> Re-imprimir A4
-            </button>
-            <button type="button" class="btn-acao btn-termica" onclick="imprimir80mm()">
-                <i class="fas fa-print"></i> Re-imprimir Cupom (80mm)
+                <i class="fas fa-file-pdf"></i> Baixar Nota Fiscal de Retirada
             </button>
         </div>
         {% endif %}
@@ -257,34 +257,35 @@
     <div class="receipt-box">
         <div class="receipt-header">
             <h1>DROGAFOZ ENCOMENDAS</h1>
-            <h2>SEGUNDA VIA - NOTA DE RETIRADA</h2>
-            <p class="receipt-date">Data da Baixa: {{ retirada.data_retirada|date:"d/m/Y" }}</p>
+            <h2>NOTA DE RETIRADA</h2>
+            <p class="receipt-date">Data: {{ retirada.data_retirada|date:"d/m/Y" }}</p>
         </div>
 
-        <div class="receipt-client-info" style="margin-bottom: 20px; font-size: 14px;">
-            <strong>RELATÓRIO GERAL DA RETIRADA #{{ retirada.id }}</strong><br>
-            <strong style="color:#C51625;">Retirado no balcão por:</strong> #{{ retirada.retirado_por.id }} - {{ retirada.retirado_por.nome }}<br>
-            Documento: {{ retirada.retirado_por.cpf|default:retirada.retirado_por.rg|default:'Sem Documento' }}
+        <div class="receipt-client-info receipt-section">
+            <strong>RELATÓRIO GERAL DE BAIXA</strong><br>
+            Quantidade de Clientes: {{ resumo_agrupado|length }}<br>
+            Quantidade de Itens: {{ retirada.encomendas.all|length }}<br>
+            <strong style="color:#C51625;">Retirado por:</strong> {{ retirada.retirado_por.nome }}
         </div>
 
         <table class="receipt-table">
             <thead>
                 <tr>
-                    <th style="width: 40%">Titular / Descrição</th>
-                    <th style="width: 15%; text-align: center;">Dias</th>
-                    <th style="width: 20%; text-align: right;">Base</th>
-                    <th style="width: 25%; text-align: right;">Cobrado</th>
+                    <th class="col-desc">Descrição</th>
+                    <th class="col-dias">Dias</th>
+                    <th class="col-base">Valor Base</th>
+                    <th class="col-valor">Valor Final</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="receipt-items-body">
                 {% for grupo in resumo_agrupado %}
                     <tr style="background-color: #f0f0f0;">
-                        <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px;">TITULAR: {{ grupo.cliente.nome }}</td>
+                        <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">CLIENTE: {{ grupo.cliente.nome }}</td>
                     </tr>
                     {% for item in grupo.itens %}
                     <tr>
-                        <td style="padding-left: 15px;">• {{ item.descricao }}</td>
-                        <td style="text-align: center;">{{ item.dias_estoque_calculado }}</td>
+                        <td style="padding-left: 15px;">• #{{ item.id }} - {{ item.descricao }}</td>
+                        <td style="text-align: center;">{{ item.dias_estoque_calculado }} dias</td>
                         <td style="text-align: right;">R$ {{ item.valor_base|floatformat:2 }}</td>
                         <td style="text-align: right;">R$ {{ item.valor_cobrado|floatformat:2 }}</td>
                     </tr>
@@ -293,51 +294,18 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" style="font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000;">TOTAL PAGO:</td>
-                    <td class="total-value">R$ {{ retirada.valor_total|floatformat:2 }}</td>
+                    <td colspan="3" class="total-label">TOTAL A PAGAR</td>
+                    <td class="total-value receipt-total-value">R$ {{ retirada.valor_total|floatformat:2 }}</td>
                 </tr>
             </tfoot>
         </table>
-        
-        <p style="font-size: 11px; font-style: italic; margin-top: 30px; text-align: center;">
-            Operador: {{ retirada.operador.username|upper }} | Reimpressão do sistema
-        </p>
-    </div>
-</div>
 
-<div id="molde-80mm" style="display: none;">
-    <div class="thermal-box">
-        <div class="thermal-header">
-            <h1>DROGAFOZ ENCOMENDAS</h1>
-            <h2>2ª VIA - COMPROVANTE</h2>
-            <p>Data: {{ retirada.data_retirada|date:"d/m/Y" }}</p>
+        <p class="receipt-note">Observação: A taxa é cobrada a cada 10 dias de armazenamento.</p>
+
+        <div class="receipt-footer">
+            <p>Obrigado pela preferência!</p>
+            <div class="signature-line">Assinatura do Responsável</div>
         </div>
-        <div class="thermal-dashed-line">--------------------------------</div>
-        
-        <div style="font-size: 13px; font-weight: 900; margin-bottom: 5px;">
-            RETIRADO POR:<br>{{ retirada.retirado_por.nome }}<br>
-            DOC: {{ retirada.retirado_por.cpf|default:retirada.retirado_por.rg|default:'-' }}
-        </div>
-        
-        <div class="thermal-dashed-line">--------------------------------</div>
-        
-        {% for grupo in resumo_agrupado %}
-            <div style="background: #000; color: #fff; padding: 2px; margin-top: 5px;">TITULAR: {{ grupo.cliente.nome }}</div>
-            {% for item in grupo.itens %}
-                <div style="margin-bottom: 5px; border-bottom: 1px dashed #000; padding-bottom: 3px;">
-                    <div>{{ item.descricao }}</div>
-                    <div style="text-align: right;">{{ item.dias_estoque_calculado }}d | <strong>R$ {{ item.valor_cobrado|floatformat:2 }}</strong></div>
-                </div>
-            {% endfor %}
-        {% endfor %}
-        
-        <div class="thermal-dashed-line">--------------------------------</div>
-        <div class="thermal-total-row">
-            <span>TOTAL PAGO</span>
-            <span>R$ {{ retirada.valor_total|floatformat:2 }}</span>
-        </div>
-        <div class="thermal-dashed-line">--------------------------------</div>
-        <div style="text-align: center; margin-top: 15px;">Operador: {{ retirada.operador.username|upper }}</div>
     </div>
 </div>
 
@@ -362,26 +330,10 @@
 
         const opt = {
             margin: [10, 10, 10, 10], 
-            filename: 'SegundaVia_Retirada_{{ retirada.id }}.pdf',
+            filename: 'Entrega_{{ resumo_agrupado|length }}clientes_{{ retirada.data_retirada|date:"d-m-Y" }}.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        setTimeout(() => { html2pdf().set(opt).from(molde).save().then(() => { renderZone.innerHTML = ''; }); }, 100);
-    }
-
-    function imprimir80mm() {
-        const molde = document.getElementById('molde-80mm').firstElementChild.cloneNode(true);
-        const renderZone = document.getElementById('render-zone');
-        renderZone.innerHTML = '';
-        renderZone.appendChild(molde);
-
-        const opt = {
-            margin: 0,
-            filename: 'SegundaVia_80mm_Retirada_{{ retirada.id }}.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-            jsPDF: { unit: 'mm', format: [80, 297], orientation: 'portrait' }
         };
         setTimeout(() => { html2pdf().set(opt).from(molde).save().then(() => { renderZone.innerHTML = ''; }); }, 100);
     }

@@ -372,8 +372,16 @@ class RetiradaAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         my_urls = [
             path('<int:object_id>/cancelar/', self.admin_site.admin_view(self.cancelar_retirada), name='entregas_retirada_cancelar'),
+            path('exportar-xml/', self.exportar_xml),
         ]
         return my_urls + urls
+
+    def exportar_xml(self, request):
+        queryset = Retirada.objects.all()
+        data = serializers.serialize("xml", queryset)
+        response = HttpResponse(data, content_type="application/xml")
+        response['Content-Disposition'] = 'attachment; filename="retiradas_drogafoz.xml"'
+        return response
 
     def cancelar_retirada(self, request, object_id):
         retirada = get_object_or_404(Retirada, pk=object_id)

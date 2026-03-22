@@ -244,7 +244,7 @@
         {% endif %}
     </div>
 
-    <h3 style="margin-bottom: 15px; color: #444;">Pacotes Inclusos nesta Baixa</h3>
+    <h3 style="margin-bottom: 15px; color: #444;">Pacotes Inclusos nesta Baixa <span style="font-size: 14px; font-weight: normal; color: #666;">({{ resumo_agrupado|length }} cliente(s) e {{ retirada.encomendas.all|length }} encomenda(s))</span></h3>
     
     {% for grupo in resumo_agrupado %}
         <div class="cliente-card">
@@ -255,6 +255,9 @@
                         <a href="{% url 'admin:entregas_cliente_change' grupo.cliente.id %}?_popup=1" onclick="return abrirPopupCentralizado(this.href, 'PopupTitular');">
                             #{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}
                         </a>
+                        <span style="font-size: 13px; font-weight: normal; margin-left: 10px; color: rgba(255,255,255,0.8); border-left: 1px solid rgba(255,255,255,0.3); padding-left: 10px;">
+                            {{ grupo.itens|length }} encomenda(s)
+                        </span>
                     </div>
                     {% if grupo.cliente.telefone %}
                     <button type="button" class="btn-export-mini btn-whatsapp-mini" onclick="abrirWhatsapp('{{ grupo.cliente.telefone }}')" title="Enviar Nota no WhatsApp">

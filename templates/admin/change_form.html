@@ -94,6 +94,17 @@
                 }
             }, true); // true garante prioridade sobre os scripts do Django (fase de captura)
 
+            // 4. Bloquear os links de sub-navegação em caso de tela Pop-up (Visualizar Retirada / Confirmar Entrega)
+            if (window.location.search.includes('_popup=1')) {
+                document.querySelectorAll('.field-cliente a, .field-retirada a').forEach(function(link) {
+                    link.style.pointerEvents = 'none';      // Desativa o clique
+                    link.style.color = '#333';              // Remove a cor azul de link
+                    link.style.textDecoration = 'none';     // Remove o sublinhado
+                    link.style.fontWeight = 'bold';         // Transforma visualmente em apenas texto forte
+                    link.removeAttribute('href');           // Remove fisicamente o href como trava de segurança dupla
+                });
+            }
+
             // --- LÓGICA DO MODAL DE SUCESSO (ID DA ENCOMENDA E CLIENTE) ---
             const urlParams = new URLSearchParams(window.location.search);
             const savedId = urlParams.get('saved_id');

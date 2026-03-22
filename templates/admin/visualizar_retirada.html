@@ -19,16 +19,18 @@
             padding-bottom: 20px;
             margin-bottom: 25px;
         }
+        /* Status Discreto */
         .audit-status {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            color: white;
-            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            text-transform: uppercase;
         }
-        .status-ativa { background-color: #28a745; }
-        .status-cancelada { background-color: #dc3545; }
+        .status-ativa { color: #28a745; }
+        .status-cancelada { color: #dc3545; }
         
         .info-grid {
             display: grid;
@@ -109,16 +111,12 @@
         .btn-cancelar-ret {
             background: #dc3545;
             color: white;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border: none;
             border-radius: 4px;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 13px;
             cursor: pointer;
-            display: block;
-            width: 100%;
-            text-align: center;
-            margin-top: 30px;
             text-transform: uppercase;
         }
         .btn-cancelar-ret:hover { background: #c82333; }
@@ -160,7 +158,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1 style="margin: 0; color: #333;">Retirada #{{ retirada.id }}</h1>
             <span class="audit-status {% if retirada.status == 'ATIVA' %}status-ativa{% else %}status-cancelada{% endif %}">
-                STATUS: {{ retirada.status }}
+                {% if retirada.status == 'ATIVA' %}<i class="fas fa-check-circle"></i>{% else %}<i class="fas fa-times-circle"></i>{% endif %} {{ retirada.status }}
             </span>
         </div>
         
@@ -168,7 +166,7 @@
             <div class="info-box">
                 <label>Retirado no balcão por:</label>
                 <span>
-                    <a href="{% url 'admin:entregas_cliente_change' retirada.retirado_por.id %}?_popup=1" onclick="window.open(this.href, 'Popup', 'width=900,height=700'); return false;">
+                    <a href="{% url 'admin:entregas_cliente_change' retirada.retirado_por.id %}?_popup=1" onclick="return abrirPopupCentralizado(this.href, 'PopupCliente');">
                         #{{ retirada.retirado_por.id }} - {{ retirada.retirado_por.nome }}
                     </a>
                 </span><br>
@@ -176,7 +174,7 @@
             </div>
             <div class="info-box">
                 <label>Data e Hora da Baixa:</label>
-                <span>{{ retirada.data_retirada|date:"d/m/Y às H:i:s" }}</span>
+                <span>{{ retirada.data_retirada|date:"d/m/Y" }} às {{ retirada.data_retirada|time:"H:i:s" }}</span>
             </div>
             <div class="info-box">
                 <label>Operador (Caixa):</label>
@@ -207,7 +205,7 @@
             <div class="cliente-header">
                 <div>
                     Titular: 
-                    <a href="{% url 'admin:entregas_cliente_change' grupo.cliente.id %}?_popup=1" onclick="window.open(this.href, 'Popup', 'width=900,height=700'); return false;">
+                    <a href="{% url 'admin:entregas_cliente_change' grupo.cliente.id %}?_popup=1" onclick="return abrirPopupCentralizado(this.href, 'PopupTitular');">
                         #{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}
                     </a>
                 </div>
@@ -217,7 +215,7 @@
             {% for item in grupo.itens %}
                 <div class="item-linha">
                     <div style="width: 50%;">
-                        <a href="{% url 'admin:entregas_encomenda_change' item.id %}?_popup=1" onclick="window.open(this.href, 'Popup', 'width=900,height=700'); return false;">
+                        <a href="{% url 'admin:entregas_encomenda_change' item.id %}?_popup=1" onclick="return abrirPopupCentralizado(this.href, 'PopupEncomenda');">
                             📦 #{{ item.id }} - {{ item.descricao }}
                         </a>
                         <div style="font-size: 12px; color: #777; margin-top: 4px;">
@@ -236,13 +234,21 @@
     {% endfor %}
 
     {% if retirada.status == 'ATIVA' %}
-        <form method="post" action="{% url 'admin:entregas_retirada_cancelar' retirada.id %}" onsubmit="return confirm('ALERTA DE SEGURANÇA:\n\nTem certeza que deseja cancelar esta retirada?\n\n- Os valores cobrados serão zerados.\n- As encomendas voltarão imediatamente para o estoque (Aguardando Retirada).\n- O status desta Retirada ficará como CANCELADA para sempre.\n\nClique em OK para confirmar o Rollback.');">
-            {% csrf_token %}
-            <button type="submit" class="btn-cancelar-ret"><i class="fas fa-undo-alt"></i> CANCELAR RETIRADA (ROLLBACK)</button>
-        </form>
+        <details style="margin-top: 40px; border: 1px solid #dc3545; border-radius: 6px; background: #fff; overflow: hidden;">
+            <summary style="background: #f8d7da; color: #721c24; padding: 15px; font-weight: bold; cursor: pointer; font-size: 14px; text-transform: uppercase;">
+                <i class="fas fa-exclamation-triangle"></i> Área de Controle (Zona de Perigo)
+            </summary>
+            <div style="padding: 20px; background: #fff;">
+                <p style="color: #dc3545; font-weight: bold; margin-top: 0;">Atenção: O Cancelamento de Retirada (Rollback) reverte toda a operação do caixa e retorna as encomendas para pendentes.</p>
+                <form method="post" action="{% url 'admin:entregas_retirada_cancelar' retirada.id %}" onsubmit="return confirm('ALERTA DE SEGURANÇA:\n\nTem certeza que deseja cancelar esta retirada?\n\n- Os valores cobrados serão zerados.\n- As encomendas voltarão imediatamente para o estoque (Aguardando Retirada).\n- O status desta Retirada ficará como CANCELADA para sempre.\n\nClique em OK para confirmar o Rollback.');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-cancelar-ret"><i class="fas fa-undo-alt"></i> Cancelar Retirada (Efetuar Rollback)</button>
+                </form>
+            </div>
+        </details>
     {% else %}
         <div style="background: #ffeeba; color: #856404; padding: 15px; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 20px;">
-            Esta retirada foi cancelada e revertida. As encomendas não constam mais neste recibo.
+            <i class="fas fa-info-circle"></i> Esta retirada foi cancelada e revertida. As encomendas não constam mais neste recibo.
         </div>
     {% endif %}
 </div>
@@ -338,6 +344,16 @@
 <div id="render-zone"></div>
 
 <script>
+    // Função global para abrir qualquer popup centralizado
+    function abrirPopupCentralizado(url, nomeDaJanela) {
+        const w = 900;
+        const h = 700;
+        const left = (screen.width / 2) - (w / 2);
+        const top = (screen.height / 2) - (h / 2);
+        window.open(url, nomeDaJanela, `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+        return false;
+    }
+
     function imprimirA4() {
         const molde = document.getElementById('molde-original').firstElementChild.cloneNode(true);
         const renderZone = document.getElementById('render-zone');

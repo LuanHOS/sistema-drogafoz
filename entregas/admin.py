@@ -157,10 +157,12 @@ def marcar_entregue(modeladmin, request, queryset):
                 else:
                     messages.success(request, msg)
 
+                # NOVO REDIRECIONAMENTO: Vai direto para a visualização da retirada gerada
+                return HttpResponseRedirect(reverse('admin:entregas_retirada_change', args=[retirada.pk]))
+
         except Exception as e:
             messages.error(request, f"Erro ao processar a baixa: {str(e)}")
-
-        return HttpResponseRedirect(request.get_full_path())
+            return HttpResponseRedirect(request.get_full_path())
 
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
     encomendas_ordenadas = queryset.select_related('cliente').order_by('cliente__nome')

@@ -26,6 +26,7 @@
                 <div style="font-weight: normal; font-size: 12px; color: #666; margin-top: 3px;">
                     {% if model.object_name == 'Cliente' %}Cadastro e gestão de clientes{% endif %}
                     {% if model.object_name == 'Encomenda' %}Controle de chegada e saída{% endif %}
+                    {% if model.object_name == 'Retirada' %}Histórico de baixas e recibos{% endif %}
                     {% if model.object_name == 'User' %}Gerenciar acessos{% endif %}
                     {% if model.object_name == 'Group' %}Permissões de equipe{% endif %}
                 </div>
@@ -54,7 +55,7 @@
 
             {# --- COLUNA 4: EXPORTAR (NOVO) --- #}
             <td>
-                {% if model.object_name == 'Cliente' or model.object_name == 'Encomenda' %}
+                {% if model.object_name == 'Cliente' or model.object_name == 'Encomenda' or model.object_name == 'Retirada' %}
                     <a href="{{ model.admin_url }}exportar-xml/" class="exportlink">Exportar XML</a>
                 {% endif %}
             </td>

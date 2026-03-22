@@ -16,8 +16,8 @@ def get_stats():
         data_entrega__year=now.year
     ).aggregate(Sum('valor_cobrado'))['valor_cobrado__sum'] or 0
     
-    # 2. Conta quantas estão no armazém (Pendentes)
-    estoque = Encomenda.objects.filter(status='PENDENTE').count()
+    # 2. Conta quantas estão no armazém (Pendentes e Não Descartadas)
+    estoque = Encomenda.objects.filter(status='PENDENTE', descartado=False).count()
     
     return {
         'lucro': lucro,

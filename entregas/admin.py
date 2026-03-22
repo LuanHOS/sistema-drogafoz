@@ -86,6 +86,9 @@ class EncomendaAdminForm(forms.ModelForm):
         data_chegada = cleaned_data.get('data_chegada')
         data_entrega = cleaned_data.get('data_entrega')
 
+        if data_chegada and data_chegada > timezone.now():
+            self.add_error('data_chegada', "ERRO: A Data de Chegada não pode ser uma data futura.")
+
         if status == 'ENTREGUE':
             if data_entrega and data_chegada and data_entrega < data_chegada:
                 self.add_error('data_entrega', "ERRO: A Data de Entrega não pode ser anterior à Data de Chegada.")

@@ -4,6 +4,7 @@
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         .select2-container { width: 100% !important; flex-grow: 1; }
         .related-widget-wrapper { display: flex; align-items: center; width: 100%; gap: 5px; }
@@ -42,6 +43,30 @@
         }
         .btn-cliente-add { color: #28a745; }
         .btn-cliente-edit { color: #123C65; }
+
+        /* Botão Gerar Relatório */
+        .btn-acao-topo {
+            background: #17a2b8; color: white; border: none; padding: 8px 15px; 
+            border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;
+            transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-acao-topo:hover { background: #138496; }
+
+        /* --- CSS DO RELATÓRIO A4 --- */
+        #render-zone { position: absolute; top: 0; left: 0; z-index: -1000; opacity: 0; width: 800px; }
+        .receipt-box { width: 700px; max-width: 700px; font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; padding: 20px; box-sizing: border-box; }
+        .receipt-header { text-align: center; margin-bottom: 30px; }
+        .receipt-header h1 { font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+        .receipt-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: normal; border-bottom: 1px dashed #000; display: inline-block; padding-bottom: 5px;}
+        .receipt-header p { font-size: 14px; margin-top: 10px; }
+        .receipt-section { margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
+        .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px; table-layout: fixed; }
+        .receipt-table th { border-bottom: 2px solid #000; padding: 8px 5px; text-align: left; text-transform: uppercase; }
+        .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 5px; vertical-align: top; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; white-space: normal; }
+        .col-desc { width: 45%; } .col-dias { width: 15%; text-align: center; } .col-base { width: 20%; text-align: right; } .col-valor { width: 20%; text-align: right; }
+        .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
+        .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
+        .receipt-note { font-size: 11px; font-style: italic; margin-top: 5px; margin-bottom: 40px; text-align: justify; }
     </style>
 {% endblock %}
 
@@ -106,6 +131,11 @@
 
     <p style="margin-bottom: 20px; color: #666; text-align: center;">Verifique os dias em estoque e ajuste os valores se necessário:</p>
 
+    <div style="display: flex; justify-content: center; margin-bottom: 25px;">
+        <button type="button" class="btn-acao-topo" onclick="gerarRelatorio()">
+            <i class="fas fa-file-pdf"></i> Gerar Relatório de Encomendas
+        </button>
+    </div>
 
         <div id="lista-clientes-wrapper">
             {% for grupo in resumo_agrupado %}
@@ -175,7 +205,7 @@
                                     {% endif %}
 
                                     <div class="meta-info" style="margin-top: 4px;">
-                                        <span style="font-size: 12.5px; color: #555;">
+                                        <span class="data-chegada-extrato" style="font-size: 12.5px; color: #555;">
                                             <strong>Chegada:</strong> {{ item.data_chegada|date:"d/m/Y H:i" }}
                                         </span>
                                         
@@ -290,6 +320,43 @@
 </div>
 {% endif %}
 
+<div id="molde-relatorio" style="display: none;">
+    <div class="receipt-box">
+        <div class="receipt-header">
+            <h1>DROGAFOZ ENCOMENDAS</h1>
+            <h2>RELATÓRIO INFORMATIVO DE ESTOQUE</h2>
+            <p class="receipt-date">Data: --/--/----</p>
+        </div>
+
+        <div class="receipt-client-info receipt-section">
+            <strong>RESUMO DA SELEÇÃO ATUAL</strong><br>
+            Clientes Envolvidos: <span class="qtd-clientes"></span><br>
+            Total de Volumes: <span class="qtd-itens"></span>
+        </div>
+
+        <table class="receipt-table">
+            <thead>
+                <tr>
+                    <th class="col-desc">Descrição / Titular</th>
+                    <th class="col-dias">Dias Armaz.</th>
+                    <th class="col-base">Valor Base</th>
+                    <th class="col-valor">Valor Atual</th>
+                </tr>
+            </thead>
+            <tbody class="receipt-items-body"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="total-label">TOTAL GERAL ESTIMADO</td>
+                    <td class="total-value receipt-total-value">R$ 0,00</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <p class="receipt-note">Observação: Este é um documento estritamente informativo para simples conferência e não possui validade como recibo de entrega. A taxa de armazenamento é progressiva e cobrada a cada 10 dias. Os valores totais poderão sofrer alterações até o momento da retirada definitiva no balcão.</p>
+    </div>
+</div>
+<div id="render-zone"></div>
+
 <script>
     // --- PREVENIR SAÍDA ACIDENTAL ---
     let safeToLeaveConfirm = false;
@@ -370,6 +437,106 @@
     // --- UTILITÁRIOS ---
     function formatCurrency(value) {
         return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function getFormattedDate() {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    }
+    
+    function getFilenameDate() {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        return `${dd}-${mm}-${yyyy}`;
+    }
+
+    // --- FUNÇÃO DO RELATÓRIO PDF ---
+    function gerarRelatorio() {
+        const molde = document.getElementById('molde-relatorio').firstElementChild.cloneNode(true);
+        const renderZone = document.getElementById('render-zone');
+        renderZone.innerHTML = ''; 
+
+        const clientesCards = document.querySelectorAll('.cliente-card');
+        const meta = document.getElementById('meta-dados');
+
+        molde.querySelector('.receipt-date').innerText = `Emitido em: ${getFormattedDate()}`;
+        molde.querySelector('.qtd-clientes').innerText = meta.dataset.qtdClientes;
+        molde.querySelector('.qtd-itens').innerText = meta.dataset.qtdItens;
+
+        let tbodyHtml = '';
+        let totalGeral = 0;
+
+        clientesCards.forEach(card => {
+            const nome = card.dataset.clientName;
+            const cpf = card.dataset.clientCpf;
+            const rg = card.dataset.clientRg;
+            const doc = cpf ? cpf : (rg ? rg : '');
+            const docStr = doc ? ` - Doc: ${doc}` : '';
+            
+            const itensElements = card.querySelectorAll('.item-linha');
+            let subtotalCliente = 0;
+
+            tbodyHtml += `
+                <tr style="background-color: #f0f0f0;">
+                    <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
+                        CLIENTE: ${nome}${docStr}
+                    </td>
+                </tr>
+            `;
+
+            itensElements.forEach(row => {
+                const desc = row.dataset.desc;
+                const dias = row.dataset.dias;
+                const baseValStr = row.dataset.baseVal;
+                const inputVal = row.querySelector('.input-valor').value;
+                const chegadaText = row.querySelector('.data-chegada-extrato').innerText.replace('Chegada: ', '').trim();
+                
+                const valFloat = parseFloat(inputVal.replace(',', '.'));
+                const baseFloat = parseFloat(baseValStr.replace(',', '.'));
+                
+                subtotalCliente += (isNaN(valFloat) ? 0 : valFloat);
+                totalGeral += (isNaN(valFloat) ? 0 : valFloat);
+
+                tbodyHtml += `
+                    <tr>
+                        <td style="padding-left: 15px;">• ${desc}<br><small style="color: #666; margin-left: 10px;">Chegada: ${chegadaText}</small></td>
+                        <td style="text-align: center; vertical-align: middle;">${dias} dias</td>
+                        <td style="text-align: right; vertical-align: middle;">${formatCurrency(baseFloat)}</td>
+                        <td style="text-align: right; vertical-align: middle;">${formatCurrency(valFloat)}</td>
+                    </tr>
+                `;
+            });
+            
+            // Linha de subtotal do cliente
+            tbodyHtml += `
+                <tr>
+                    <td colspan="3" style="text-align: right; font-size: 12px; font-weight: bold; padding-bottom: 10px;">Subtotal do Cliente:</td>
+                    <td style="text-align: right; font-size: 13px; font-weight: bold; padding-bottom: 10px;">${formatCurrency(subtotalCliente)}</td>
+                </tr>
+            `;
+        });
+
+        molde.querySelector('.receipt-items-body').innerHTML = tbodyHtml;
+        molde.querySelector('.receipt-total-value').innerText = formatCurrency(totalGeral);
+
+        renderZone.appendChild(molde);
+
+        const opt = {
+            margin: [10, 10, 10, 10], 
+            filename: `Relatorio_Informativo_${getFilenameDate()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        setTimeout(() => {
+            html2pdf().set(opt).from(molde).save().then(() => { renderZone.innerHTML = ''; });
+        }, 100);
     }
 
     // --- VERIFICAÇÃO CHECKBOX OBRIGATÓRIO E BOTÃO REMOVER ---

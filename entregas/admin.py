@@ -331,10 +331,14 @@ class RetiradaStatusFilter(admin.SimpleListFilter):
 
 @admin.register(Retirada)
 class RetiradaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'retirado_por', 'get_qtd_clientes', 'get_qtd_encomendas', 'get_data_hora', 'get_valor_total_fmt')
+    list_display = ('id', 'get_retirado_por_nome', 'get_qtd_clientes', 'get_qtd_encomendas', 'get_data_hora', 'get_valor_total_fmt')
     list_filter = (RetiradaStatusFilter, 'data_retirada', 'operador')
     search_fields = ('retirado_por__nome', 'retirado_por__cpf')
     
+    @admin.display(description='Retirado Por', ordering='retirado_por__nome')
+    def get_retirado_por_nome(self, obj):
+        return obj.retirado_por.nome
+
     @admin.display(description='Qtd de Clientes')
     def get_qtd_clientes(self, obj):
         return obj.encomendas.values('cliente').distinct().count()

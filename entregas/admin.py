@@ -288,11 +288,72 @@ class StatusFilter(admin.SimpleListFilter):
             return queryset.filter(descartado=False)
         return queryset.filter(status='PENDENTE', descartado=False)
 
+class RetiradaStatusFilter(admin.SimpleListFilter):
+    title = _('Filtrar por Status')
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('ATIVA', 'Ativas'), 
+            ('CANCELADA', 'Canceladas'), 
+            ('TODAS', 'Todas'),
+        )
+
+    def choices(self, changelist):
+        total_ativas = Retirada.objects.filter(status='ATIVA').count()
+        total_canceladas = Retirada.objects.filter(status='CANCELADA').count()
+        total_geral = Retirada.objects.count()
+        
+        value = self.value()
+        
+        yield {
+            'selected': value is None or value == 'ATIVA', 
+            'query_string': changelist.get_query_string({'status': 'ATIVA'}, []), 
+            'display': f'Ativas ({total_ativas})'
+        }
+        yield {
+            'selected': value == 'CANCELADA', 
+            'query_string': changelist.get_query_string({'status': 'CANCELADA'}, []), 
+            'display': f'Canceladas ({total_canceladas})'
+        }
+        yield {
+            'selected': value == 'TODAS', 
+            'query_string': changelist.get_query_string({'status': 'TODAS'}, []), 
+            'display': f'Todas ({total_geral})'
+        }
+
+    def queryset(self, request, queryset):
+        if self.value() == 'CANCELADA':
+            return queryset.filter(status='CANCELADA')
+        if self.value() == 'TODAS': 
+            return queryset
+        return queryset.filter(status='ATIVA')
+
 @admin.register(Retirada)
 class RetiradaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'retirado_por', 'data_retirada', 'valor_total', 'status', 'operador')
-    list_filter = ('status', 'data_retirada', 'operador')
+    list_display = ('id', 'retirado_por', 'get_qtd_clientes', 'get_qtd_encomendas', 'get_data_hora', 'get_valor_total_fmt')
+    list_filter = (RetiradaStatusFilter, 'data_retirada', 'operador')
     search_fields = ('retirado_por__nome', 'retirado_por__cpf')
+    
+    @admin.display(description='Qtd de Clientes')
+    def get_qtd_clientes(self, obj):
+        return obj.encomendas.values('cliente').distinct().count()
+
+    @admin.display(description='Qtd de Encomendas')
+    def get_qtd_encomendas(self, obj):
+        return obj.encomendas.count()
+
+    @admin.display(description='Data e Hora da Retirada', ordering='data_retirada')
+    def get_data_hora(self, obj):
+        if obj.data_retirada:
+            return timezone.localtime(obj.data_retirada).strftime('%d/%m/%Y %H:%M')
+        return "-"
+
+    @admin.display(description='Valor Total Cobrado', ordering='valor_total')
+    def get_valor_total_fmt(self, obj):
+        if obj.valor_total is not None:
+            return f"R$ {obj.valor_total:.2f}".replace('.', ',')
+        return "R$ 0,00"
     
     def has_add_permission(self, request):
         return False

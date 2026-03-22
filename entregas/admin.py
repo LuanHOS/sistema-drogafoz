@@ -74,6 +74,24 @@ class RetiranteForm(forms.Form):
         self.fields['retirante'].widget.can_delete_related = False
 # --- FIM CORREÇÃO 5 ---
 
+# --- NOVO: FORMULÁRIO DE ENCOMENDA COM VALIDAÇÃO SEGURA ---
+class EncomendaAdminForm(forms.ModelForm):
+    class Meta:
+        model = Encomenda
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        status = cleaned_data.get('status')
+        data_chegada = cleaned_data.get('data_chegada')
+        data_entrega = cleaned_data.get('data_entrega')
+
+        if status == 'ENTREGUE':
+            if data_entrega and data_chegada and data_entrega < data_chegada:
+                self.add_error('data_entrega', "ERRO: A Data de Entrega não pode ser anterior à Data de Chegada.")
+        
+        return cleaned_data
+
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
     # --- CORREÇÃO DE PERSISTÊNCIA (IGNORAR FILTRO DE BUSCA) ---
@@ -144,9 +162,11 @@ def marcar_entregue(modeladmin, request, queryset):
                             )
                             count += 1
                         
-                        except ValueError:
+                        except ValueError as e:
                             erros_conversao += 1
-                            continue
+                            raise ValueError(f"Erro de conversão financeira no pacote #{encomenda.id}: {str(e)}")
+                        except Exception as e:
+                            raise Exception(f"Erro ao salvar pacote #{encomenda.id}: {str(e)}")
                 
                 retirada.valor_total = total_cobrado
                 retirada.save()
@@ -161,8 +181,8 @@ def marcar_entregue(modeladmin, request, queryset):
                 return HttpResponseRedirect(reverse('admin:entregas_retirada_change', args=[retirada.pk]))
 
         except Exception as e:
-            messages.error(request, f"Erro ao processar a baixa: {str(e)}")
-            return HttpResponseRedirect(request.get_full_path())
+            # Em vez de redirecionar e apagar a tela, disparamos o erro e deixamos re-renderizar
+            messages.error(request, f"Ação Revertida de forma atômica (Rollback executado). Corrija e tente novamente. Detalhes: {str(e)}")
 
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
     encomendas_ordenadas = queryset.select_related('cliente').order_by('cliente__nome')
@@ -183,12 +203,22 @@ def marcar_entregue(modeladmin, request, queryset):
         valor_sugerido = valor_base_float * multiplicador
 
         enc.dias_estoque = dias_estoque
-        enc.valor_sugerido = valor_sugerido
         enc.multiplicador = multiplicador
         enc.alerta_prazo = multiplicador > 1
 
+        # Lógica de persistência em caso de rollback: Recupera os dados POSTados
+        if 'post' in request.POST and f'valor_{enc.id}' in request.POST:
+            try:
+                val_str = request.POST.get(f'valor_{enc.id}')
+                val_limpo = re.sub(r'[^\d.,]', '', str(val_str)).replace(',', '.')
+                enc.valor_sugerido = float(val_limpo) if val_limpo else 0.0
+            except ValueError:
+                enc.valor_sugerido = valor_sugerido
+        else:
+            enc.valor_sugerido = valor_sugerido
+
         resumo_agrupado[c_id]['itens'].append(enc)
-        resumo_agrupado[c_id]['total_sugerido'] += valor_sugerido
+        resumo_agrupado[c_id]['total_sugerido'] += enc.valor_sugerido
 
     # --- LÓGICA DE VERIFICAÇÃO DE ENCOMENDAS ESQUECIDAS ---
     clientes_ids = list(resumo_agrupado.keys())
@@ -226,6 +256,9 @@ def marcar_entregue(modeladmin, request, queryset):
         } for c in Cliente.objects.all()
     }
 
+    # Mantém o form preenchido caso tenha ocorrido falha no atomic rollback
+    retirante_form = RetiranteForm(request.POST if 'post' in request.POST else None)
+
     context = {
         'encomendas': queryset,
         'resumo_agrupado': resumo_agrupado.values(),
@@ -235,7 +268,7 @@ def marcar_entregue(modeladmin, request, queryset):
         'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
         'esquecidas_agrupadas': esquecidas_agrupadas,
         'todas_esquecidas_ids': todas_esquecidas_ids,
-        'retirante_form': RetiranteForm(),
+        'retirante_form': retirante_form,
         'clientes_dados_json': json.dumps(clientes_dados),
     }
     return render(request, 'admin/confirmar_entrega.html', context)
@@ -408,7 +441,7 @@ class RetiradaAdmin(admin.ModelAdmin):
                         change_message=f"Rollback manual efetuado"
                     )
             except Exception as e:
-                messages.error(request, f"Erro ao cancelar retirada: {e}")
+                messages.error(request, f"Ação Revertida de forma atômica. Erro ao cancelar retirada: {e}")
         return HttpResponseRedirect(reverse('admin:entregas_retirada_changelist'))
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
@@ -468,8 +501,17 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="clientes_drogafoz.xml"'
         return response
 
+    def save_model(self, request, obj, form, change):
+        try:
+            with transaction.atomic():
+                super().save_model(request, obj, form, change)
+        except Exception as e:
+            messages.error(request, f"Ação de salvamento revertida: {str(e)}")
+            raise e
+
 @admin.register(Encomenda)
 class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
+    form = EncomendaAdminForm
     show_facets = admin.ShowFacets.NEVER
     
     list_display = (
@@ -544,18 +586,18 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         return text
 
     def save_model(self, request, obj, form, change):
-        if obj.status == 'ENTREGUE':
-            if not obj.data_entrega:
-                obj.data_entrega = timezone.now()
-            if obj.data_entrega < obj.data_chegada:
-                messages.error(request, "ERRO: A Data de Entrega não pode ser anterior à Data de Chegada.")
-                raise ValidationError("A Data de Entrega não pode ser anterior à Data de Chegada.")
+        if obj.status == 'ENTREGUE' and not obj.data_entrega:
+            obj.data_entrega = timezone.now()
 
         try:
-            super().save_model(request, obj, form, change)
+            with transaction.atomic():
+                super().save_model(request, obj, form, change)
         except IntegrityError:
-            messages.error(request, "ATENÇÃO: Esta encomenda já foi cadastrada anteriormente (Duplicidade detectada). O segundo cadastro foi ignorado.")
-            return
+            messages.error(request, "ATENÇÃO: Cadastro cancelado (Rollback executado). Duplicidade de dados detectada no banco.")
+            pass # Deixa o formulário recarregar com as infos preservadas
+        except Exception as e:
+            messages.error(request, f"ATENÇÃO: Ação revertida: {str(e)}")
+            raise e
 
     def response_add(self, request, obj, post_url_continue=None):
         if not request.GET.get('_popup') and not request.POST.get('_popup'):

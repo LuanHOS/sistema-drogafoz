@@ -486,7 +486,12 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj and hasattr(obj, 'retirada_id') and obj.retirada_id:
             return ('id', 'cliente', 'descricao', 'remetente', 'observacao', 'status', 'data_chegada', 'data_entrega', 'valor_base', 'valor_calculado', 'valor_cobrado', 'descartado', 'retirada')
-        return ('id', 'valor_calculado', 'status', 'retirada')
+        return ('id', 'valor_calculado', 'status', 'retirada', 'data_entrega', 'valor_cobrado')
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and hasattr(obj, 'retirada_id') and obj.retirada_id:
+            return False
+        return super().has_delete_permission(request, obj)
     
     fieldsets = (
         ('Dados da Encomenda', {

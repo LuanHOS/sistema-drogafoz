@@ -6,6 +6,35 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+        /* Estilos do Botão Voltar (Idêntico ao das outras telas) */
+        .btn-voltar-container {
+            margin-bottom: 25px; 
+            margin-top: 0;
+            display: flex;
+            justify-content: flex-start;
+            width: 100%;
+        }
+        .btn-voltar-topo {
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            background: #6c757d; 
+            color: white !important; 
+            padding: 0 20px;
+            height: 35px;
+            line-height: 1; 
+            border-radius: 4px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 13px; 
+            text-transform: uppercase;
+            transition: background 0.2s;
+        }
+        .btn-voltar-topo:hover { 
+            background: #5a6268; 
+            color: white;
+        }
+
         .audit-container {
             max-width: 950px;
             margin: 40px auto;
@@ -150,8 +179,8 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-<div style="margin-bottom: 20px;">
-    <a href="{% url 'admin:entregas_retirada_changelist' %}" style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; text-transform: uppercase;">← Voltar para Histórico</a>
+<div class="btn-voltar-container">
+    <a href="{% url 'admin:entregas_retirada_changelist' %}" class="btn-voltar-topo">← Voltar para a Lista</a>
 </div>
 {% endblock %}
 
@@ -190,7 +219,7 @@
         </div>
         
         {% if retirada.status == 'ATIVA' %}
-        <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <div style="margin-top: 20px; display: flex; justify-content: center;">
             <button type="button" class="btn-acao" onclick="imprimirA4()">
                 <i class="fas fa-file-pdf"></i> Baixar Nota Fiscal de Retirada
             </button>
@@ -265,7 +294,9 @@
             <strong>RELATÓRIO GERAL DE BAIXA</strong><br>
             Quantidade de Clientes: {{ resumo_agrupado|length }}<br>
             Quantidade de Itens: {{ retirada.encomendas.all|length }}<br>
-            <strong style="color:#C51625;">Retirado por:</strong> {{ retirada.retirado_por.nome }}
+            <strong style="color:#C51625;">Retirado por:</strong> {{ retirada.retirado_por.nome }}<br>
+            Documento: {{ retirada.retirado_por.cpf|default:retirada.retirado_por.rg|default:"Não Informado" }}<br>
+            Contato: {{ retirada.retirado_por.telefone|default:retirada.retirado_por.email|default:"Não Informado" }}
         </div>
 
         <table class="receipt-table">
@@ -280,7 +311,12 @@
             <tbody class="receipt-items-body">
                 {% for grupo in resumo_agrupado %}
                     <tr style="background-color: #f0f0f0;">
-                        <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">CLIENTE: {{ grupo.cliente.nome }}</td>
+                        <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
+                            CLIENTE: {{ grupo.cliente.nome }}
+                            {% if grupo.cliente.cpf or grupo.cliente.rg %}
+                                - {{ grupo.cliente.cpf|default:grupo.cliente.rg }}
+                            {% endif %}
+                        </td>
                     </tr>
                     {% for item in grupo.itens %}
                     <tr>

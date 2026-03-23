@@ -123,7 +123,11 @@ def marcar_entregue(modeladmin, request, queryset):
                 if not retirante_id:
                     raise ValueError("Você precisa selecionar quem está retirando no balcão.")
                 
-                retirante = Cliente.objects.get(pk=retirante_id)
+                try:
+                    retirante = Cliente.objects.get(pk=retirante_id)
+                except Cliente.DoesNotExist:
+                    raise ValueError("O cliente selecionado foi apagado ou não existe mais no sistema.")
+                    
                 agora = timezone.now()
                 
                 retirada = Retirada.objects.create(
@@ -139,10 +143,12 @@ def marcar_entregue(modeladmin, request, queryset):
                 erros_conversao = 0
                 total_cobrado = 0.0
                 
-                for encomenda in queryset:
-                    # TRAVA 2: Proteção contra Concorrência (Dois operadores baixando a mesma caixa)
+                # TRAVA 2: Bloqueio de Concorrência Real no Banco de Dados
+                encomendas_lock = Encomenda.objects.select_for_update().filter(pk__in=selected)
+                
+                for encomenda in encomendas_lock:
                     if encomenda.status == 'ENTREGUE':
-                        raise ValueError(f"A encomenda #{encomenda.id} já foi entregue anteriormente! Abortando operação para evitar faturamento duplicado.")
+                        raise ValueError(f"A encomenda #{encomenda.id} já foi entregue em outro caixa. Operação abortada por segurança.")
 
                     input_name = f'valor_{encomenda.id}'
                     valor_bruto = request.POST.get(input_name)
@@ -154,7 +160,7 @@ def marcar_entregue(modeladmin, request, queryset):
                         valor_limpo = re.sub(r'[^\d.,]', '', str(valor_bruto))
                         valor_limpo = valor_limpo.replace(',', '.')
                         
-                        # TRAVA 3: Correção do crash de formatação monetária (Evita o Erro 500 se o usuário injetar "15.00.00")
+                        # TRAVA 3: Proteção contra injeção de múltiplos pontos (Erro 500)
                         if valor_limpo.count('.') > 1:
                             partes = valor_limpo.split('.')
                             valor_limpo = ''.join(partes[:-1]) + '.' + partes[-1]
@@ -205,6 +211,8 @@ def marcar_entregue(modeladmin, request, queryset):
         except Exception as e:
             # Em vez de redirecionar e apagar a tela, disparamos o erro e deixamos re-renderizar
             messages.error(request, f"Ação Revertida de forma atômica (Rollback executado). Corrija e tente novamente. Detalhes: {str(e)}")
+            # TRAVA 4: Limpa o cache de objetos corrompidos na memória Python após o Rollback do banco
+            queryset = Encomenda.objects.filter(pk__in=selected)
 
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
     encomendas_ordenadas = queryset.select_related('cliente').order_by('cliente__nome')

@@ -30,7 +30,15 @@ admin.site.unregister(User)
 class BuscaSemAcentoMixin:
     def get_search_results(self, request, queryset, search_term):
         campos_originais = self.search_fields
-        self.search_fields = [f"{campo}__unaccent" for campo in self.search_fields]
+        nova_busca = []
+        for campo in self.search_fields:
+            # Evita aplicar unaccent em campos numéricos de ID para não gerar crash no Postgres
+            if campo in ['id', '=id']:
+                nova_busca.append(campo)
+            else:
+                nova_busca.append(f"{campo}__unaccent")
+        
+        self.search_fields = nova_busca
         try:
             qs, use_distinct = super().get_search_results(request, queryset, search_term)
         finally:
@@ -40,7 +48,7 @@ class BuscaSemAcentoMixin:
 @admin.register(User)
 class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
     actions = None
-    search_fields = ('username', 'first_name', 'last_name', 'email')
+    search_fields = ('=id', 'username', 'first_name', 'last_name', 'email')
     readonly_fields = ('date_joined', 'last_login')
     list_per_page = 25
     list_max_show_all = 10000
@@ -371,7 +379,7 @@ class RetiradaStatusFilter(admin.SimpleListFilter):
 class RetiradaAdmin(admin.ModelAdmin):
     list_display = ('id', 'get_retirado_por_nome', 'get_qtd_clientes', 'get_qtd_encomendas', 'get_data_hora', 'get_valor_total_fmt')
     list_filter = (RetiradaStatusFilter, 'data_retirada', 'operador')
-    search_fields = ('retirado_por__nome', 'retirado_por__cpf')
+    search_fields = ('=id', 'retirado_por__nome', 'retirado_por__cpf')
     
     @admin.display(description='Retirado Por', ordering='retirado_por__nome')
     def get_retirado_por_nome(self, obj):
@@ -478,7 +486,7 @@ class RetiradaAdmin(admin.ModelAdmin):
 class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     actions = None
     list_display = ('id', 'get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
-    search_fields = ('nome', 'cpf', 'rg')
+    search_fields = ('=id', 'nome', 'cpf', 'rg')
     list_per_page = 25
     list_max_show_all = 10000
     readonly_fields = ('id',)
@@ -524,7 +532,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     )
     
     list_filter = (StatusFilter,) 
-    search_fields = ('cliente__nome',)
+    search_fields = ('=id', 'cliente__nome')
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     

@@ -67,6 +67,10 @@
         .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
         .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
         .receipt-note { font-size: 11px; font-style: italic; margin-top: 5px; margin-bottom: 40px; text-align: justify; }
+
+        /* Mudar a cor da setinha do container minimizável */
+        details summary { outline: none; }
+        details summary::-webkit-details-marker { display: none; }
     </style>
 {% endblock %}
 
@@ -121,13 +125,21 @@
             </div>
             
             <div id="resumo-retirante" class="resumo-retirante">
-                <p><strong>Nome:</strong> <span id="resumo-nome">-</span></p>
-                <p><strong>Documento:</strong> <span id="resumo-doc">-</span></p>
-                <p><strong>Contato:</strong> <span id="resumo-contato">-</span></p>
+                <p><strong id="label-nome">Nome:</strong> <span id="resumo-nome">-</span></p>
+                <p><strong id="label-doc">Documento:</strong> <span id="resumo-doc">-</span></p>
+                <p><strong id="label-contato">Contato:</strong> <span id="resumo-contato">-</span></p>
             </div>
             
             <p style="font-size: 12px; color: #666; margin-top: 8px; margin-bottom: 0;">Dica: Verifique se os dados do retirante estão atualizados.</p>
         </div>
+
+    <p style="margin-bottom: 20px; color: #666; text-align: center;">Verifique os dias em estoque e ajuste os valores se necessário:</p>
+
+    <div style="display: flex; justify-content: center; margin-bottom: 25px;">
+        <button type="button" class="btn-acao-topo" onclick="gerarRelatorio()">
+            <i class="fas fa-file-pdf"></i> Gerar Relatório de Encomendas
+        </button>
+    </div>
 
         <details style="margin-bottom: 25px; border: 1px solid #28a745; border-radius: 8px; background: #fff; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
             <summary style="background: #d4edda; color: #155724; padding: 15px; font-weight: bold; cursor: pointer; font-size: 15px; display: flex; align-items: center; gap: 8px;">
@@ -146,19 +158,11 @@
                 
                 <div style="margin-top: 15px; text-align: right;">
                     <button type="button" class="btn-confirmar" style="background: #28a745; padding: 8px 20px;" onclick="adicionarExtras()">
-                        ➕ Adicionar Selecionadas
+                        <i class="fas fa-plus" style="color: white; margin-right: 5px;"></i> Adicionar Selecionadas
                     </button>
                 </div>
             </div>
         </details>
-
-    <p style="margin-bottom: 20px; color: #666; text-align: center;">Verifique os dias em estoque e ajuste os valores se necessário:</p>
-
-    <div style="display: flex; justify-content: center; margin-bottom: 25px;">
-        <button type="button" class="btn-acao-topo" onclick="gerarRelatorio()">
-            <i class="fas fa-file-pdf"></i> Gerar Relatório de Encomendas
-        </button>
-    </div>
 
         <div id="lista-clientes-wrapper">
             {% for grupo in resumo_agrupado %}
@@ -770,15 +774,39 @@
 
         // Puxa as informações do dicionário pre-carregado com todos os clientes
         const cli = clientesData[clientId];
+        let nomeText = "-";
+        let docText = "Não Informado";
+        let contatoText = "Não Informado";
+
         if (cli) {
-            document.getElementById('resumo-nome').innerText = cli.nome;
-            document.getElementById('resumo-doc').innerText = cli.cpf ? "CPF: " + cli.cpf : (cli.rg ? "RG: " + cli.rg : "Não informado");
-            document.getElementById('resumo-contato').innerText = cli.telefone ? cli.telefone : (cli.email ? cli.email : "Não Informado");
+            nomeText = cli.nome;
+            docText = cli.cpf ? "CPF: " + cli.cpf : (cli.rg ? "RG: " + cli.rg : "Não Informado");
+            contatoText = cli.telefone ? cli.telefone : (cli.email ? cli.email : "Não Informado");
+        }
+
+        document.getElementById('resumo-nome').innerText = nomeText;
+        document.getElementById('resumo-doc').innerText = docText;
+        document.getElementById('resumo-contato').innerText = contatoText;
+
+        // Controle visual de atenção (Cor vermelha se Não Informado)
+        const labelDoc = document.getElementById('label-doc');
+        const resumoDoc = document.getElementById('resumo-doc');
+        if (docText === "Não Informado") {
+            labelDoc.style.color = "#C51625";
+            resumoDoc.style.color = "#C51625";
         } else {
-            // Apenas para caso de segurança máxima contra bugs de sincronia
-            document.getElementById('resumo-nome').innerText = "-";
-            document.getElementById('resumo-doc').innerText = "Não informado";
-            document.getElementById('resumo-contato').innerText = "Não Informado";
+            labelDoc.style.color = "#123C65";
+            resumoDoc.style.color = "#333";
+        }
+
+        const labelContato = document.getElementById('label-contato');
+        const resumoContato = document.getElementById('resumo-contato');
+        if (contatoText === "Não Informado") {
+            labelContato.style.color = "#C51625";
+            resumoContato.style.color = "#C51625";
+        } else {
+            labelContato.style.color = "#123C65";
+            resumoContato.style.color = "#333";
         }
         
         box.style.display = 'block';

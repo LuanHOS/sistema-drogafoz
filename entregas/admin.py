@@ -109,6 +109,10 @@ def marcar_entregue(modeladmin, request, queryset):
     selected = request.POST.getlist(admin.helpers.ACTION_CHECKBOX_NAME)
     if selected:
         queryset = Encomenda.objects.filter(pk__in=selected)
+    elif 'post' in request.POST:
+        # TRAVA 1: Impede que o Django dê baixa no queryset inteiro se a lista de IDs sumir (Lista Fantasma)
+        messages.error(request, "ERRO CRÍTICO: Nenhuma encomenda válida selecionada para a baixa.")
+        return HttpResponseRedirect(request.get_full_path())
 
     if 'post' in request.POST:
         # Puxa o campo 'retirante' gerado pelo Autocomplete
@@ -136,6 +140,10 @@ def marcar_entregue(modeladmin, request, queryset):
                 total_cobrado = 0.0
                 
                 for encomenda in queryset:
+                    # TRAVA 2: Proteção contra Concorrência (Dois operadores baixando a mesma caixa)
+                    if encomenda.status == 'ENTREGUE':
+                        raise ValueError(f"A encomenda #{encomenda.id} já foi entregue anteriormente! Abortando operação para evitar faturamento duplicado.")
+
                     input_name = f'valor_{encomenda.id}'
                     valor_bruto = request.POST.get(input_name)
 
@@ -146,8 +154,10 @@ def marcar_entregue(modeladmin, request, queryset):
                         valor_limpo = re.sub(r'[^\d.,]', '', str(valor_bruto))
                         valor_limpo = valor_limpo.replace(',', '.')
                         
+                        # TRAVA 3: Correção do crash de formatação monetária (Evita o Erro 500 se o usuário injetar "15.00.00")
                         if valor_limpo.count('.') > 1:
-                             pass 
+                            partes = valor_limpo.split('.')
+                            valor_limpo = ''.join(partes[:-1]) + '.' + partes[-1]
 
                         if valor_limpo == '':
                             valor_final = 0.00

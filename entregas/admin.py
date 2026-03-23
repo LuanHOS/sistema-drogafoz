@@ -139,44 +139,46 @@ def marcar_entregue(modeladmin, request, queryset):
                     input_name = f'valor_{encomenda.id}'
                     valor_bruto = request.POST.get(input_name)
 
-                    if valor_bruto is not None:
-                        try:
-                            valor_limpo = re.sub(r'[^\d.,]', '', str(valor_bruto))
-                            valor_limpo = valor_limpo.replace(',', '.')
-                            
-                            if valor_limpo.count('.') > 1:
-                                 pass 
+                    if valor_bruto is None:
+                        raise ValueError(f"Falta o valor final para a encomenda #{encomenda.id}. Abortando baixa de segurança.")
 
-                            if valor_limpo == '':
-                                valor_final = 0.00
-                            else:
-                                valor_final = float(valor_limpo)
-
-                            encomenda.valor_cobrado = valor_final
-                            encomenda.status = 'ENTREGUE'
-                            encomenda.retirada = retirada
-                            
-                            if not encomenda.data_entrega:
-                                 encomenda.data_entrega = agora
-                            
-                            encomenda.save()
-                            total_cobrado += valor_final
-
-                            LogEntry.objects.log_action(
-                                user_id=request.user.id,
-                                content_type_id=ContentType.objects.get_for_model(encomenda).pk,
-                                object_id=encomenda.pk,
-                                object_repr=str(encomenda),
-                                action_flag=CHANGE,
-                                change_message=f"Baixado na Retirada #{retirada.id}. Cobrado: {encomenda.valor_cobrado}"
-                            )
-                            count += 1
+                    try:
+                        valor_limpo = re.sub(r'[^\d.,]', '', str(valor_bruto))
+                        valor_limpo = valor_limpo.replace(',', '.')
                         
-                        except ValueError as e:
-                            erros_conversao += 1
-                            raise ValueError(f"Erro de conversão financeira no pacote #{encomenda.id}: {str(e)}")
-                        except Exception as e:
-                            raise Exception(f"Erro ao salvar pacote #{encomenda.id}: {str(e)}")
+                        if valor_limpo.count('.') > 1:
+                             pass 
+
+                        if valor_limpo == '':
+                            valor_final = 0.00
+                        else:
+                            valor_final = float(valor_limpo)
+
+                        encomenda.valor_cobrado = valor_final
+                        encomenda.status = 'ENTREGUE'
+                        encomenda.retirada = retirada
+                        
+                        if not encomenda.data_entrega:
+                             encomenda.data_entrega = agora
+                        
+                        encomenda.save()
+                        total_cobrado += valor_final
+
+                        LogEntry.objects.log_action(
+                            user_id=request.user.id,
+                            content_type_id=ContentType.objects.get_for_model(encomenda).pk,
+                            object_id=encomenda.pk,
+                            object_repr=str(encomenda),
+                            action_flag=CHANGE,
+                            change_message=f"Baixado na Retirada #{retirada.id}. Cobrado: {encomenda.valor_cobrado}"
+                        )
+                        count += 1
+                    
+                    except ValueError as e:
+                        erros_conversao += 1
+                        raise ValueError(f"Erro de conversão financeira no pacote #{encomenda.id}: {str(e)}")
+                    except Exception as e:
+                        raise Exception(f"Erro ao salvar pacote #{encomenda.id}: {str(e)}")
                 
                 retirada.valor_total = total_cobrado
                 retirada.save()
@@ -443,11 +445,14 @@ class RetiradaAdmin(admin.ModelAdmin):
                     retirada.status = 'CANCELADA'
                     retirada.save()
                     
-                    for enc in retirada.encomendas.all():
+                    for enc in list(retirada.encomendas.all()):
                         enc.status = 'PENDENTE'
+                        enc.retirada = None
+                        enc.data_entrega = None
+                        enc.valor_cobrado = None
                         enc.save() 
                         
-                    messages.success(request, f"Retirada #{retirada.id} cancelada com sucesso. As encomendas voltaram ao estoque.")
+                    messages.success(request, f"Retirada #{retirada.id} cancelada com sucesso. As encomendas voltaram ao estoque e o recibo foi limpo.")
                     
                     LogEntry.objects.log_action(
                         user_id=request.user.id, 
@@ -517,6 +522,15 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         response = HttpResponse(data, content_type="application/xml")
         response['Content-Disposition'] = 'attachment; filename="clientes_drogafoz.xml"'
         return response
+
+    def has_delete_permission(self, request, obj=None):
+        if obj:
+            # Trava de segurança: impede exclusão em cascata se o cliente tiver histórico
+            tem_encomendas = Encomenda.objects.filter(cliente=obj).exists()
+            tem_retiradas = Retirada.objects.filter(retirado_por=obj).exists()
+            if tem_encomendas or tem_retiradas:
+                return False
+        return super().has_delete_permission(request, obj)
 
     def save_model(self, request, obj, form, change):
         try:

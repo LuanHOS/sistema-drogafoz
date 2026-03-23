@@ -129,6 +129,29 @@
             <p style="font-size: 12px; color: #666; margin-top: 8px; margin-bottom: 0;">Dica: Verifique se os dados do retirante estão atualizados.</p>
         </div>
 
+        <details style="margin-bottom: 25px; border: 1px solid #28a745; border-radius: 8px; background: #fff; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <summary style="background: #d4edda; color: #155724; padding: 15px; font-weight: bold; cursor: pointer; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-plus-circle" style="color: #28a745; font-size: 18px;"></i> Adicionar Encomenda
+            </summary>
+            <div style="padding: 20px; border-top: 1px solid #c3e6cb;">
+                <label for="select-encomendas-extras" style="font-weight: bold; color: #123C65; margin-bottom: 10px; display: block;">Selecione as encomendas extras (Pesquise por ID ou Nome do Cliente):</label>
+                
+                <select id="select-encomendas-extras" multiple="multiple" style="width: 100%;">
+                    {% for enc in todas_pendentes %}
+                        <option value="{{ enc.id }}" data-id="{{ enc.id }}" data-nome="{{ enc.cliente.nome }}">
+                            📦 ID: #{{ enc.id }} | Cliente: {{ enc.cliente.nome }} | Desc: {{ enc.descricao }} | Remetente: {{ enc.remetente|default:'-' }} | Obs: {{ enc.observacao|default:'-' }}
+                        </option>
+                    {% endfor %}
+                </select>
+                
+                <div style="margin-top: 15px; text-align: right;">
+                    <button type="button" class="btn-confirmar" style="background: #28a745; padding: 8px 20px;" onclick="adicionarExtras()">
+                        ➕ Adicionar Selecionadas
+                    </button>
+                </div>
+            </div>
+        </details>
+
     <p style="margin-bottom: 20px; color: #666; text-align: center;">Verifique os dias em estoque e ajuste os valores se necessário:</p>
 
     <div style="display: flex; justify-content: center; margin-bottom: 25px;">
@@ -539,6 +562,37 @@
         }, 100);
     }
 
+    // --- FUNÇÃO ADICIONAR ENCOMENDAS EXTRAS ---
+    function adicionarExtras() {
+        const select = django.jQuery('#select-encomendas-extras');
+        const selectedIds = select.val();
+        
+        if (!selectedIds || selectedIds.length === 0) {
+            alert("Selecione pelo menos uma encomenda extra na lista para adicionar.");
+            return;
+        }
+        
+        safeToLeaveConfirm = true; 
+        salvarEstadoCheckboxes();
+        
+        const form = document.getElementById('form-entrega');
+        // Remove input 'post' para que a view não tente fechar/dar baixa nas encomendas
+        const postInput = form.querySelector('input[name="post"]');
+        if (postInput) postInput.remove(); 
+        
+        // Insere as novas encomendas ocultas no formulário para juntar na lista atual
+        selectedIds.forEach(function(id) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '{{ action_checkbox_name }}';
+            input.value = id;
+            form.appendChild(input);
+        });
+        
+        form.submit();
+    }
+
+
     // --- VERIFICAÇÃO CHECKBOX OBRIGATÓRIO E BOTÃO REMOVER ---
     function verificarCheckboxes() {
         const checkboxes = document.querySelectorAll('.check-encontrado');
@@ -731,6 +785,29 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
+        // --- INICIALIZA SELECT2 COM MATCHER PERSONALIZADO ---
+        django.jQuery('#select-encomendas-extras').select2({
+            placeholder: "🔎 Digite o ID ou Nome do Cliente...",
+            width: '100%',
+            allowClear: true,
+            matcher: function(params, data) {
+                // Se a barra estiver vazia, retorna todas
+                if (django.jQuery.trim(params.term) === '') return data;
+                if (typeof data.text === 'undefined') return null;
+                
+                const el = django.jQuery(data.element);
+                const id = String(el.attr('data-id') || '').toLowerCase();
+                const nome = String(el.attr('data-nome') || '').toLowerCase();
+                const termo = params.term.toLowerCase();
+                
+                // Pesquisa exclusiva por ID da encomenda ou NOME do cliente
+                if (id.indexOf(termo) > -1 || nome.indexOf(termo) > -1) {
+                    return data;
+                }
+                return null;
+            }
+        });
+
         // --- LIBERAR SAÍDA SE FOR CONFIRMAR ENTREGA ---
         const formEntrega = document.getElementById('form-entrega');
         if (formEntrega) {
@@ -952,5 +1029,9 @@
         cursor: not-allowed !important;
         opacity: 0.65;
     }
+
+    /* Mudar a cor da setinha do container minimizável */
+    details summary { outline: none; }
+    details summary::-webkit-details-marker { display: none; }
 </style>
 {% endblock %}

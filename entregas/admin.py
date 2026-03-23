@@ -231,7 +231,7 @@ def marcar_entregue(modeladmin, request, queryset):
         resumo_agrupado[c_id]['itens'].append(enc)
         resumo_agrupado[c_id]['total_sugerido'] += enc.valor_sugerido
 
-    # --- LÓGICA DE VERIFICAÇÃO DE ENCOMENDAS ESQUECIDAS ---
+    # --- LÓGICA DE VERIFICAÇÃO DE ENCOMENDAS ESQUECIDAS E EXTRAS ---
     clientes_ids = list(resumo_agrupado.keys())
     selecionados_ids = list(queryset.values_list('id', flat=True))
     
@@ -256,6 +256,12 @@ def marcar_entregue(modeladmin, request, queryset):
         })
         todas_esquecidas_ids.append(enc.pk)
 
+    # Consulta todas as encomendas pendentes que NÃO estão na lista atual para o Select2
+    todas_pendentes = Encomenda.objects.filter(
+        status='PENDENTE', 
+        descartado=False
+    ).exclude(id__in=selecionados_ids).select_related('cliente').order_by('cliente__nome', 'id')
+
     # --- DICIONÁRIO COMPLETO DE CLIENTES PARA O JS ---
     clientes_dados = {
         str(c.id): {
@@ -279,6 +285,7 @@ def marcar_entregue(modeladmin, request, queryset):
         'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
         'esquecidas_agrupadas': esquecidas_agrupadas,
         'todas_esquecidas_ids': todas_esquecidas_ids,
+        'todas_pendentes': todas_pendentes,
         'retirante_form': retirante_form,
         'clientes_dados_json': json.dumps(clientes_dados),
     }

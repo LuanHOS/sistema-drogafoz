@@ -146,9 +146,13 @@ def marcar_entregue(modeladmin, request, queryset):
                 # TRAVA 2: Bloqueio de Concorrência Real no Banco de Dados
                 encomendas_lock = Encomenda.objects.select_for_update().filter(pk__in=selected)
                 
+                # NOVA TRAVA: Verificação contra exclusão de pacotes durante a operação
+                if len(encomendas_lock) != len(selected):
+                    raise ValueError("Algumas encomendas selecionadas foram apagadas do sistema por outro utilizador. Operação abortada por segurança.")
+                
                 for encomenda in encomendas_lock:
                     if encomenda.status == 'ENTREGUE':
-                        raise ValueError(f"A encomenda #{encomenda.id} já foi entregue em outro caixa. Operação abortada por segurança.")
+                        raise ValueError(f"A encomenda #{encomenda.id} já foi entregue em outro caixa. Operação abortada para evitar faturamento duplicado.")
 
                     input_name = f'valor_{encomenda.id}'
                     valor_bruto = request.POST.get(input_name)
@@ -210,7 +214,7 @@ def marcar_entregue(modeladmin, request, queryset):
 
         except Exception as e:
             # Em vez de redirecionar e apagar a tela, disparamos o erro e deixamos re-renderizar
-            messages.error(request, f"Ação Revertida de forma atômica (Rollback executado). Corrija e tente novamente. Detalhes: {str(e)}")
+            messages.error(request, f"Ação Revertida de forma atómica (Rollback executado). Corrija e tente novamente. Detalhes: {str(e)}")
             # TRAVA 4: Limpa o cache de objetos corrompidos na memória Python após o Rollback do banco
             queryset = Encomenda.objects.filter(pk__in=selected)
 
@@ -460,28 +464,31 @@ class RetiradaAdmin(admin.ModelAdmin):
         if retirada.status == 'ATIVA':
             try:
                 with transaction.atomic():
-                    retirada.status = 'CANCELADA'
-                    retirada.save()
-                    
-                    for enc in list(retirada.encomendas.all()):
-                        enc.status = 'PENDENTE'
-                        enc.retirada = None
-                        enc.data_entrega = None
-                        enc.valor_cobrado = None
-                        enc.save() 
+                    # TRAVA DE CONCORRÊNCIA NO ROLLBACK: Garante segurança se dois caixas cancelarem ao mesmo tempo
+                    retirada_lock = Retirada.objects.select_for_update().get(pk=retirada.pk)
+                    if retirada_lock.status == 'ATIVA':
+                        retirada_lock.status = 'CANCELADA'
+                        retirada_lock.save()
                         
-                    messages.success(request, f"Retirada #{retirada.id} cancelada com sucesso. As encomendas voltaram ao estoque e o recibo foi limpo.")
-                    
-                    LogEntry.objects.log_action(
-                        user_id=request.user.id, 
-                        content_type_id=ContentType.objects.get_for_model(retirada).pk,
-                        object_id=retirada.pk, 
-                        object_repr=str(retirada), 
-                        action_flag=CHANGE, 
-                        change_message=f"Rollback manual efetuado"
-                    )
+                        for enc in list(retirada_lock.encomendas.all()):
+                            enc.status = 'PENDENTE'
+                            enc.retirada = None
+                            enc.data_entrega = None
+                            enc.valor_cobrado = None
+                            enc.save() 
+                            
+                        messages.success(request, f"Retirada #{retirada_lock.id} cancelada com sucesso. As encomendas voltaram ao stock e o recibo foi limpo.")
+                        
+                        LogEntry.objects.log_action(
+                            user_id=request.user.id, 
+                            content_type_id=ContentType.objects.get_for_model(retirada_lock).pk,
+                            object_id=retirada_lock.pk, 
+                            object_repr=str(retirada_lock), 
+                            action_flag=CHANGE, 
+                            change_message=f"Rollback manual efetuado"
+                        )
             except Exception as e:
-                messages.error(request, f"Ação Revertida de forma atômica. Erro ao cancelar retirada: {e}")
+                messages.error(request, f"Ação Revertida de forma atómica. Erro ao cancelar retirada: {e}")
         return HttpResponseRedirect(reverse('admin:entregas_retirada_changelist'))
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
@@ -551,12 +558,8 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         return super().has_delete_permission(request, obj)
 
     def save_model(self, request, obj, form, change):
-        try:
-            with transaction.atomic():
-                super().save_model(request, obj, form, change)
-        except Exception as e:
-            messages.error(request, f"Ação de salvamento revertida: {str(e)}")
-            raise e
+        # REMOVIDO try/except perigoso. A validação nativa do Django é mais segura.
+        super().save_model(request, obj, form, change)
 
 @admin.register(Encomenda)
 class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
@@ -637,16 +640,8 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if obj.status == 'ENTREGUE' and not obj.data_entrega:
             obj.data_entrega = timezone.now()
-
-        try:
-            with transaction.atomic():
-                super().save_model(request, obj, form, change)
-        except IntegrityError:
-            messages.error(request, "ATENÇÃO: Cadastro cancelado (Rollback executado). Duplicidade de dados detectada no banco.")
-            pass # Deixa o formulário recarregar com as infos preservadas
-        except Exception as e:
-            messages.error(request, f"ATENÇÃO: Ação revertida: {str(e)}")
-            raise e
+        # REMOVIDO try/except com "pass" que causava falhas silenciosas no ecrã.
+        super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
         if not request.GET.get('_popup') and not request.POST.get('_popup'):

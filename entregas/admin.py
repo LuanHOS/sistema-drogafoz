@@ -105,11 +105,10 @@ class EncomendaAdminForm(forms.ModelForm):
 
 @admin.action(description='Marcar selecionados como "Entregue ao Cliente"')
 def marcar_entregue(modeladmin, request, queryset):
-    # --- CORREÇÃO DE PERSISTÊNCIA (IGNORAR FILTRO DE BUSCA) ---
-    if 'post' not in request.POST:
-        selected = request.POST.getlist(admin.helpers.ACTION_CHECKBOX_NAME)
-        if selected:
-            queryset = Encomenda.objects.filter(pk__in=selected)
+    # --- GARANTE A PERSISTÊNCIA DOS IDs SUBMETIDOS EM TODAS AS ETAPAS ---
+    selected = request.POST.getlist(admin.helpers.ACTION_CHECKBOX_NAME)
+    if selected:
+        queryset = Encomenda.objects.filter(pk__in=selected)
 
     if 'post' in request.POST:
         # Puxa o campo 'retirante' gerado pelo Autocomplete

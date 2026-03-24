@@ -80,6 +80,13 @@ class RetiranteForm(forms.Form):
         self.fields['retirante'].widget.can_change_related = True
         self.fields['retirante'].widget.can_view_related = False
         self.fields['retirante'].widget.can_delete_related = False
+
+    def clean_retirante(self):
+        retirante = self.cleaned_data.get('retirante')
+        # CORREÇÃO: Bloqueia IDs de outros modelos (como Encomendas) de entrarem aqui após o reload
+        if not isinstance(retirante, Cliente):
+            raise forms.ValidationError("Erro de Mapeamento: O ID fornecido não pertence a um Cliente.")
+        return retirante
 # --- FIM CORREÇÃO 5 ---
 
 # --- NOVO: FORMULÁRIO DE ENCOMENDA COM VALIDAÇÃO SEGURA ---
@@ -124,9 +131,10 @@ def marcar_entregue(modeladmin, request, queryset):
                     raise ValueError("Você precisa selecionar quem está retirando no balcão.")
                 
                 try:
+                    # CORREÇÃO: Validação rigorosa do tipo de ID para evitar conflito com ID de Encomenda
                     retirante = Cliente.objects.get(pk=retirante_id)
-                except Cliente.DoesNotExist:
-                    raise ValueError("O cliente selecionado foi apagado ou não existe mais no sistema.")
+                except (Cliente.DoesNotExist, ValueError):
+                    raise ValueError("O sistema detectou um conflito de dados. O ID selecionado como retirante não é um Cliente válido.")
                     
                 agora = timezone.now()
                 

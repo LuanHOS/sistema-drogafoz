@@ -322,8 +322,8 @@
             Quantidade de Clientes: {{ resumo_agrupado|length }}<br>
             Quantidade de Itens: {{ retirada.encomendas.all|length }}<br>
             <strong style="color:#C51625;">Retirado por:</strong> {{ retirada.retirado_por.nome }}<br>
-            Documento: {{ retirada.retirado_por.cpf|default:retirada.retirado_por.rg|default:"Não Informado" }}<br>
-            Contato: {{ retirada.retirado_por.telefone|default:retirada.retirado_por.email|default:"Não Informado" }}
+            <strong style="color:#C51625;">Documento:</strong> {{ retirada.retirado_por.cpf|default:retirada.retirado_por.rg|default:"Não Informado" }}<br>
+            <strong style="color:#C51625;">Contato:</strong> {{ retirada.retirado_por.telefone|default:retirada.retirado_por.email|default:"Não Informado" }}
         </div>
 
         <table class="receipt-table">

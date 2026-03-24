@@ -64,7 +64,7 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
         if User.objects.count() <= 1: return False
         return super().has_delete_permission(request, obj)
 
-# --- INÍCIO CORREÇÃO 5 (FORM DO RETIRANTE) ---
+# --- INÍCIO CORREÇÃO ATIVA (FORM DO RETIRANTE COM TRAVA DE INSTÂNCIA) ---
 class RetiranteForm(forms.Form):
     retirante = forms.ModelChoiceField(
         queryset=Cliente.objects.all(),
@@ -74,8 +74,9 @@ class RetiranteForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        # Captura o cliente original passado pelo contexto para segurança em caso de refresh
+        self.cliente_original = kwargs.pop('cliente_original', None)
         super().__init__(*args, **kwargs)
-        # Habilita os botões de Adicionar e Alterar no widget
         self.fields['retirante'].widget.can_add_related = True
         self.fields['retirante'].widget.can_change_related = True
         self.fields['retirante'].widget.can_view_related = False
@@ -83,11 +84,15 @@ class RetiranteForm(forms.Form):
 
     def clean_retirante(self):
         retirante = self.cleaned_data.get('retirante')
-        # CORREÇÃO: Bloqueia IDs de outros modelos (como Encomendas) de entrarem aqui após o reload
+        
+        # LÓGICA ATIVA: Se o ID recebido for de uma Encomenda (ou não for Cliente), 
+        # o sistema força o retorno do cliente original que estava na tela antes do refresh.
         if not isinstance(retirante, Cliente):
-            raise forms.ValidationError("Erro de Mapeamento: O ID fornecido não pertence a um Cliente.")
+            if self.cliente_original:
+                return self.cliente_original
+            raise forms.ValidationError("Erro de Mapeamento detectado. Por favor, selecione o cliente novamente.")
         return retirante
-# --- FIM CORREÇÃO 5 ---
+# --- FIM CORREÇÃO ATIVA ---
 
 # --- NOVO: FORMULÁRIO DE ENCOMENDA COM VALIDAÇÃO SEGURA ---
 class EncomendaAdminForm(forms.ModelForm):
@@ -121,6 +126,12 @@ def marcar_entregue(modeladmin, request, queryset):
         messages.error(request, "ERRO CRÍTICO: Nenhuma encomenda válida selecionada para a baixa.")
         return HttpResponseRedirect(request.get_full_path())
 
+    # Identifica o cliente principal da operação para usar como âncora de segurança
+    cliente_principal = None
+    if queryset.exists():
+        primeira_enc = queryset.select_related('cliente').first()
+        cliente_principal = primeira_enc.cliente
+
     if 'post' in request.POST:
         # Puxa o campo 'retirante' gerado pelo Autocomplete
         retirante_id = request.POST.get('retirante')
@@ -134,7 +145,11 @@ def marcar_entregue(modeladmin, request, queryset):
                     # CORREÇÃO: Validação rigorosa do tipo de ID para evitar conflito com ID de Encomenda
                     retirante = Cliente.objects.get(pk=retirante_id)
                 except (Cliente.DoesNotExist, ValueError):
-                    raise ValueError("O sistema detectou um conflito de dados. O ID selecionado como retirante não é um Cliente válido.")
+                    # Se falhar, tenta usar o cliente original das encomendas como fallback de segurança
+                    if cliente_principal:
+                        retirante = cliente_principal
+                    else:
+                        raise ValueError("O sistema detectou um conflito de dados. O ID selecionado como retirante não é um Cliente válido.")
                     
                 agora = timezone.now()
                 
@@ -305,7 +320,11 @@ def marcar_entregue(modeladmin, request, queryset):
     }
 
     # Mantém o form preenchido caso tenha ocorrido falha no atomic rollback
-    retirante_form = RetiranteForm(request.POST if 'post' in request.POST else None)
+    # Passamos o cliente_principal como âncora de segurança
+    retirante_form = RetiranteForm(
+        request.POST if 'post' in request.POST else None,
+        cliente_original=cliente_principal
+    )
 
     context = {
         'encomendas': queryset,

@@ -238,7 +238,7 @@
         {% if retirada.status == 'ATIVA' %}
         <div style="margin-top: 20px; display: flex; justify-content: center;">
             <button type="button" class="btn-acao" onclick="imprimirA4()">
-                <i class="fas fa-file-pdf"></i> Baixar Nota Fiscal de Retirada
+                <i class="fas fa-file-pdf"></i> Baixar Nota de Retirada
             </button>
         </div>
         {% endif %}
@@ -347,7 +347,12 @@
                     </tr>
                     {% for item in grupo.itens %}
                     <tr>
-                        <td style="padding-left: 15px;">• #{{ item.id }} - {{ item.descricao }}</td>
+                        <td style="padding-left: 15px;">
+                            • #{{ item.id }} - {{ item.descricao }}
+                            {% if item.remetente and item.remetente != '-' %}
+                                <br><small style="color: #666; margin-left: 10px;">Remetente: {{ item.remetente }}</small>
+                            {% endif %}
+                        </td>
                         <td style="text-align: center;">{{ item.dias_estoque_calculado }} dias</td>
                         <td style="text-align: right;">R$ {{ item.valor_base|floatformat:2 }}</td>
                         <td style="text-align: right;">R$ {{ item.valor_cobrado|floatformat:2 }}</td>

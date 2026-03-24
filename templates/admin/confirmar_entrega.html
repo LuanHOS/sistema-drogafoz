@@ -201,7 +201,9 @@
                             <li class="item-linha" 
                                 data-desc="#{{ item.id }} - {{ item.descricao }}" 
                                 data-dias="{{ item.dias_estoque }}"
-                                data-base-val="{{ item.valor_base|unlocalize }}">
+                                data-base-val="{{ item.valor_base|unlocalize }}"
+                                data-remetente="{{ item.remetente|default:'' }}"
+                                data-obs="{{ item.observacao|default:'' }}">
                                 
                                 <div class="item-info">
                                     <div class="desc">
@@ -541,6 +543,8 @@
                 const desc = row.dataset.desc;
                 const dias = row.dataset.dias;
                 const baseValStr = row.dataset.baseVal;
+                const remetente = row.dataset.remetente;
+                const obs = row.dataset.obs;
                 const inputVal = row.querySelector('.input-valor').value;
                 const chegadaText = row.querySelector('.data-chegada-extrato').innerText.replace('Chegada: ', '').trim();
                 
@@ -550,9 +554,17 @@
                 subtotalCliente += (isNaN(valFloat) ? 0 : valFloat);
                 totalGeral += (isNaN(valFloat) ? 0 : valFloat);
 
+                let detalhesExtras = `<br><small style="color: #666; margin-left: 10px;">Chegada: ${chegadaText}</small>`;
+                if (remetente && remetente !== '-' && remetente.trim() !== '') {
+                    detalhesExtras += `<br><small style="color: #666; margin-left: 10px;">Remetente: ${remetente}</small>`;
+                }
+                if (obs && obs.trim() !== '') {
+                    detalhesExtras += `<br><small style="color: #666; margin-left: 10px;">Obs: ${obs}</small>`;
+                }
+
                 tbodyHtml += `
                     <tr>
-                        <td style="padding-left: 15px;">• ${desc}<br><small style="color: #666; margin-left: 10px;">Chegada: ${chegadaText}</small></td>
+                        <td style="padding-left: 15px;">• ${desc}${detalhesExtras}</td>
                         <td style="text-align: center; vertical-align: middle;">${dias} dias</td>
                         <td style="text-align: right; vertical-align: middle;">${formatCurrency(baseFloat)}</td>
                         <td style="text-align: right; vertical-align: middle;">${formatCurrency(valFloat)}</td>

@@ -77,6 +77,12 @@ class RetiranteForm(forms.Form):
         # Captura o cliente original passado pelo contexto para segurança em caso de refresh
         self.cliente_original = kwargs.pop('cliente_original', None)
         super().__init__(*args, **kwargs)
+        
+        # AJUSTE ATIVO: Se a página recarregar (ex: após pop-up), força o valor inicial 
+        # para ser o cliente das encomendas, impedindo que o ID da encomenda assuma o campo.
+        if not self.is_bound and self.cliente_original:
+            self.fields['retirante'].initial = self.cliente_original.id
+
         self.fields['retirante'].widget.can_add_related = True
         self.fields['retirante'].widget.can_change_related = True
         self.fields['retirante'].widget.can_view_related = False
@@ -145,7 +151,8 @@ def marcar_entregue(modeladmin, request, queryset):
                     # CORREÇÃO: Validação rigorosa do tipo de ID para evitar conflito com ID de Encomenda
                     retirante = Cliente.objects.get(pk=retirante_id)
                 except (Cliente.DoesNotExist, ValueError):
-                    # Se falhar, tenta usar o cliente original das encomendas como fallback de segurança
+                    # Se falhar (ex: refresh de pop-up injetou ID de encomenda aqui), 
+                    # tenta usar o cliente original das encomendas como fallback de segurança
                     if cliente_principal:
                         retirante = cliente_principal
                     else:

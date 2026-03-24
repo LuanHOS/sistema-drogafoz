@@ -395,7 +395,7 @@
         }
     });
 
-    // --- FUNÇÕES PARA SALVAR CHECKBOXES ---
+    // --- FUNÇÕES PARA SALVAR CHECKBOXES E RETIRANTE ---
     function salvarEstadoCheckboxes() {
         const marcados = [];
         document.querySelectorAll('.check-encontrado').forEach(function(check) {
@@ -406,24 +406,45 @@
         sessionStorage.setItem('checkboxes_marcados', JSON.stringify(marcados));
     }
 
+    function salvarEstadoRetirante() {
+        const select = django.jQuery('#id_retirante');
+        const val = select.val();
+        if (val) {
+            sessionStorage.setItem('retirante_persist_id', val);
+            sessionStorage.setItem('retirante_persist_repr', select.find('option:selected').text());
+        }
+    }
+
     // --- FUNÇÃO POPUP ---
     window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
+        const isEncomendaPopup = win.name === "EditarEncomenda" || (win.location && win.location.href.includes("encomenda"));
         win.close();
         safeToLeaveConfirm = true; 
-        // LÓGICA DE PERSISTÊNCIA: Salva o ID no storage para pré-selecionar após o reload
-        sessionStorage.setItem('retirante_persist_id', newId);
-        sessionStorage.setItem('retirante_persist_repr', newRepr);
         salvarEstadoCheckboxes();
+        
+        if (isEncomendaPopup) {
+            salvarEstadoRetirante(); // Preserva o retirante atual se for edição de encomenda
+        } else {
+            // Se for cliente, salva o novo ID para atualizar
+            sessionStorage.setItem('retirante_persist_id', newId);
+            sessionStorage.setItem('retirante_persist_repr', newRepr);
+        }
         location.reload(); 
     };
 
     window.dismissAddRelatedObjectPopup = function(win, newId, newRepr) {
+        const isEncomendaPopup = win.name === "EditarEncomenda" || (win.location && win.location.href.includes("encomenda"));
         win.close();
         safeToLeaveConfirm = true; 
-        // LÓGICA DE PERSISTÊNCIA: Salva o ID no storage para pré-selecionar após o reload
-        sessionStorage.setItem('retirante_persist_id', newId);
-        sessionStorage.setItem('retirante_persist_repr', newRepr);
         salvarEstadoCheckboxes();
+        
+        if (isEncomendaPopup) {
+            salvarEstadoRetirante(); // Preserva o retirante atual se for edição de encomenda
+        } else {
+            // Se for cliente, salva o novo ID para atualizar
+            sessionStorage.setItem('retirante_persist_id', newId);
+            sessionStorage.setItem('retirante_persist_repr', newRepr);
+        }
         location.reload(); 
     };
 
@@ -578,6 +599,7 @@
         
         safeToLeaveConfirm = true; 
         salvarEstadoCheckboxes();
+        salvarEstadoRetirante();
         
         const form = document.getElementById('form-entrega');
         // Remove input 'post' para que a view não tente fechar/dar baixa nas encomendas
@@ -701,6 +723,9 @@
 
     function adicionarEsquecidas() {
         safeToLeaveConfirm = true; // Liberar saída pois o JavaScript vai dar submit sozinho aqui
+        salvarEstadoCheckboxes();
+        salvarEstadoRetirante();
+        
         const form = document.getElementById('form-entrega');
         // Remove the input 'post' to only reload and add new IDs
         const postInput = form.querySelector('input[name="post"]');

@@ -63,6 +63,12 @@
         .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px; table-layout: fixed; }
         .receipt-table th { border-bottom: 2px solid #000; padding: 8px 5px; text-align: left; text-transform: uppercase; }
         .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 5px; vertical-align: top; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; white-space: normal; }
+        
+        /* PREVENÇÃO DE CORTE NO PDF */
+        .receipt-table tr { page-break-inside: avoid; }
+        .receipt-table tbody { page-break-inside: avoid; }
+        .grupo-cliente-pdf { page-break-inside: avoid; margin-bottom: 10px; display: block; }
+        
         .col-desc { width: 45%; } .col-dias { width: 15%; text-align: center; } .col-base { width: 20%; text-align: right; } .col-valor { width: 20%; text-align: right; }
         .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
         .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
@@ -531,6 +537,8 @@
             const itensElements = card.querySelectorAll('.item-linha');
             let subtotalCliente = 0;
 
+            // Transforma o cabeçalho e os itens do cliente num bloco único para o PDF
+            tbodyHtml += `<tbody class="grupo-cliente-pdf">`;
             tbodyHtml += `
                 <tr style="background-color: #f0f0f0;">
                     <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
@@ -579,9 +587,10 @@
                     <td style="text-align: right; font-size: 13px; font-weight: bold; padding-bottom: 10px;">${formatCurrency(subtotalCliente)}</td>
                 </tr>
             `;
+            tbodyHtml += `</tbody>`;
         });
 
-        molde.querySelector('.receipt-items-body').innerHTML = tbodyHtml;
+        molde.querySelector('.receipt-table').innerHTML += tbodyHtml;
         molde.querySelector('.receipt-total-value').innerText = formatCurrency(totalGeral);
 
         renderZone.appendChild(molde);
@@ -591,7 +600,8 @@
             filename: `Relatorio_Informativo_${getFilenameDate()}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: 'css', before: '#nextpage1' } // Ativa o page-break-inside do CSS
         };
 
         setTimeout(() => {

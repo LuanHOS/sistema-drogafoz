@@ -64,7 +64,7 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
         if User.objects.count() <= 1: return False
         return super().has_delete_permission(request, obj)
 
-# --- INÍCIO CORREÇÃO ATIVA (FORM DO RETIRANTE COM TRAVA DE INSTÂNCIA) ---
+# --- INÍCIO CORREÇÃO 5 (FORM DO RETIRANTE) ---
 class RetiranteForm(forms.Form):
     retirante = forms.ModelChoiceField(
         queryset=Cliente.objects.all(),
@@ -74,31 +74,13 @@ class RetiranteForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        # Captura o cliente original passado pelo contexto para segurança em caso de refresh
-        self.cliente_original = kwargs.pop('cliente_original', None)
         super().__init__(*args, **kwargs)
-        
-        # AJUSTE ATIVO: Se a página recarregar (ex: após pop-up), força o valor inicial 
-        # para ser o cliente das encomendas, impedindo que o ID da encomenda assuma o campo.
-        if not self.is_bound and self.cliente_original:
-            self.fields['retirante'].initial = self.cliente_original.id
-
+        # Habilita os botões de Adicionar e Alterar no widget
         self.fields['retirante'].widget.can_add_related = True
         self.fields['retirante'].widget.can_change_related = True
         self.fields['retirante'].widget.can_view_related = False
         self.fields['retirante'].widget.can_delete_related = False
-
-    def clean_retirante(self):
-        retirante = self.cleaned_data.get('retirante')
-        
-        # LÓGICA ATIVA: Se o ID recebido for de uma Encomenda (ou não for Cliente), 
-        # o sistema força o retorno do cliente original que estava na tela antes do refresh.
-        if not isinstance(retirante, Cliente):
-            if self.cliente_original:
-                return self.cliente_original
-            raise forms.ValidationError("Erro de Mapeamento detectado. Por favor, selecione o cliente novamente.")
-        return retirante
-# --- FIM CORREÇÃO ATIVA ---
+# --- FIM CORREÇÃO 5 ---
 
 # --- NOVO: FORMULÁRIO DE ENCOMENDA COM VALIDAÇÃO SEGURA ---
 class EncomendaAdminForm(forms.ModelForm):
@@ -132,12 +114,6 @@ def marcar_entregue(modeladmin, request, queryset):
         messages.error(request, "ERRO CRÍTICO: Nenhuma encomenda válida selecionada para a baixa.")
         return HttpResponseRedirect(request.get_full_path())
 
-    # Identifica o cliente principal da operação para usar como âncora de segurança
-    cliente_principal = None
-    if queryset.exists():
-        primeira_enc = queryset.select_related('cliente').first()
-        cliente_principal = primeira_enc.cliente
-
     if 'post' in request.POST:
         # Puxa o campo 'retirante' gerado pelo Autocomplete
         retirante_id = request.POST.get('retirante')
@@ -148,15 +124,9 @@ def marcar_entregue(modeladmin, request, queryset):
                     raise ValueError("Você precisa selecionar quem está retirando no balcão.")
                 
                 try:
-                    # CORREÇÃO: Validação rigorosa do tipo de ID para evitar conflito com ID de Encomenda
                     retirante = Cliente.objects.get(pk=retirante_id)
-                except (Cliente.DoesNotExist, ValueError):
-                    # Se falhar (ex: refresh de pop-up injetou ID de encomenda aqui), 
-                    # tenta usar o cliente original das encomendas como fallback de segurança
-                    if cliente_principal:
-                        retirante = cliente_principal
-                    else:
-                        raise ValueError("O sistema detectou um conflito de dados. O ID selecionado como retirante não é um Cliente válido.")
+                except Cliente.DoesNotExist:
+                    raise ValueError("O cliente selecionado foi apagado ou não existe mais no sistema.")
                     
                 agora = timezone.now()
                 
@@ -327,11 +297,7 @@ def marcar_entregue(modeladmin, request, queryset):
     }
 
     # Mantém o form preenchido caso tenha ocorrido falha no atomic rollback
-    # Passamos o cliente_principal como âncora de segurança
-    retirante_form = RetiranteForm(
-        request.POST if 'post' in request.POST else None,
-        cliente_original=cliente_principal
-    )
+    retirante_form = RetiranteForm(request.POST if 'post' in request.POST else None)
 
     context = {
         'encomendas': queryset,

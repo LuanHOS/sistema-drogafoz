@@ -554,13 +554,14 @@
                 subtotalCliente += (isNaN(valFloat) ? 0 : valFloat);
                 totalGeral += (isNaN(valFloat) ? 0 : valFloat);
 
-                let detalhesExtras = `<br><small style="color: #666; margin-left: 10px;">Chegada: ${chegadaText}</small>`;
+                let detalhesExtras = '';
                 if (remetente && remetente !== '-' && remetente.trim() !== '') {
                     detalhesExtras += `<br><small style="color: #666; margin-left: 10px;">Remetente: ${remetente}</small>`;
                 }
                 if (obs && obs.trim() !== '') {
                     detalhesExtras += `<br><small style="color: #666; margin-left: 10px;">Obs: ${obs}</small>`;
                 }
+                detalhesExtras += `<br><small style="color: #666; margin-left: 10px;">Chegada: ${chegadaText}</small>`;
 
                 tbodyHtml += `
                     <tr>
@@ -699,7 +700,7 @@
                 if (headerCount) headerCount.innerText = remainingItems + ' encomenda(s)';
                 
                 const footerCount = document.getElementById('footer-count-' + clienteId);
-                if (footerCount) footerCount.innerText = 'Total (' + remainingItems + ' itens):';
+                if (footerCount) footerCount.innerText = 'Total (' + remainingItems + ' items):';
             }
         }
 

@@ -349,10 +349,10 @@
                     <tr>
                         <td style="padding-left: 15px;">
                             • #{{ item.id }} - {{ item.descricao }}
-                            <br><small style="color: #666; margin-left: 10px;">Chegada: {{ item.data_chegada|date:"d/m/Y H:i" }}</small>
                             {% if item.remetente and item.remetente != '-' %}
                                 <br><small style="color: #666; margin-left: 10px;">Remetente: {{ item.remetente }}</small>
                             {% endif %}
+                            <br><small style="color: #666; margin-left: 10px;">Chegada: {{ item.data_chegada|date:"d/m/Y H:i" }}</small>
                         </td>
                         <td style="text-align: center;">{{ item.dias_estoque_calculado }} dias</td>
                         <td style="text-align: right;">R$ {{ item.valor_base|floatformat:2 }}</td>

@@ -183,12 +183,6 @@
         .receipt-header p { font-size: 14px; margin-top: 10px; }
         .receipt-section { margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
         .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px; table-layout: fixed; }
-        
-        /* PREVENÇÃO DE CORTE NO PDF */
-        .receipt-table tr { page-break-inside: avoid; }
-        .receipt-table tbody { page-break-inside: avoid; }
-        .grupo-cliente-pdf { page-break-inside: avoid; margin-bottom: 10px; display: block;}
-        
         .receipt-table th { border-bottom: 2px solid #000; padding: 8px 5px; text-align: left; text-transform: uppercase; }
         .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 5px; vertical-align: top; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; white-space: normal; }
         .col-desc { width: 40%; } .col-dias { width: 15%; text-align: center; } .col-base { width: 20%; text-align: right; } .col-valor { width: 25%; text-align: right; }
@@ -341,9 +335,8 @@
                     <th class="col-valor">Valor Final</th>
                 </tr>
             </thead>
-            
-            {% for grupo in resumo_agrupado %}
-                <tbody class="grupo-cliente-pdf">
+            <tbody class="receipt-items-body">
+                {% for grupo in resumo_agrupado %}
                     <tr style="background-color: #f0f0f0;">
                         <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
                             CLIENTE: {{ grupo.cliente.nome }}
@@ -365,9 +358,8 @@
                         <td style="text-align: right;">R$ {{ item.valor_cobrado|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
-                </tbody>
-            {% endfor %}
-            
+                {% endfor %}
+            </tbody>
             <tfoot>
                 <tr>
                     <td colspan="3" class="total-label">TOTAL A PAGAR</td>
@@ -420,8 +412,7 @@
             filename: 'Entrega_{{ resumo_agrupado|length }}clientes_{{ retirada.data_retirada|date:"d-m-Y" }}.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: 'css', before: '#nextpage1' } // Ativa o page-break-inside do CSS
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
         setTimeout(() => { html2pdf().set(opt).from(molde).save().then(() => { renderZone.innerHTML = ''; }); }, 100);
     }

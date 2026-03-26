@@ -213,7 +213,7 @@
                                            onclick="return abrirPopupEncomenda(this.href);"
                                            style="color: inherit; text-decoration: none;"
                                            title="Editar Encomenda">
-                                           📦 #{{ item.id }} - {{ item.descricao|linebreaksbr }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
+                                            📦 #{{ item.id }} - {{ item.descricao|linebreaksbr }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
                                         </a>
                                         
                                         {% if item.status == 'ENTREGUE' %}
@@ -851,36 +851,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-
-        // --- ORDENAR CAMPO RETIRANTE DO ÚLTIMO ID PARA O PRIMEIRO ---
-        var $selectRet = django.jQuery('#id_retirante');
-        if ($selectRet.length) {
-            var options = $selectRet.find('option').detach();
-            options.sort(function(a, b) {
-                if (!a.value) return -1;
-                if (!b.value) return 1;
-                return parseInt(b.value, 10) - parseInt(a.value, 10);
-            });
-            $selectRet.append(options);
-            // Atualiza a interface caso o Django já tenha aplicado o Select2
-            if ($selectRet.hasClass('select2-hidden-accessible') || $selectRet.data('select2')) {
-                $selectRet.trigger('change.select2');
-            }
-        }
-
-        // --- ORDENAR CAMPO ENCOMENDAS EXTRAS DO ÚLTIMO ID PARA O PRIMEIRO ---
-        var $selectExtras = django.jQuery('#select-encomendas-extras');
-        if ($selectExtras.length) {
-            var optionsExtras = $selectExtras.find('option').detach();
-            optionsExtras.sort(function(a, b) {
-                if (!a.value) return -1;
-                if (!b.value) return 1;
-                return parseInt(b.value, 10) - parseInt(a.value, 10);
-            });
-            $selectExtras.append(optionsExtras);
-            // O select-encomendas-extras é inicializado logo abaixo, então a ordem já estará pronta
-        }
-
         // --- INICIALIZA SELECT2 COM MATCHER PERSONALIZADO ---
         django.jQuery('#select-encomendas-extras').select2({
             placeholder: "🔎 Digite o ID ou Nome do Cliente...",

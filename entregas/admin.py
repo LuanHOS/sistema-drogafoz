@@ -67,8 +67,7 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
 # --- INÍCIO CORREÇÃO 5 (FORM DO RETIRANTE) ---
 class RetiranteForm(forms.Form):
     retirante = forms.ModelChoiceField(
-        # ALTERAÇÃO AQUI: Força a ordenação pelo ID decrescente apenas neste formulário
-        queryset=Cliente.objects.all().order_by('-id'),
+        queryset=Cliente.objects.all(),
         widget=AutocompleteSelect(Retirada._meta.get_field('retirado_por'), admin.site),
         required=True,
         label="Quem está retirando as encomendas no balcão? (Obrigatório)"
@@ -280,11 +279,11 @@ def marcar_entregue(modeladmin, request, queryset):
         })
         todas_esquecidas_ids.append(enc.pk)
 
-    # ALTERAÇÃO AQUI: Força a ordenação das encomendas extras pelo ID (-id)
+    # Consulta todas as encomendas pendentes que NÃO estão na lista atual para o Select2
     todas_pendentes = Encomenda.objects.filter(
         status='PENDENTE', 
         descartado=False
-    ).exclude(id__in=selecionados_ids).select_related('cliente').order_by('-id')
+    ).exclude(id__in=selecionados_ids).select_related('cliente').order_by('cliente__nome', 'id')
 
     # --- DICIONÁRIO COMPLETO DE CLIENTES PARA O JS ---
     clientes_dados = {

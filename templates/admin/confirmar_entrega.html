@@ -418,31 +418,18 @@
     }
 
     // --- FUNÇÃO POPUP ---
-    // Alteração crucial para lidar com a diferença nas versões mais recentes do Django 
-    // onde a resposta é enviada através de um Objeto em vez de parâmetros de texto limpos
-    window.dismissChangeRelatedObjectPopup = function(win, objId, newRepr, newId) {
+    window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
         const isEncomendaPopup = win.name === "EditarEncomenda" || (win.location && win.location.href.includes("encomenda"));
         win.close();
         safeToLeaveConfirm = true; 
         salvarEstadoCheckboxes();
         
-        let finalId;
-        let finalRepr;
-
-        if (typeof objId === 'object' && objId !== null) {
-            finalId = objId.new_value || objId.value || objId.old_value;
-            finalRepr = objId.obj || objId.new_repr || "Cliente Atualizado";
-        } else {
-            finalId = newId !== undefined ? newId : objId;
-            finalRepr = newRepr;
-        }
-        
         if (isEncomendaPopup) {
             salvarEstadoRetirante(); // Preserva o retirante atual se for edição de encomenda
         } else {
             // Se for cliente, salva o novo ID para atualizar
-            sessionStorage.setItem('retirante_persist_id', finalId);
-            sessionStorage.setItem('retirante_persist_repr', finalRepr);
+            sessionStorage.setItem('retirante_persist_id', newId);
+            sessionStorage.setItem('retirante_persist_repr', newRepr);
         }
         location.reload(); 
     };
@@ -453,20 +440,12 @@
         safeToLeaveConfirm = true; 
         salvarEstadoCheckboxes();
         
-        let finalId = newId;
-        let finalRepr = newRepr;
-
-        if (typeof newId === 'object' && newId !== null) {
-            finalId = newId.value;
-            finalRepr = newId.obj;
-        }
-        
         if (isEncomendaPopup) {
             salvarEstadoRetirante(); // Preserva o retirante atual se for edição de encomenda
         } else {
             // Se for cliente, salva o novo ID para atualizar
-            sessionStorage.setItem('retirante_persist_id', finalId);
-            sessionStorage.setItem('retirante_persist_repr', finalRepr);
+            sessionStorage.setItem('retirante_persist_id', newId);
+            sessionStorage.setItem('retirante_persist_repr', newRepr);
         }
         location.reload(); 
     };
@@ -941,7 +920,7 @@
             atualizarResumoRetirante();
         });
 
-        // LÓGICA DE PRÉ-PREENCHIMENTO E PRESERVAÇÃO
+        // LÓGICA DE PRÉ-PREENCHIMENTO
         let idParaSelecionar = null;
         let reprParaSelecionar = null;
 
@@ -949,7 +928,7 @@
         const idPersistido = sessionStorage.getItem('retirante_persist_id');
         const reprPersistido = sessionStorage.getItem('retirante_persist_repr');
         
-        if (idPersistido && idPersistido !== "undefined" && idPersistido !== "[object Object]") {
+        if (idPersistido) {
             idParaSelecionar = idPersistido;
             reprParaSelecionar = reprPersistido;
             sessionStorage.removeItem('retirante_persist_id');
@@ -968,14 +947,12 @@
         }
 
         if (idParaSelecionar) {
-            // Utilizamos um setTimeout para garantir que a injeção não seja sobrescrita pelo Django
-            setTimeout(function() {
-                if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
-                    const newOption = new Option(reprParaSelecionar, idParaSelecionar, true, true);
-                    $select.append(newOption);
-                }
-                $select.val(idParaSelecionar).trigger('change');
-            }, 100);
+            // Cria e insere o option se ele ainda não estiver lá, garantindo que o jQuery dispare corretamente o select
+            if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
+                const newOption = new Option(reprParaSelecionar, idParaSelecionar, true, true);
+                $select.append(newOption);
+            }
+            $select.val(idParaSelecionar).trigger('change');
         }
 
         atualizarResumoRetirante();

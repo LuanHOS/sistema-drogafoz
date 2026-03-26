@@ -418,7 +418,7 @@
     }
 
     // --- FUNÇÃO POPUP ---
-    window.dismissChangeRelatedObjectPopup = function(win, objId, newRepr, newId) {
+    window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
         const isEncomendaPopup = win.name === "EditarEncomenda" || (win.location && win.location.href.includes("encomenda"));
         win.close();
         safeToLeaveConfirm = true; 
@@ -427,17 +427,9 @@
         if (isEncomendaPopup) {
             salvarEstadoRetirante(); // Preserva o retirante atual se for edição de encomenda
         } else {
-            // Se for cliente, salva o novo ID para atualizar. Tratamento para Django 3+ vs 4+
-            let finalId = objId;
-            let finalRepr = newRepr;
-            if (typeof objId === 'object' && objId !== null) {
-                finalId = objId.new_value || objId.value || objId.old_value;
-                finalRepr = objId.obj || objId.new_repr;
-            } else if (newId !== undefined) {
-                finalId = newId;
-            }
-            sessionStorage.setItem('retirante_persist_id', finalId);
-            sessionStorage.setItem('retirante_persist_repr', finalRepr);
+            // Se for cliente, salva o novo ID para atualizar
+            sessionStorage.setItem('retirante_persist_id', newId);
+            sessionStorage.setItem('retirante_persist_repr', newRepr);
         }
         location.reload(); 
     };
@@ -451,15 +443,9 @@
         if (isEncomendaPopup) {
             salvarEstadoRetirante(); // Preserva o retirante atual se for edição de encomenda
         } else {
-            // Se for cliente, salva o novo ID para atualizar. Tratamento para Django 3+ vs 4+
-            let finalId = newId;
-            let finalRepr = newRepr;
-            if (typeof newId === 'object' && newId !== null) {
-                finalId = newId.value || newId.new_value;
-                finalRepr = newId.obj || newId.new_repr;
-            }
-            sessionStorage.setItem('retirante_persist_id', finalId);
-            sessionStorage.setItem('retirante_persist_repr', finalRepr);
+            // Se for cliente, salva o novo ID para atualizar
+            sessionStorage.setItem('retirante_persist_id', newId);
+            sessionStorage.setItem('retirante_persist_repr', newRepr);
         }
         location.reload(); 
     };
@@ -475,7 +461,6 @@
 
     // Função para abrir pop-up de novo cliente sem usar tags de URL do Django inline para evitar erros
     function abrirPopupNovoCliente() {
-        sessionStorage.setItem('novo_cliente_criado', 'sim');
         const url = "/admin/entregas/cliente/add/?_popup=1";
         abrirPopupCliente(url);
     }
@@ -942,25 +927,8 @@
         // 1. Prioridade absoluta: Se houve recarregamento após adicionar/editar um cliente
         const idPersistido = sessionStorage.getItem('retirante_persist_id');
         const reprPersistido = sessionStorage.getItem('retirante_persist_repr');
-        const novoClienteCriado = sessionStorage.getItem('novo_cliente_criado');
         
-        if (novoClienteCriado) {
-            sessionStorage.removeItem('novo_cliente_criado');
-            let maiorId = -1;
-            let nomeMaiorId = "";
-            
-            for (let chave in clientesData) {
-                let idNumerico = parseInt(chave);
-                if (idNumerico > maiorId) {
-                    maiorId = idNumerico;
-                    nomeMaiorId = clientesData[chave].nome;
-                }
-            }
-            if (maiorId !== -1) {
-                idParaSelecionar = maiorId;
-                reprParaSelecionar = nomeMaiorId;
-            }
-        } else if (idPersistido && idPersistido !== "undefined" && idPersistido !== "[object Object]") {
+        if (idPersistido) {
             idParaSelecionar = idPersistido;
             reprParaSelecionar = reprPersistido;
             sessionStorage.removeItem('retirante_persist_id');

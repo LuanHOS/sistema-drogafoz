@@ -67,7 +67,7 @@ class CustomUserAdmin(BuscaSemAcentoMixin, UserAdmin):
 # --- INÍCIO CORREÇÃO 5 (FORM DO RETIRANTE) ---
 class RetiranteForm(forms.Form):
     retirante = forms.ModelChoiceField(
-        queryset=Cliente.objects.all(),
+        queryset=Cliente.objects.all().order_by('-id'),
         widget=AutocompleteSelect(Retirada._meta.get_field('retirado_por'), admin.site),
         required=True,
         label="Quem está retirando as encomendas no balcão? (Obrigatório)"
@@ -279,11 +279,11 @@ def marcar_entregue(modeladmin, request, queryset):
         })
         todas_esquecidas_ids.append(enc.pk)
 
-    # Consulta todas as encomendas pendentes que NÃO estão na lista atual para o Select2
+    # Força a ordenação das encomendas extras pelo ID (-id)
     todas_pendentes = Encomenda.objects.filter(
         status='PENDENTE', 
         descartado=False
-    ).exclude(id__in=selecionados_ids).select_related('cliente').order_by('cliente__nome', 'id')
+    ).exclude(id__in=selecionados_ids).select_related('cliente').order_by('-id')
 
     # --- DICIONÁRIO COMPLETO DE CLIENTES PARA O JS ---
     clientes_dados = {
@@ -527,6 +527,14 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     list_max_show_all = 10000
     readonly_fields = ('id',)
     fields = ('id', 'nome', 'cpf', 'rg', 'genero', 'telefone', 'email')
+
+    # --- A SOLUÇÃO: ORDENAÇÃO EXCLUSIVA PARA O AUTOCOMPLETE ---
+    def get_ordering(self, request):
+        # Se a busca estiver vindo da caixinha dinâmica do Autocomplete, forçamos o ID invertido
+        if request.resolver_match and request.resolver_match.url_name == 'autocomplete':
+            return ['-id']
+        # Caso contrário (telas e listas normais), mantém a ordem definida no model (Alfabética)
+        return super().get_ordering(request)
 
     @admin.display(ordering='nome', description='Nome')
     def get_nome_status(self, obj):

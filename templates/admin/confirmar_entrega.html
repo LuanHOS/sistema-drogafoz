@@ -461,6 +461,7 @@
 
     // Função para abrir pop-up de novo cliente sem usar tags de URL do Django inline para evitar erros
     function abrirPopupNovoCliente() {
+        sessionStorage.setItem('novo_cliente_criado', 'sim');
         const url = "/admin/entregas/cliente/add/?_popup=1";
         abrirPopupCliente(url);
     }
@@ -927,8 +928,25 @@
         // 1. Prioridade absoluta: Se houve recarregamento após adicionar/editar um cliente
         const idPersistido = sessionStorage.getItem('retirante_persist_id');
         const reprPersistido = sessionStorage.getItem('retirante_persist_repr');
+        const novoClienteCriado = sessionStorage.getItem('novo_cliente_criado');
         
-        if (idPersistido) {
+        if (novoClienteCriado) {
+            sessionStorage.removeItem('novo_cliente_criado');
+            let maiorId = -1;
+            let nomeMaiorId = "";
+            
+            for (let chave in clientesData) {
+                let idNumerico = parseInt(chave);
+                if (idNumerico > maiorId) {
+                    maiorId = idNumerico;
+                    nomeMaiorId = clientesData[chave].nome;
+                }
+            }
+            if (maiorId !== -1) {
+                idParaSelecionar = maiorId;
+                reprParaSelecionar = nomeMaiorId;
+            }
+        } else if (idPersistido && idPersistido !== "undefined" && idPersistido !== "[object Object]") {
             idParaSelecionar = idPersistido;
             reprParaSelecionar = reprPersistido;
             sessionStorage.removeItem('retirante_persist_id');

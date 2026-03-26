@@ -213,7 +213,7 @@
                                            onclick="return abrirPopupEncomenda(this.href);"
                                            style="color: inherit; text-decoration: none;"
                                            title="Editar Encomenda">
-                                            📦 #{{ item.id }} - {{ item.descricao|linebreaksbr }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
+                                           📦 #{{ item.id }} - {{ item.descricao|linebreaksbr }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
                                         </a>
                                         
                                         {% if item.status == 'ENTREGUE' %}
@@ -851,6 +851,30 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
+        // --- ORDENAR CAMPO RETIRANTE DO ÚLTIMO ID PARA O PRIMEIRO ---
+        var selectRet = document.getElementById('id_retirante');
+        if (selectRet) {
+            var opts = Array.from(selectRet.options);
+            var optVazia = opts.filter(function(o) { return !o.value; });
+            var optValidas = opts.filter(function(o) { return o.value; });
+            optValidas.sort(function(a, b) { return parseInt(b.value) - parseInt(a.value); });
+            selectRet.innerHTML = '';
+            if (optVazia.length > 0) selectRet.appendChild(optVazia[0]);
+            optValidas.forEach(function(o) { selectRet.appendChild(o); });
+        }
+
+        // --- ORDENAR CAMPO ENCOMENDAS EXTRAS DO ÚLTIMO ID PARA O PRIMEIRO ---
+        var selectExtras = document.getElementById('select-encomendas-extras');
+        if (selectExtras) {
+            var optsExtras = Array.from(selectExtras.options);
+            var optsExtrasVazias = optsExtras.filter(function(o) { return !o.value; });
+            var optsExtrasValidas = optsExtras.filter(function(o) { return o.value; });
+            optsExtrasValidas.sort(function(a, b) { return parseInt(b.value) - parseInt(a.value); });
+            selectExtras.innerHTML = '';
+            if (optsExtrasVazias.length > 0) selectExtras.appendChild(optsExtrasVazias[0]);
+            optsExtrasValidas.forEach(function(o) { selectExtras.appendChild(o); });
+        }
+
         // --- INICIALIZA SELECT2 COM MATCHER PERSONALIZADO ---
         django.jQuery('#select-encomendas-extras').select2({
             placeholder: "🔎 Digite o ID ou Nome do Cliente...",

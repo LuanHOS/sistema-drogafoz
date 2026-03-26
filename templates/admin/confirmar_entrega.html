@@ -430,11 +430,6 @@
             // Se for cliente, salva o novo ID para atualizar
             sessionStorage.setItem('retirante_persist_id', newId);
             sessionStorage.setItem('retirante_persist_repr', newRepr);
-            
-            // Adicionado: Salvar o nome para a notificação
-            let nomeNotificacao = newRepr;
-            if (typeof newId === 'object' && newId !== null) { nomeNotificacao = newId.obj || newId.new_repr; }
-            sessionStorage.setItem('mostrar_notificacao_cliente', nomeNotificacao || 'Cliente');
         }
         location.reload(); 
     };
@@ -451,11 +446,6 @@
             // Se for cliente, salva o novo ID para atualizar
             sessionStorage.setItem('retirante_persist_id', newId);
             sessionStorage.setItem('retirante_persist_repr', newRepr);
-            
-            // Adicionado: Salvar o nome para a notificação
-            let nomeNotificacao = newRepr;
-            if (typeof newId === 'object' && newId !== null) { nomeNotificacao = newId.obj || newId.new_repr; }
-            sessionStorage.setItem('mostrar_notificacao_cliente', nomeNotificacao || 'Cliente');
         }
         location.reload(); 
     };
@@ -883,19 +873,6 @@
                 return null;
             }
         });
-
-        // Adicionado: Exibir notificação de cliente salvo se houver na sessão
-        const nomeNotificacao = sessionStorage.getItem('mostrar_notificacao_cliente');
-        if (nomeNotificacao) {
-            const nomeExibir = (nomeNotificacao !== 'undefined' && nomeNotificacao !== '[object Object]') ? nomeNotificacao : 'Novo Cliente';
-            const alertaHTML = '<div style="padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; color: #155724; background-color: #d4edda; border-color: #c3e6cb; font-size: 14px; font-weight: bold;"><i class="fas fa-check-circle" style="margin-right: 5px;"></i> Cliente "' + nomeExibir + '" salvo com sucesso! Pesquise e selecione-o no campo de Retirante abaixo.</div>';
-            
-            const divTopo = document.querySelector('div[style*="max-width: 950px"]');
-            if (divTopo) {
-                divTopo.insertAdjacentHTML('afterbegin', alertaHTML);
-            }
-            sessionStorage.removeItem('mostrar_notificacao_cliente');
-        }
 
         // --- LIBERAR SAÍDA SE FOR CONFIRMAR ENTREGA ---
         const formEntrega = document.getElementById('form-entrega');

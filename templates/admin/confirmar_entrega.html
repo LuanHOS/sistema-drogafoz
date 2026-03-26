@@ -700,7 +700,7 @@
                 if (headerCount) headerCount.innerText = remainingItems + ' encomenda(s)';
                 
                 const footerCount = document.getElementById('footer-count-' + clienteId);
-                if (footerCount) footerCount.innerText = 'Total (' + remainingItems + ' items):';
+                if (footerCount) footerCount.innerText = 'Total (' + remainingItems + ' itens):';
             }
         }
 
@@ -851,18 +851,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        // --- ORDENAR CAMPO RETIRANTE DO ÚLTIMO ID PARA O PRIMEIRO ---
-        var selectRet = document.getElementById('id_retirante');
-        if (selectRet) {
-            var opts = Array.from(selectRet.options);
-            var optVazia = opts.filter(function(o) { return !o.value; });
-            var optValidas = opts.filter(function(o) { return o.value; });
-            optValidas.sort(function(a, b) { return parseInt(b.value) - parseInt(a.value); });
-            selectRet.innerHTML = '';
-            if (optVazia.length > 0) selectRet.appendChild(optVazia[0]);
-            optValidas.forEach(function(o) { selectRet.appendChild(o); });
-        }
-
         // --- INICIALIZA SELECT2 COM MATCHER PERSONALIZADO ---
         django.jQuery('#select-encomendas-extras').select2({
             placeholder: "🔎 Digite o ID ou Nome do Cliente...",

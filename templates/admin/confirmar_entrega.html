@@ -913,47 +913,50 @@
             sessionStorage.removeItem('checkboxes_marcados');
         }
 
-        // Evento de mudança no Select2 (usando jQuery do Django para garantir compatibilidade)
-        const $select = django.jQuery('#id_retirante');
+        // LÓGICA DE DETECÇÃO DO NOVO CLIENTE NA CARGA DA PÁGINA
+        const selectElement = document.getElementById('id_retirante');
         
-        $select.on('change', function() {
+        if (selectElement) {
+            // Se o id_retirante já tem um valor no HTML inicializado pelo Django
+            // (que é o que acontece quando o Django Add/Change Related Object salva e fecha)
+            const valorAtual = selectElement.value;
+            
+            if (valorAtual) {
+                 // Salva esse valor para garantir que seja mantido na próxima interação
+                 sessionStorage.setItem('ultimo_cliente_id', valorAtual);
+            } else {
+                // Se não tem valor nativo do Django, verifica se temos um salvo no Storage
+                const ultimoIdSalvo = sessionStorage.getItem('ultimo_cliente_id');
+                
+                if (ultimoIdSalvo) {
+                    // Nós temos um cliente guardado. Precisamos fazer o Select2 reconhecer ele.
+                    django.jQuery('#id_retirante').val(ultimoIdSalvo).trigger('change');
+                } else {
+                    // Ninguém está selecionado e não tem nada no histórico. Regra do cliente de maior volume!
+                    let maxItens = -1;
+                    let idMaior = null;
+                    
+                    document.querySelectorAll('.cliente-card').forEach(card => {
+                        let count = parseInt(card.dataset.itemCount);
+                        if (count > maxItens) {
+                            maxItens = count;
+                            idMaior = card.dataset.clientId;
+                        }
+                    });
+                    
+                    if (idMaior) {
+                        django.jQuery('#id_retirante').val(idMaior).trigger('change');
+                        sessionStorage.setItem('ultimo_cliente_id', idMaior); // Memoriza essa auto-seleção
+                    }
+                }
+            }
+        }
+
+        // Toda vez que o select mudar manualmente ou via Javascript, atualizamos o storage
+        django.jQuery('#id_retirante').on('change', function() {
+            sessionStorage.setItem('ultimo_cliente_id', this.value);
             atualizarResumoRetirante();
         });
-
-        // LÓGICA DE PRÉ-PREENCHIMENTO
-        let idParaSelecionar = null;
-        let reprParaSelecionar = null;
-
-        // 1. Prioridade absoluta: Se houve recarregamento após adicionar/editar um cliente
-        const idPersistido = sessionStorage.getItem('retirante_persist_id');
-        const reprPersistido = sessionStorage.getItem('retirante_persist_repr');
-        
-        if (idPersistido) {
-            idParaSelecionar = idPersistido;
-            reprParaSelecionar = reprPersistido;
-            sessionStorage.removeItem('retirante_persist_id');
-            sessionStorage.removeItem('retirante_persist_repr');
-        } else {
-            // 2. Lógica de quem tem mais itens na lista
-            let maxItens = -1;
-            document.querySelectorAll('.cliente-card').forEach(card => {
-                let count = parseInt(card.dataset.itemCount);
-                if (count > maxItens) {
-                    maxItens = count;
-                    idParaSelecionar = card.dataset.clientId;
-                    reprParaSelecionar = card.dataset.clientName; // Usado para criar a tag <option>
-                }
-            });
-        }
-
-        if (idParaSelecionar) {
-            // Cria e insere o option se ele ainda não estiver lá, garantindo que o jQuery dispare corretamente o select
-            if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
-                const newOption = new Option(reprParaSelecionar, idParaSelecionar, true, true);
-                $select.append(newOption);
-            }
-            $select.val(idParaSelecionar).trigger('change');
-        }
 
         atualizarResumoRetirante();
         verificarCheckboxes(); // Aplica a trava assim que a página carrega

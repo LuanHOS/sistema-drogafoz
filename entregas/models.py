@@ -74,7 +74,7 @@ class Cliente(models.Model):
         return f"{base} ({self.cpf})" if self.cpf else base
     
     class Meta:
-        ordering = ['-id']  # ALTERADO PARA ORDENAR DO MAIOR PARA O MENOR
+        ordering = ['nome']
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
 
@@ -174,7 +174,7 @@ class Encomenda(models.Model):
         return f"{self.descricao} - {self.cliente.nome}"
 
     class Meta:
-        ordering = ['-id']  # ALTERADO PARA ORDENAR DO MAIOR PARA O MENOR
+        ordering = ['cliente__nome']
         verbose_name = 'Encomenda'
         verbose_name_plural = 'Encomendas'
         # Proteção contra duplicidade exata:

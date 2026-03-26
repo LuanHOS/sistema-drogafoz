@@ -417,21 +417,21 @@
         }
     }
 
-    // --- FUNÇÃO POPUP ---
-    window.dismissChangeRelatedObjectPopup = function(win, newId, newRepr) {
+    // --- LÓGICA DE POPUP DO DJANGO ---
+    // Removemos a nossa tentativa de interceptar o pop-up nativo de clientes,
+    // pois o Django Admin 4.x+ lida com a inserção da tag <option> automaticamente via Select2.
+    // Em vez disso, vamos interceptar SOMENTE o popup das encomendas (que nós criamos).
+    window.dismissChangeRelatedObjectPopup = function(win, objId, newRepr, newId) {
         const isEncomendaPopup = win.name === "EditarEncomenda" || (win.location && win.location.href.includes("encomenda"));
         win.close();
         safeToLeaveConfirm = true; 
         salvarEstadoCheckboxes();
         
         if (isEncomendaPopup) {
-            salvarEstadoRetirante(); // Preserva o retirante atual se for edição de encomenda
-        } else {
-            // Se for cliente, salva o novo ID para atualizar
-            sessionStorage.setItem('retirante_persist_id', newId);
-            sessionStorage.setItem('retirante_persist_repr', newRepr);
-        }
-        location.reload(); 
+            salvarEstadoRetirante(); 
+            location.reload(); 
+        } 
+        // Se for Cliente, deixa o script nativo do Django agir e fechar!
     };
 
     window.dismissAddRelatedObjectPopup = function(win, newId, newRepr) {
@@ -441,13 +441,10 @@
         salvarEstadoCheckboxes();
         
         if (isEncomendaPopup) {
-            salvarEstadoRetirante(); // Preserva o retirante atual se for edição de encomenda
-        } else {
-            // Se for cliente, salva o novo ID para atualizar
-            sessionStorage.setItem('retirante_persist_id', newId);
-            sessionStorage.setItem('retirante_persist_repr', newRepr);
-        }
-        location.reload(); 
+            salvarEstadoRetirante(); 
+            location.reload(); 
+        } 
+        // Se for Cliente, deixa o script nativo do Django agir e fechar!
     };
 
     function abrirPopupCliente(url) {
@@ -459,13 +456,11 @@
         return false;
     }
 
-    // Função para abrir pop-up de novo cliente sem usar tags de URL do Django inline para evitar erros
     function abrirPopupNovoCliente() {
         const url = "/admin/entregas/cliente/add/?_popup=1";
         abrirPopupCliente(url);
     }
 
-    // Função para editar o retirante atualmente selecionado no select
     function editarRetiranteSelecionado() {
         const id = django.jQuery('#id_retirante').val();
         if (id) {
@@ -795,6 +790,21 @@
     // Carregamos a lista completa de clientes via JSON com total segurança e performance
     const clientesData = JSON.parse('{{ clientes_dados_json|escapejs }}');
 
+    // MANTÉM OS DADOS DO NOVO CLIENTE EM TELA ATRAVÉS DO DJANGO SELECT2
+    function buscarNovoClienteNaAPI(id) {
+        // Se o cliente não estiver no dicionário inicial (acabou de ser adicionado),
+        // A API nativa do Django irá carregar a opção sozinha no select2, nós apenas atualizamos o HTML.
+        const option = django.jQuery('#id_retirante option:selected');
+        let text = option.text();
+        if (text) {
+            document.getElementById('resumo-nome').innerText = text;
+            document.getElementById('resumo-doc').innerText = "Verifique na tabela abaixo";
+            document.getElementById('resumo-contato').innerText = "Cliente Recém-Atualizado";
+            document.getElementById('label-doc').style.color = "#123C65";
+            document.getElementById('resumo-doc').style.color = "#333";
+        }
+    }
+
     function atualizarResumoRetirante() {
         const select = django.jQuery('#id_retirante');
         const box = document.getElementById('resumo-retirante');
@@ -807,46 +817,42 @@
             return;
         }
 
-        // Mostra o botão de editar
         btnEdit.style.display = 'inline-flex';
 
-        // Puxa as informações do dicionário pre-carregado com todos os clientes
         const cli = clientesData[clientId];
-        let nomeText = "-";
-        let docText = "Não Informado";
-        let contatoText = "Não Informado";
-
-        if (cli) {
-            nomeText = cli.nome;
-            docText = cli.cpf ? "CPF: " + cli.cpf : (cli.rg ? "RG: " + cli.rg : "Não Informado");
-            contatoText = cli.telefone ? cli.telefone : (cli.email ? cli.email : "Não Informado");
-        }
-
-        document.getElementById('resumo-nome').innerText = nomeText;
-        document.getElementById('resumo-doc').innerText = docText;
-        document.getElementById('resumo-contato').innerText = contatoText;
-
-        // Controle visual de atenção (Cor vermelha se Não Informado)
-        const labelDoc = document.getElementById('label-doc');
-        const resumoDoc = document.getElementById('resumo-doc');
-        if (docText === "Não Informado") {
-            labelDoc.style.color = "#C51625";
-            resumoDoc.style.color = "#C51625";
-        } else {
-            labelDoc.style.color = "#123C65";
-            resumoDoc.style.color = "#333";
-        }
-
-        const labelContato = document.getElementById('label-contato');
-        const resumoContato = document.getElementById('resumo-contato');
-        if (contatoText === "Não Informado") {
-            labelContato.style.color = "#C51625";
-            resumoContato.style.color = "#C51625";
-        } else {
-            labelContato.style.color = "#123C65";
-            resumoContato.style.color = "#333";
-        }
         
+        // Se o cliente existe no dicionário que carregou com a tela
+        if (cli) {
+            let docText = cli.cpf ? "CPF: " + cli.cpf : (cli.rg ? "RG: " + cli.rg : "Não Informado");
+            let contatoText = cli.telefone ? cli.telefone : (cli.email ? cli.email : "Não Informado");
+
+            document.getElementById('resumo-nome').innerText = cli.nome;
+            document.getElementById('resumo-doc').innerText = docText;
+            document.getElementById('resumo-contato').innerText = contatoText;
+
+            const labelDoc = document.getElementById('label-doc');
+            const resumoDoc = document.getElementById('resumo-doc');
+            if (docText === "Não Informado") {
+                labelDoc.style.color = "#C51625";
+                resumoDoc.style.color = "#C51625";
+            } else {
+                labelDoc.style.color = "#123C65";
+                resumoDoc.style.color = "#333";
+            }
+
+            const labelContato = document.getElementById('label-contato');
+            const resumoContato = document.getElementById('resumo-contato');
+            if (contatoText === "Não Informado") {
+                labelContato.style.color = "#C51625";
+                resumoContato.style.color = "#C51625";
+            } else {
+                labelContato.style.color = "#123C65";
+                resumoContato.style.color = "#333";
+            }
+        } else {
+            // Se o cliente acabou de ser criado e não estava no JSON inicial
+            buscarNovoClienteNaAPI(clientId);
+        }
         box.style.display = 'block';
     }
 
@@ -857,24 +863,17 @@
             width: '100%',
             allowClear: true,
             matcher: function(params, data) {
-                // Se a barra estiver vazia, retorna todas
                 if (django.jQuery.trim(params.term) === '') return data;
                 if (typeof data.text === 'undefined') return null;
-                
                 const el = django.jQuery(data.element);
                 const id = String(el.attr('data-id') || '').toLowerCase();
                 const nome = String(el.attr('data-nome') || '').toLowerCase();
                 const termo = params.term.toLowerCase();
-                
-                // Pesquisa exclusiva por ID da encomenda ou NOME do cliente
-                if (id.indexOf(termo) > -1 || nome.indexOf(termo) > -1) {
-                    return data;
-                }
+                if (id.indexOf(termo) > -1 || nome.indexOf(termo) > -1) return data;
                 return null;
             }
         });
 
-        // --- LIBERAR SAÍDA SE FOR CONFIRMAR ENTREGA ---
         const formEntrega = document.getElementById('form-entrega');
         if (formEntrega) {
             formEntrega.addEventListener('submit', function() {
@@ -884,7 +883,6 @@
 
         recalcularTotalGeral();
 
-        // Check visual de encontrados no estoque
         document.querySelectorAll('.check-encontrado').forEach(function(check) {
             check.addEventListener('change', function() {
                 const linha = this.closest('.item-linha');
@@ -897,7 +895,6 @@
             });
         });
 
-        // RESTAURAR CHECKBOXES ANTES DE VERIFICAR ESTADO FINAL
         const marcadosSalvos = sessionStorage.getItem('checkboxes_marcados');
         if (marcadosSalvos) {
             try {
@@ -913,9 +910,10 @@
             sessionStorage.removeItem('checkboxes_marcados');
         }
 
-        // Evento de mudança no Select2 (usando jQuery do Django para garantir compatibilidade)
+        // LÓGICA DO SELECT2 NATIVO DO DJANGO
         const $select = django.jQuery('#id_retirante');
         
+        // Dispara sempre que houver alteração (manual ou via Popup do Django)
         $select.on('change', function() {
             atualizarResumoRetirante();
         });
@@ -924,39 +922,45 @@
         let idParaSelecionar = null;
         let reprParaSelecionar = null;
 
-        // 1. Prioridade absoluta: Se houve recarregamento após adicionar/editar um cliente
         const idPersistido = sessionStorage.getItem('retirante_persist_id');
         const reprPersistido = sessionStorage.getItem('retirante_persist_repr');
         
-        if (idPersistido) {
+        // Se a página está recarregando após adicionar um extra ou mudar encomenda
+        if (idPersistido && idPersistido !== "undefined" && idPersistido !== "[object Object]") {
             idParaSelecionar = idPersistido;
             reprParaSelecionar = reprPersistido;
             sessionStorage.removeItem('retirante_persist_id');
             sessionStorage.removeItem('retirante_persist_repr');
-        } else {
-            // 2. Lógica de quem tem mais itens na lista
+            
+            // Força a seleção no Select2
+            if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
+                const newOption = new Option(reprParaSelecionar, idParaSelecionar, true, true);
+                $select.append(newOption);
+            }
+            $select.val(idParaSelecionar).trigger('change');
+            
+        } else if (!$select.val()) {
+            // Se NÃO tem ninguém selecionado, puxa o de maior volume
             let maxItens = -1;
             document.querySelectorAll('.cliente-card').forEach(card => {
                 let count = parseInt(card.dataset.itemCount);
                 if (count > maxItens) {
                     maxItens = count;
                     idParaSelecionar = card.dataset.clientId;
-                    reprParaSelecionar = card.dataset.clientName; // Usado para criar a tag <option>
+                    reprParaSelecionar = card.dataset.clientName;
                 }
             });
-        }
-
-        if (idParaSelecionar) {
-            // Cria e insere o option se ele ainda não estiver lá, garantindo que o jQuery dispare corretamente o select
-            if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
-                const newOption = new Option(reprParaSelecionar, idParaSelecionar, true, true);
-                $select.append(newOption);
+            if (idParaSelecionar) {
+                if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
+                    const newOption = new Option(reprParaSelecionar, idParaSelecionar, true, true);
+                    $select.append(newOption);
+                }
+                $select.val(idParaSelecionar).trigger('change');
             }
-            $select.val(idParaSelecionar).trigger('change');
         }
 
         atualizarResumoRetirante();
-        verificarCheckboxes(); // Aplica a trava assim que a página carrega
+        verificarCheckboxes(); 
     });
 </script>
 

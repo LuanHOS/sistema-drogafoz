@@ -177,8 +177,8 @@
                     
                     <div class="cliente-header">
                         <div style="display: flex; align-items: center;">
-                            {% if not grupo.cliente.telefone or not grupo.cliente.cpf %}
-                                <i class="fas fa-user" style="color: #C51625; margin-right: 8px;" title="Cadastro Incompleto (Falta CPF ou Telefone)"></i> 
+                            {% if not grupo.cliente.cpf and not grupo.cliente.rg or not grupo.cliente.telefone and not grupo.cliente.email %}
+                                <i class="fas fa-user" style="color: #C51625; margin-right: 8px;" title="Cadastro Incompleto (Falta Documento ou Contato)"></i> 
                             {% else %}
                                 <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> 
                             {% endif %}
@@ -700,7 +700,7 @@
                 if (headerCount) headerCount.innerText = remainingItems + ' encomenda(s)';
                 
                 const footerCount = document.getElementById('footer-count-' + clienteId);
-                if (footerCount) footerCount.innerText = 'Total (' + remainingItems + ' items):';
+                if (footerCount) footerCount.innerText = 'Total (' + remainingItems + ' itens):';
             }
         }
 

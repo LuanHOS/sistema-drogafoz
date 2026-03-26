@@ -820,6 +820,11 @@
             nomeText = cli.nome;
             docText = cli.cpf ? "CPF: " + cli.cpf : (cli.rg ? "RG: " + cli.rg : "Não Informado");
             contatoText = cli.telefone ? cli.telefone : (cli.email ? cli.email : "Não Informado");
+        } else {
+            // Caso o cliente seja novo e ainda não esteja no clientesData
+            nomeText = select.find('option:selected').text() || "Cliente Atualizado";
+            docText = "Verifique na tabela principal";
+            contatoText = "Cliente Recém Atualizado";
         }
 
         document.getElementById('resumo-nome').innerText = nomeText;
@@ -913,47 +918,48 @@
             sessionStorage.removeItem('checkboxes_marcados');
         }
 
-        // Evento de mudança no Select2 (usando jQuery do Django para garantir compatibilidade)
-        const $select = django.jQuery('#id_retirante');
+        // LÓGICA DE DETECÇÃO DO NOVO CLIENTE NA CARGA DA PÁGINA
+        const selectElement = document.getElementById('id_retirante');
         
-        $select.on('change', function() {
+        if (selectElement) {
+            const valorAtual = selectElement.value;
+            
+            if (valorAtual) {
+                 sessionStorage.setItem('ultimo_cliente_id', valorAtual);
+            } else {
+                const ultimoIdSalvo = sessionStorage.getItem('ultimo_cliente_id');
+                
+                if (ultimoIdSalvo) {
+                    setTimeout(function() {
+                        django.jQuery('#id_retirante').val(ultimoIdSalvo).trigger('change');
+                    }, 50);
+                } else {
+                    let maxItens = -1;
+                    let idMaior = null;
+                    
+                    document.querySelectorAll('.cliente-card').forEach(card => {
+                        let count = parseInt(card.dataset.itemCount);
+                        if (count > maxItens) {
+                            maxItens = count;
+                            idMaior = card.dataset.clientId;
+                        }
+                    });
+                    
+                    if (idMaior) {
+                        setTimeout(function() {
+                            django.jQuery('#id_retirante').val(idMaior).trigger('change');
+                            sessionStorage.setItem('ultimo_cliente_id', idMaior);
+                        }, 50);
+                    }
+                }
+            }
+        }
+
+        // Evento de mudança no Select2
+        django.jQuery('#id_retirante').on('change', function() {
+            sessionStorage.setItem('ultimo_cliente_id', this.value);
             atualizarResumoRetirante();
         });
-
-        // LÓGICA DE PRÉ-PREENCHIMENTO
-        let idParaSelecionar = null;
-        let reprParaSelecionar = null;
-
-        // 1. Prioridade absoluta: Se houve recarregamento após adicionar/editar um cliente
-        const idPersistido = sessionStorage.getItem('retirante_persist_id');
-        const reprPersistido = sessionStorage.getItem('retirante_persist_repr');
-        
-        if (idPersistido) {
-            idParaSelecionar = idPersistido;
-            reprParaSelecionar = reprPersistido;
-            sessionStorage.removeItem('retirante_persist_id');
-            sessionStorage.removeItem('retirante_persist_repr');
-        } else {
-            // 2. Lógica de quem tem mais itens na lista
-            let maxItens = -1;
-            document.querySelectorAll('.cliente-card').forEach(card => {
-                let count = parseInt(card.dataset.itemCount);
-                if (count > maxItens) {
-                    maxItens = count;
-                    idParaSelecionar = card.dataset.clientId;
-                    reprParaSelecionar = card.dataset.clientName; // Usado para criar a tag <option>
-                }
-            });
-        }
-
-        if (idParaSelecionar) {
-            // Cria e insere o option se ele ainda não estiver lá, garantindo que o jQuery dispare corretamente o select
-            if ($select.find("option[value='" + idParaSelecionar + "']").length === 0) {
-                const newOption = new Option(reprParaSelecionar, idParaSelecionar, true, true);
-                $select.append(newOption);
-            }
-            $select.val(idParaSelecionar).trigger('change');
-        }
 
         atualizarResumoRetirante();
         verificarCheckboxes(); // Aplica a trava assim que a página carrega

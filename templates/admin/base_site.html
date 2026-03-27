@@ -177,38 +177,11 @@
         .submit-row { flex-direction: column; gap: 10px; }
         .submit-row p.deletelink-box { margin-right: 0 !important; width: 100%; }
         .submit-row input[type=submit], a.deletelink, .btn-cancel { width: 100%; margin-left: 0 !important; }
-        .btn-voltar-container { margin-left: 10px !important; margin-top: 10px !important; }
+        .btn-voltar-container { margin-left: 10px !important; }
         #result_list .field-descricao { max-width: 200px; }
         .object-tools { flex-direction: column; gap: 10px; }
         .object-tools li { margin: 0 !important; width: 100%; }
         .object-tools a.addlink, .object-tools a.exportlink { width: 100%; box-sizing: border-box; }
-
-        /* --- REGRAS GLOBAIS DE RESPONSIVIDADE (MOBILE) --- */
-        
-        /* 1. Margens e espaçamentos menores */
-        #content { padding: 10px !important; }
-        
-        /* Pega containers customizados que usam 40px auto e reduz para mobile */
-        div[style*="margin: 40px auto"] { margin: 10px auto !important; padding: 15px !important; width: 100% !important; }
-        
-        /* 2. Forçar larguras relativas e impedir vazamento de tela */
-        * { box-sizing: border-box !important; }
-        input, select, textarea, .select2-container { max-width: 100% !important; }
-        
-        /* 3. Tabelas com rolagem horizontal (Scroll) nativo do celular */
-        .results, #changelist-form, .overflow-auto { overflow-x: auto !important; -webkit-overflow-scrolling: touch; display: block; width: 100%; }
-        #result_list { min-width: 650px; /* Garante que a tabela não esmague o texto, ativando a barra de rolagem */ }
-        
-        /* 4. Textos e títulos ajustados para caber na tela */
-        #content h1 { font-size: 18px !important; line-height: 1.3 !important; margin-bottom: 10px !important; }
-        h2 { font-size: 16px !important; }
-        
-        /* 5. Ajustes de botões laterais (ex: lupa do select2 ou botões de +) */
-        .related-widget-wrapper { flex-wrap: wrap !important; gap: 8px !important; }
-        .related-widget-wrapper select { width: 100% !important; }
-        
-        /* 6. Garantir que modais (pop-ups customizados) caibam na tela */
-        .modal-box { width: 95% !important; padding: 20px !important; margin: 10px !important; }
     }
 </style>
 {% endblock %}

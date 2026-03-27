@@ -17,6 +17,27 @@
         } catch (e) {
             console.error("Erro ao forçar tema claro:", e);
         }
+
+        // --- SCRIPT MOBILE: Reduzir textos de botões de ação longos no celular ---
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.innerWidth <= 767) {
+                var els = document.querySelectorAll('option, input[type="submit"], input[type="button"], button');
+                els.forEach(function(el) {
+                    var textoAlvo = "entregue ao cliente";
+                    
+                    if (el.tagName === 'OPTION' && el.textContent.toLowerCase().includes(textoAlvo)) {
+                        el.textContent = 'Marcar como Entregue';
+                    }
+                    if (el.tagName === 'INPUT' && el.value.toLowerCase().includes(textoAlvo)) {
+                        el.value = 'Marcar como Entregue';
+                    }
+                    if (el.tagName === 'BUTTON' && el.textContent.toLowerCase().includes(textoAlvo)) {
+                        // Faz replace simples caso o botão tenha ícones HTML internos
+                        el.innerHTML = el.innerHTML.replace(/Marcar selecionados como ["']?entregue ao cliente["']?/gi, 'Marcar como Entregue');
+                    }
+                });
+            }
+        });
     </script>
 {% endblock %}
 
@@ -182,6 +203,25 @@
         .object-tools { flex-direction: column; gap: 10px; }
         .object-tools li { margin: 0 !important; width: 100%; }
         .object-tools a.addlink, .object-tools a.exportlink { width: 100%; box-sizing: border-box; }
+        
+        /* --- REGRAS GLOBAIS DE RESPONSIVIDADE --- */
+        
+        /* Reduz as fontes de textos básicos, inputs e tabelas em cerca de 50% */
+        body, #content, table, th, td, p, span, a, input, select, textarea, div, li, label, .select2-container {
+            font-size: 11px !important;
+        }
+        #content h1 { font-size: 15px !important; }
+        #content h2, caption { font-size: 13px !important; }
+        
+        /* Impedir botões de cortarem palavras ao meio (permitir quebra de linha por frase, mas não quebrar palavras longas) */
+        button, input[type="submit"], input[type="button"], .btn, .button, a.addlink, a.exportlink, .submit-row input {
+            word-break: normal !important;
+            word-wrap: normal !important;
+            white-space: normal !important;
+            hyphens: none !important;
+            overflow-wrap: break-word !important;
+            font-size: 11px !important;
+        }
     }
 </style>
 {% endblock %}

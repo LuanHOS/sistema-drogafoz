@@ -219,7 +219,7 @@ def marcar_entregue(modeladmin, request, queryset):
             queryset = Encomenda.objects.filter(pk__in=selected)
 
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
-    encomendas_ordenadas = queryset.select_related('cliente').order_by('cliente__nome')
+    encomendas_ordenadas = queryset.select_related('cliente').order_by('cliente__nome', 'data_chegada')
     
     resumo_agrupado = {}
     agora = timezone.now()
@@ -493,7 +493,7 @@ class RetiradaAdmin(admin.ModelAdmin):
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         retirada = get_object_or_404(Retirada, pk=object_id)
-        encomendas = retirada.encomendas.all().select_related('cliente')
+        encomendas = retirada.encomendas.all().select_related('cliente').order_by('cliente__nome', 'data_chegada')
         
         resumo_agrupado = {}
         for enc in encomendas:
@@ -528,12 +528,9 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     readonly_fields = ('id',)
     fields = ('id', 'nome', 'cpf', 'rg', 'genero', 'telefone', 'email')
 
-    # --- A SOLUÇÃO: ORDENAÇÃO EXCLUSIVA PARA O AUTOCOMPLETE ---
     def get_ordering(self, request):
-        # Se a busca estiver vindo da caixinha dinâmica do Autocomplete, forçamos o ID invertido
         if request.resolver_match and request.resolver_match.url_name == 'autocomplete':
             return ['-id']
-        # Caso contrário (telas e listas normais), mantém a ordem definida no model (Alfabética)
         return super().get_ordering(request)
 
     @admin.display(ordering='nome', description='Nome')

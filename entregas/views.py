@@ -4,8 +4,11 @@ from django.db.models import Sum, Count, Avg, F, Q, Min, Max
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
+from django.conf import settings
 from .models import Encomenda, Cliente
 import json
+import urllib.request
+import urllib.parse
 
 @staff_member_required
 def relatorio_entregas(request):
@@ -221,56 +224,92 @@ def relatorio_entregas(request):
     return render(request, 'admin/relatorio_ganhos.html', context)
 
 def consulta_publica(request):
-    query = request.GET.get('q')
+    # Aceita tanto POST quanto GET, mas a validação de segurança ocorre via POST
+    query = request.POST.get('q') or request.GET.get('q')
     resultados = []
     total_geral = 0.0
     cliente_existe = False
+    erro_recaptcha = False
     
-    if query:
-        # Remove caracteres especiais para comparar apenas números
-        termo_limpo = query.replace('.', '').replace('-', '').strip()
+    # Executa a busca apenas se a requisição for POST (que traz o token do reCAPTCHA)
+    if query and request.method == 'POST':
+        # --- 1. VALIDAÇÃO DO RECAPTCHA ENTERPRISE VIA REST API ---
+        recaptcha_response = request.POST.get('g-recaptcha-response')
         
-        # Verifica se o cliente existe no banco independentemente de ter encomendas pendentes
-        cliente_existe = Cliente.objects.filter(Q(cpf=termo_limpo) | Q(rg=termo_limpo)).exists()
+        project_id = getattr(settings, 'GOOGLE_PROJECT_ID', '')
+        api_key = getattr(settings, 'GOOGLE_API_KEY', '')
+        site_key = getattr(settings, 'RECAPTCHA_SITE_KEY', '')
         
-        # Busca EXATA pelo CPF ou RG. 
-        # Não usa 'icontains' para evitar matches parciais.
-        # Não busca por nome para garantir privacidade.
-        qs = Encomenda.objects.filter(
-            Q(cliente__cpf=termo_limpo) | 
-            Q(cliente__rg=termo_limpo),
-            status='PENDENTE',
-            descartado=False
-        ).order_by('-data_chegada')
+        url = f'https://recaptchaenterprise.googleapis.com/v1/projects/{project_id}/assessments?key={api_key}'
+        
+        valores = {
+            "event": {
+                "token": recaptcha_response,
+                "expectedAction": "LOGIN",
+                "siteKey": site_key
+            }
+        }
+        
+        dados = json.dumps(valores).encode('utf-8')
+        req = urllib.request.Request(url, data=dados, headers={'Content-Type': 'application/json'})
+        
+        try:
+            resposta = urllib.request.urlopen(req)
+            resultado_json = json.loads(resposta.read().decode())
+            
+            propriedades_token = resultado_json.get('tokenProperties', {})
+            if not propriedades_token.get('valid'):
+                erro_recaptcha = True
+        except Exception:
+            # Se houver erro de conexão com o Google, aborta a busca por segurança
+            erro_recaptcha = True
 
-        agora = timezone.now()
+        # --- 2. BUSCA NO BANCO DE DADOS (Apenas se passar pelo reCAPTCHA) ---
+        if not erro_recaptcha:
+            # Remove caracteres especiais para comparar apenas números
+            termo_limpo = query.replace('.', '').replace('-', '').strip()
+            
+            # Verifica se o cliente existe no banco independentemente de ter encomendas pendentes
+            cliente_existe = Cliente.objects.filter(Q(cpf=termo_limpo) | Q(rg=termo_limpo)).exists()
+            
+            # Busca EXATA pelo CPF ou RG.
+            qs = Encomenda.objects.filter(
+                Q(cliente__cpf=termo_limpo) | 
+                Q(cliente__rg=termo_limpo),
+                status='PENDENTE',
+                descartado=False
+            ).order_by('-data_chegada')
 
-        for item in qs:
-            # 1. Calcular dias em estoque
-            dias_estoque = (agora - item.data_chegada).days
-            if dias_estoque < 0: dias_estoque = 0
-            
-            # 2. Calcular multiplicador
-            multiplicador = max(1, dias_estoque // 10)
-            
-            # 3. Calcular valor atualizado
-            valor_final = float(item.valor_base) * multiplicador
+            agora = timezone.now()
 
-            # Atributos para o template
-            item.dias_display = dias_estoque
-            item.valor_final_display = valor_final
-            
-            # Flag para destacar SOMENTE se ultrapassar 10 dias
-            item.is_atrasado = (dias_estoque > 10) 
-            
-            resultados.append(item)
-            total_geral += valor_final
+            for item in qs:
+                # 1. Calcular dias em estoque
+                dias_estoque = (agora - item.data_chegada).days
+                if dias_estoque < 0: dias_estoque = 0
+                
+                # 2. Calcular multiplicador
+                multiplicador = max(1, dias_estoque // 10)
+                
+                # 3. Calcular valor atualizado
+                valor_final = float(item.valor_base) * multiplicador
+
+                # Atributos para o template
+                item.dias_display = dias_estoque
+                item.valor_final_display = valor_final
+                
+                # Flag para destacar SOMENTE se ultrapassar 10 dias
+                item.is_atrasado = (dias_estoque > 10) 
+                
+                resultados.append(item)
+                total_geral += valor_final
 
     return render(request, 'publica/consulta.html', {
         'resultados': resultados, 
         'query': query,
         'total_geral': total_geral,
-        'cliente_existe': cliente_existe
+        'cliente_existe': cliente_existe,
+        'erro_recaptcha': erro_recaptcha,
+        'recaptcha_site_key': getattr(settings, 'RECAPTCHA_SITE_KEY', '')
     })
 
 def home(request):

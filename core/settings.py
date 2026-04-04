@@ -80,3 +80,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- CHAVES DO GOOGLE RECAPTCHA ENTERPRISE ---
+RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY')
+GOOGLE_PROJECT_ID = os.environ.get('GOOGLE_PROJECT_ID')
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')

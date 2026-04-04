@@ -6,6 +6,8 @@
     <title>Consulta de Encomendas - Drogafoz</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
 
+    <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
@@ -77,21 +79,31 @@
             <h2>Consulte suas Encomendas</h2>
             <p>Para sua segurança, informe seu <strong>CPF ou RG</strong> (apenas números) abaixo para verificar se existem pacotes aguardando retirada.</p>
             
-            <form method="get" class="input-group">
-                <input 
-                    type="text" 
-                    name="q" 
-                    placeholder="Digite seu CPF ou RG (Apenas números)" 
-                    value="{{ query|default:'' }}" 
-                    required
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    maxlength="14"
-                >
-                <button type="submit">Consultar</button>
+            <form method="post" class="input-group" style="flex-direction: column; align-items: center; gap: 15px;">
+                {% csrf_token %}
+                <div style="display: flex; width: 100%; justify-content: center;">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        placeholder="Digite seu CPF ou RG (Apenas números)" 
+                        value="{{ query|default:'' }}" 
+                        required
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        maxlength="14"
+                        style="width: 70%;"
+                    >
+                    <button type="submit">Consultar</button>
+                </div>
+                
+                <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-action="LOGIN"></div>
             </form>
         </div>
 
-        {% if query %}
+        {% if erro_recaptcha %}
+            <div class="empty-msg" style="color: #dc3545;">
+                <p>⚠️ Verificação de segurança falhou. Por favor, marque a caixa "Não sou um robô".</p>
+            </div>
+        {% elif query %}
             {% if resultados %}
                 <table>
                     <thead>

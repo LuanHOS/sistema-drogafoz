@@ -578,7 +578,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     )
     
     list_filter = (StatusFilter,) 
-    search_fields = ('=id', 'cliente__nome')
+    search_fields = ('=id', 'cliente__nome', 'remetente')
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     

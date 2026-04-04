@@ -409,7 +409,7 @@ class RetiradaStatusFilter(admin.SimpleListFilter):
 class RetiradaAdmin(admin.ModelAdmin):
     list_display = ('id', 'get_retirado_por_nome', 'get_qtd_clientes', 'get_qtd_encomendas', 'get_data_hora', 'get_valor_total_fmt')
     list_filter = (RetiradaStatusFilter, 'data_retirada', 'operador')
-    search_fields = ('=id', 'retirado_por__nome', 'retirado_por__cpf')
+    search_fields = ('=id', 'retirado_por__nome', 'retirado_por__cpf', 'encomendas__cliente__nome')
     
     @admin.display(description='Retirado Por', ordering='retirado_por__nome')
     def get_retirado_por_nome(self, obj):
@@ -578,7 +578,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     )
     
     list_filter = (StatusFilter,) 
-    search_fields = ('=id', 'cliente__nome', 'remetente')
+    search_fields = ('=id', 'cliente__nome')
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     

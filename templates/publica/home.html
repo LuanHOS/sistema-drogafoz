@@ -167,7 +167,7 @@
             text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
         }
 
-        /* Botão WhatsApp Flutuante */
+        /* Botões Flutuantes (WhatsApp e Instagram) */
         .whatsapp-float {
             position: fixed;
             width: 60px;
@@ -192,6 +192,32 @@
             background-color: #128c7e;
             transform: scale(1.1);
             color: #FFF;
+        }
+
+        .instagram-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 115px; /* Fica logo acima do WhatsApp */
+            right: 40px;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .instagram-float:hover {
+            transform: scale(1.1);
+            color: #FFF;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
         }
 
         @media (max-width: 900px) {
@@ -318,6 +344,12 @@
         © {{ now.year }} Drogafoz Encomendas - Foz do Iguaçu. Todos os direitos reservados.
     </footer>
 
+    <!-- Botão Instagram Flutuante -->
+    <a href="https://www.instagram.com/drogafoz/" class="instagram-float" target="_blank">
+        <i class="fab fa-instagram"></i>
+    </a>
+
+    <!-- Botão WhatsApp Flutuante -->
     <a href="https://wa.me/5545999422240" class="whatsapp-float" target="_blank">
         <i class="fab fa-whatsapp"></i>
     </a>

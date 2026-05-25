@@ -94,11 +94,11 @@
 
             <div class="form-group">
                 <label>Início</label>
-                <input type="date" name="data_inicial" value="{{ data_inicial }}" class="form-control" id="dt_ini" {% if ignorar_periodo %}disabled{% endif %}>
+                <input type="date" name="data_inicial" value="{{ data_inicial }}" max="{% now 'Y-m-d' %}" class="form-control" id="dt_ini" {% if ignorar_periodo %}disabled{% endif %}>
             </div>
             <div class="form-group">
                 <label>Fim</label>
-                <input type="date" name="data_final" value="{{ data_final }}" class="form-control" id="dt_fim" {% if ignorar_periodo %}disabled{% endif %}>
+                <input type="date" name="data_final" value="{{ data_final }}" max="{% now 'Y-m-d' %}" class="form-control" id="dt_fim" {% if ignorar_periodo %}disabled{% endif %}>
             </div>
             <div class="form-group" style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
                 <input type="checkbox" name="ignorar_periodo" id="chk_ignorar" {% if ignorar_periodo %}checked{% endif %} onchange="toggleDates()">
@@ -144,6 +144,7 @@
     </div>
 
     <div class="content-row">
+        <!-- Coluna 1: Gráfico -->
         <div class="panel">
             <h4>📈 Evolução do Faturamento (Últimos 6 Meses)</h4>
             <div class="chart-container-box">
@@ -151,6 +152,7 @@
             </div>
         </div>
 
+        <!-- Coluna 2: Top 5 Receitas -->
         <div class="panel">
             <h4>🏆 Top 5 Clientes (Período)</h4>
             <table class="mini-table">
@@ -173,8 +175,9 @@
             </table>
         </div>
 
+        <!-- Coluna 3: Lista de Maiores Pendências -->
         <div class="panel" style="display: flex; flex-direction: column;">
-            <h4>📦 Clientes c/ Mais Enc. Armazenadas</h4>
+            <h4>📦 Clientes c/ Mais Pendências</h4>
             <div style="flex-grow: 1; overflow-y: auto; max-height: 300px; padding-right: 5px;">
                 <table class="mini-table" style="margin: 0;">
                     <thead style="position: sticky; top: 0; background: #fff; z-index: 1; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);">
@@ -244,11 +247,11 @@
 
             <div class="form-group">
                 <label>Início (Cliente)</label>
-                <input type="date" name="data_inicial_cliente" value="{{ data_inicial_cliente }}" class="form-control" id="dt_ini_cli" {% if ignorar_periodo_cliente %}disabled{% endif %}>
+                <input type="date" name="data_inicial_cliente" value="{{ data_inicial_cliente }}" max="{% now 'Y-m-d' %}" class="form-control" id="dt_ini_cli" {% if ignorar_periodo_cliente %}disabled{% endif %}>
             </div>
             <div class="form-group">
                 <label>Fim (Cliente)</label>
-                <input type="date" name="data_final_cliente" value="{{ data_final_cliente }}" class="form-control" id="dt_fim_cli" {% if ignorar_periodo_cliente %}disabled{% endif %}>
+                <input type="date" name="data_final_cliente" value="{{ data_final_cliente }}" max="{% now 'Y-m-d' %}" class="form-control" id="dt_fim_cli" {% if ignorar_periodo_cliente %}disabled{% endif %}>
             </div>
             <div class="form-group" style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
                 <input type="checkbox" name="ignorar_periodo_cliente" id="chk_ignorar_cli" {% if ignorar_periodo_cliente %}checked{% endif %} onchange="toggleDatesCli()">
@@ -396,6 +399,54 @@
     document.addEventListener("DOMContentLoaded", function() {
         toggleDates();
         toggleDatesCli();
+
+        // --- VALIDAÇÃO DE DATAS (IMPEDIR DATAS FUTURAS E INVERSÃO DE DATAS) ---
+        const todayStr = "{% now 'Y-m-d' %}";
+
+        const dtIni = document.getElementById('dt_ini');
+        const dtFim = document.getElementById('dt_fim');
+        if (dtIni && dtFim) {
+            dtIni.addEventListener('change', () => { dtFim.min = dtIni.value; });
+            dtFim.addEventListener('change', () => { dtIni.max = dtFim.value < todayStr ? dtFim.value : todayStr; });
+            if (dtIni.value) dtFim.min = dtIni.value;
+            if (dtFim.value) dtIni.max = dtFim.value < todayStr ? dtFim.value : todayStr;
+        }
+
+        const dtIniCli = document.getElementById('dt_ini_cli');
+        const dtFimCli = document.getElementById('dt_fim_cli');
+        if (dtIniCli && dtFimCli) {
+            dtIniCli.addEventListener('change', () => { dtFimCli.min = dtIniCli.value; });
+            dtFimCli.addEventListener('change', () => { dtIniCli.max = dtFimCli.value < todayStr ? dtFimCli.value : todayStr; });
+            if (dtIniCli.value) dtFimCli.min = dtIniCli.value;
+            if (dtFimCli.value) dtIniCli.max = dtFimCli.value < todayStr ? dtFimCli.value : todayStr;
+        }
+
+        // Validação adicional ao clicar no botão "Atualizar/Filtrar"
+        const forms = document.querySelectorAll('.filter-form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const dateInputs = form.querySelectorAll('input[type="date"]');
+                for (let input of dateInputs) {
+                    if (!input.disabled && input.value > todayStr) {
+                        e.preventDefault();
+                        alert("ERRO: Não é permitido filtrar por datas futuras.");
+                        input.focus();
+                        return;
+                    }
+                }
+                
+                const ini = form.querySelector('input[name^="data_inicial"]');
+                const fim = form.querySelector('input[name^="data_final"]');
+                if (ini && fim && !ini.disabled && !fim.disabled && ini.value && fim.value) {
+                    if (ini.value > fim.value) {
+                        e.preventDefault();
+                        alert("ERRO: A Data Início não pode ser maior que a Data Fim.");
+                        return;
+                    }
+                }
+            });
+        });
+        // --- FIM DA VALIDAÇÃO DE DATAS ---
 
         // Lógica do Dropdown Customizado de Clientes
         var checkList = document.getElementById('cli-dropdown');

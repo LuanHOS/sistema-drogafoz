@@ -83,6 +83,22 @@ def relatorio_entregas(request):
     estoque_qtd = pendentes.count()
     estoque_valor_base = pendentes.aggregate(Sum('valor_base'))['valor_base__sum'] or 0
     
+    # NOVO: Lista de clientes com maior volume de encomendas pendentes
+    clientes_pendentes_agrupado = pendentes.values('cliente__nome').annotate(
+        qtd_pendentes=Count('id'),
+        data_mais_antiga=Min('data_chegada')
+    ).order_by('-qtd_pendentes', 'cliente__nome')
+    
+    clientes_pendentes_list = []
+    for c in clientes_pendentes_agrupado:
+        dias = (hoje - c['data_mais_antiga']).days if c['data_mais_antiga'] else 0
+        if dias < 0: dias = 0
+        clientes_pendentes_list.append({
+            'nome': c['cliente__nome'],
+            'qtd': c['qtd_pendentes'],
+            'dias_mais_antiga': dias
+        })
+
     # Alertas
     limite_critico = hoje - timedelta(days=120)
     limite_atencao = hoje - timedelta(days=30)
@@ -203,6 +219,8 @@ def relatorio_entregas(request):
         'estoque_valor_base': estoque_valor_base,
         'alertas_criticos': alertas_criticos,
         'alertas_atencao': alertas_atencao,
+        
+        'clientes_pendentes_list': clientes_pendentes_list,
         
         'tempo_medio_dias': tempo_medio_dias,
         'top_clientes': top_clientes,

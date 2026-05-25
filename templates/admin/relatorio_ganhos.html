@@ -39,7 +39,7 @@
         .text-black { color: #333 !important; }
 
         /* TABELAS E GRÁFICOS */
-        .content-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
+        .content-row { display: grid; grid-template-columns: 1.6fr 1fr 1.2fr; gap: 20px; margin-top: 20px; }
         
         .panel { 
             background: #fff; padding: 20px; border-radius: 8px; 
@@ -172,6 +172,33 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="panel" style="display: flex; flex-direction: column;">
+            <h4>📦 Clientes c/ Mais Enc. Armazenadas</h4>
+            <div style="flex-grow: 1; overflow-y: auto; max-height: 300px; padding-right: 5px;">
+                <table class="mini-table" style="margin: 0;">
+                    <thead style="position: sticky; top: 0; background: #fff; z-index: 1; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);">
+                        <tr>
+                            <th>Cliente</th>
+                            <th style="text-align: center; white-space: nowrap;">+ Antiga</th>
+                            <th style="text-align: right;">Qtd</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in clientes_pendentes_list %}
+                        <tr>
+                            <td>{{ c.nome }}</td>
+                            <td style="text-align: center; color: #888; font-size: 11px;">{{ c.dias_mais_antiga }} dias</td>
+                            <td style="text-align: right; font-weight: bold; color: #17a2b8;">{{ c.qtd }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" style="text-align: center; color: #888;">Nenhuma encomenda pendente no momento</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <div class="section-header" style="margin-top: 40px;">

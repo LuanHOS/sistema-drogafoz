@@ -518,8 +518,28 @@ class RetiradaAdmin(admin.ModelAdmin):
         
         return render(request, 'admin/visualizar_retirada.html', extra_context)
 
+# --- NOVO: FORMULÁRIO DE CLIENTE PARA LIMPAR CPF AUTOMATICAMENTE ---
+class ClienteAdminForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = '__all__'
+        widgets = {
+            'cpf': forms.TextInput(attrs={
+                'oninput': "this.value = this.value.replace(/[^0-9]/g, '')",
+                'placeholder': 'Apenas números'
+            })
+        }
+
+    def clean_cpf(self):
+        cpf = self.cleaned_data.get('cpf')
+        if cpf:
+            # Garante que no backend, antes de salvar, só fiquem números
+            cpf = re.sub(r'\D', '', str(cpf))
+        return cpf
+
 @admin.register(Cliente)
 class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
+    form = ClienteAdminForm # Aplica o formulário criado acima
     actions = None
     list_display = ('id', 'get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
     search_fields = ('=id', 'nome', 'cpf', 'rg')

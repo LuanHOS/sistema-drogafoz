@@ -167,17 +167,32 @@
             text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
         }
 
-        .btn-whatsapp {
-            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-            margin-top: 10px;
-            background: transparent; color: #25D366; border: 2px solid #25D366;
-            padding: 12px 30px; border-radius: 50px;
-            text-decoration: none; font-weight: bold; font-size: 16px;
-            transition: 0.3s;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        /* Botão WhatsApp Flutuante */
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 40px;
+            right: 40px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
         }
-        .btn-whatsapp:hover { background: #25D366; color: white; }
+
+        .whatsapp-float:hover {
+            background-color: #128c7e;
+            transform: scale(1.1);
+            color: #FFF;
+        }
 
         @media (max-width: 900px) {
             .rules-grid { flex-direction: column; }
@@ -297,15 +312,15 @@
             </div>
         </div>
 
-        <a href="https://wa.me/5545999422240" target="_blank" class="btn-whatsapp">
-            <i class="fab fa-whatsapp fa-lg"></i> Falar com Atendente no WhatsApp
-        </a>
-
     </div>
 
     <footer style="margin-top: auto; padding: 30px; font-size: 13px; opacity: 0.6;">
         © {{ now.year }} Drogafoz Encomendas - Foz do Iguaçu. Todos os direitos reservados.
     </footer>
+
+    <a href="https://wa.me/5545999422240" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 
 </body>
 </html>

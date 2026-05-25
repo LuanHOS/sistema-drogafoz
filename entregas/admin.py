@@ -526,6 +526,7 @@ class ClienteAdminForm(forms.ModelForm):
         widgets = {
             'cpf': forms.TextInput(attrs={
                 'oninput': "this.value = this.value.replace(/[^0-9]/g, '')",
+                'placeholder': 'Apenas números'
             })
         }
 
@@ -591,7 +592,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     show_facets = admin.ShowFacets.NEVER
     
     list_display = (
-        'id', 'get_cliente_nome', 'get_descricao_fmt', 'get_remetente_fmt', 'observacao', 'get_status_fmt', 
+        'id', 'get_cliente_nome', 'get_descricao_fmt', 'get_remetente_fmt', 'get_observacao_fmt', 'get_status_fmt', 
         'get_data_chegada_fmt', 'get_data_saida_fmt', 
         'get_valor_base_custom', 'get_valor_cobrado_custom'
     )
@@ -676,7 +677,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     @admin.display(ordering='valor_base', description='Valor Base')
     def get_valor_base_custom(self, obj):
-        return obj.valor_base
+        return self._get_colored_text(obj, obj.valor_base)
 
     @admin.display(ordering='valor_calculado', description='Valor Calculado')
     def get_valor_calculado_custom(self, obj):
@@ -693,6 +694,11 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     @admin.display(ordering='remetente', description='Remetente')
     def get_remetente_fmt(self, obj):
         return self._get_colored_text(obj, obj.remetente)
+        
+    @admin.display(ordering='observacao', description='Observação')
+    def get_observacao_fmt(self, obj):
+        texto = obj.observacao if obj.observacao else ""
+        return self._get_colored_text(obj, texto)
 
     @admin.display(ordering='status', description='Status')
     def get_status_fmt(self, obj):

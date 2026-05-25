@@ -526,7 +526,6 @@ class ClienteAdminForm(forms.ModelForm):
         widgets = {
             'cpf': forms.TextInput(attrs={
                 'oninput': "this.value = this.value.replace(/[^0-9]/g, '')",
-                'placeholder': 'Apenas números'
             })
         }
 

@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from django.conf import settings
 from .models import Encomenda, Cliente
+from .models import PalavraChave
+from django.shortcuts import redirect
 import json
 import urllib.request
 import urllib.parse
@@ -333,3 +335,17 @@ def consulta_publica(request):
 
 def home(request):
     return render(request, 'publica/home.html')
+
+@staff_member_required
+def gerenciar_palavras(request):
+    if request.method == 'POST':
+        if 'add_palavra' in request.POST:
+            cliente_input = request.POST.get('cliente_palavra')
+            texto_input = request.POST.get('texto_palavra')
+            if cliente_input and texto_input:
+                PalavraChave.objects.create(cliente=cliente_input[:255], palavra=texto_input[:255])
+        elif 'del_palavra' in request.POST:
+            palavra_id = request.POST.get('palavra_id')
+            if palavra_id:
+                PalavraChave.objects.filter(id=palavra_id).delete()
+    return redirect('admin:index')

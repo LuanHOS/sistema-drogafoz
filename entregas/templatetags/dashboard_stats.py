@@ -1,7 +1,7 @@
 from django import template
 from django.db.models import Sum
 from django.utils import timezone
-from entregas.models import Encomenda
+from entregas.models import Encomenda, PalavraChave
 
 register = template.Library()
 
@@ -19,7 +19,11 @@ def get_stats():
     # 2. Conta quantas estão no armazém (Pendentes e Não Descartadas)
     estoque = Encomenda.objects.filter(status='PENDENTE', descartado=False).count()
     
+    # Busca as palavras-chave para o Post-it
+    palavras = PalavraChave.objects.all().order_by('-id')
+    
     return {
         'lucro': lucro,
         'estoque': estoque,
+        'palavras': palavras,
     }

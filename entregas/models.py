@@ -25,11 +25,8 @@ class Cliente(models.Model):
     apenas_numeros = RegexValidator(r'^\d+$', 'Este campo deve conter apenas números (sem pontos ou traços).')
 
     nome = models.CharField(max_length=200)
-    
-    # CAMPO NOVO: Observação do Cliente
     observacao = models.CharField(max_length=255, blank=True, null=True, verbose_name="Observação")
     
-    # CPF já possui unique=True, garantindo que não se repita entre CPFs
     cpf = models.CharField(
         max_length=14, unique=True, blank=True, null=True, 
         validators=[apenas_numeros, validar_cpf_algoritmo],
@@ -116,7 +113,6 @@ class Encomenda(models.Model):
     # CAMPO NOVO: Remetente (default removido para vir vazio no form)
     remetente = models.CharField(max_length=255, verbose_name="Remetente")
     
-    # CAMPO NOVO: Observação
     observacao = models.CharField(max_length=150, blank=True, null=True, verbose_name="Observação")
     
     data_chegada = models.DateTimeField(verbose_name="Data de Chegada")
@@ -185,3 +181,16 @@ class Encomenda(models.Model):
         # Proteção contra duplicidade exata:
         # Não permite criar outra encomenda com mesmo cliente, descrição e data exata (segundos)
         unique_together = ('cliente', 'descricao', 'data_chegada')
+
+class PalavraChave(models.Model):
+    cliente = models.CharField(max_length=255, verbose_name="Cliente")
+    palavra = models.CharField(max_length=255, verbose_name="Palavra-Chave")
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.cliente} - {self.palavra}"
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = 'Palavra-Chave'
+        verbose_name_plural = 'Palavras-Chaves'

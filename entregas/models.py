@@ -26,6 +26,9 @@ class Cliente(models.Model):
 
     nome = models.CharField(max_length=200)
     
+    # CAMPO NOVO: Observação do Cliente
+    observacao = models.CharField(max_length=255, blank=True, null=True, verbose_name="Observação")
+    
     # CPF já possui unique=True, garantindo que não se repita entre CPFs
     cpf = models.CharField(
         max_length=14, unique=True, blank=True, null=True, 
@@ -71,6 +74,8 @@ class Cliente(models.Model):
 
     def __str__(self):
         base = f"#{self.id} - {self.nome}" if self.id else self.nome
+        if self.observacao:
+            base = f"{base} ({self.observacao})"
         return f"{base} ({self.cpf})" if self.cpf else base
     
     class Meta:

@@ -545,7 +545,7 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     list_per_page = 25
     list_max_show_all = 10000
     readonly_fields = ('id',)
-    fields = ('id', 'nome', 'cpf', 'rg', 'genero', 'telefone', 'email')
+    fields = ('id', 'nome', 'observacao', 'cpf', 'rg', 'genero', 'telefone', 'email')
 
     def get_ordering(self, request):
         if request.resolver_match and request.resolver_match.url_name == 'autocomplete':

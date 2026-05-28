@@ -144,7 +144,6 @@
     </div>
 
     <div class="content-row">
-        <!-- Coluna 1: Gráfico -->
         <div class="panel">
             <h4>📈 Evolução do Faturamento (Últimos 6 Meses)</h4>
             <div class="chart-container-box">
@@ -152,7 +151,6 @@
             </div>
         </div>
 
-        <!-- Coluna 2: Top 5 Receitas -->
         <div class="panel">
             <h4>🏆 Top 5 Clientes (Período)</h4>
             <table class="mini-table">
@@ -165,7 +163,7 @@
                 <tbody>
                     {% for c in top_clientes %}
                     <tr>
-                        <td>{{ c.cliente__nome }} <br> <small style="color:#999">{{ c.qtd }} retiradas</small></td>
+                        <td>{{ c.cliente__nome }}{% if c.cliente__observacao %} ({{ c.cliente__observacao }}){% endif %} <br> <small style="color:#999">{{ c.qtd }} retiradas</small></td>
                         <td style="text-align: right; font-weight: bold;">R$ {{ c.total_gasto|floatformat:2 }}</td>
                     </tr>
                     {% empty %}
@@ -175,7 +173,6 @@
             </table>
         </div>
 
-        <!-- Coluna 3: Lista de Maiores Pendências -->
         <div class="panel" style="display: flex; flex-direction: column;">
             <h4>📦 Clientes Com Mais Encomendas Armazenadas</h4>
             <div style="flex-grow: 1; overflow-y: auto; max-height: 300px; padding-right: 5px;">
@@ -268,7 +265,7 @@
                             {% for c in clientes_todos %}
                             <label>
                                 <input type="checkbox" name="cliente_ids" value="{{ c.id }}" {% if c.id in cliente_ids_selecionados %}checked{% endif %}> 
-                                {{ c.nome }}
+                                {{ c.nome }}{% if c.observacao %} ({{ c.observacao }}){% endif %}
                             </label>
                             {% endfor %}
                         </div>
@@ -334,7 +331,7 @@
                 <tbody>
                     {% for enc in cli_dados.encomendas %}
                     <tr>
-                        <td style="font-weight: bold;">{{ enc.cliente.nome }}</td>
+                        <td style="font-weight: bold;">{{ enc.cliente.nome }}{% if enc.cliente.observacao %} ({{ enc.cliente.observacao }}){% endif %}</td>
                         <td>#{{ enc.id }}</td>
                         <td>{{ enc.descricao }}</td>
                         <td>

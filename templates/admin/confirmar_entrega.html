@@ -150,8 +150,8 @@
                 
                 <select id="select-encomendas-extras" multiple="multiple" style="width: 100%;">
                     {% for enc in todas_pendentes %}
-                        <option value="{{ enc.id }}" data-id="{{ enc.id }}" data-nome="{{ enc.cliente.nome }}">
-                            📦 ID: #{{ enc.id }} | Cliente: {{ enc.cliente.nome }} | Desc: {{ enc.descricao }} | Remetente: {{ enc.remetente|default:'-' }} | Obs: {{ enc.observacao|default:'-' }}
+                        <option value="{{ enc.id }}" data-id="{{ enc.id }}" data-nome="{{ enc.cliente.nome }} {% if enc.cliente.observacao %}({{ enc.cliente.observacao }}){% endif %}">
+                            📦 ID: #{{ enc.id }} | Cliente: {{ enc.cliente.nome }}{% if enc.cliente.observacao %} ({{ enc.cliente.observacao }}){% endif %} | Desc: {{ enc.descricao }} | Remetente: {{ enc.remetente|default:'-' }} | Obs: {{ enc.observacao|default:'-' }}
                         </option>
                     {% endfor %}
                 </select>
@@ -168,7 +168,8 @@
             {% for grupo in resumo_agrupado %}
                 <div class="cliente-card" id="card-cliente-{{ grupo.cliente.id }}" 
                      data-client-id="{{ grupo.cliente.id }}"
-                     data-client-name="#{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}" 
+                     data-client-name="#{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}{% if grupo.cliente.observacao %} ({{ grupo.cliente.observacao }}){% endif %}" 
+                     data-client-clean-name="#{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}"
                      data-client-cpf="{{ grupo.cliente.cpf|default:'' }}"
                      data-client-rg="{{ grupo.cliente.rg|default:'' }}"
                      data-client-tel="{{ grupo.cliente.telefone|default:'' }}"
@@ -187,7 +188,7 @@
                                onclick="return abrirPopupCliente(this.href);"
                                style="color: white; text-decoration: none;"
                                title="Editar Cliente">
-                                #{{ grupo.cliente.id }} - {{ grupo.cliente.nome }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
+                                #{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}{% if grupo.cliente.observacao %} ({{ grupo.cliente.observacao }}){% endif %} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
                             </a>
 
                             <span id="header-count-{{ grupo.cliente.id }}" style="font-size: 13px; font-weight: normal; margin-left: 10px; color: rgba(255,255,255,0.8); border-left: 1px solid rgba(255,255,255,0.3); padding-left: 10px;">
@@ -522,7 +523,8 @@
         let totalGeral = 0;
 
         clientesCards.forEach(card => {
-            const nome = card.dataset.clientName;
+            // Alterado para utilizar o Nome Limpo, sem observações no PDF.
+            const nome = card.dataset.clientCleanName;
             const cpf = card.dataset.clientCpf;
             const rg = card.dataset.clientRg;
             const doc = cpf ? cpf : (rg ? rg : '');

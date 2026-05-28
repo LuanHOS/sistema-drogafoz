@@ -268,7 +268,8 @@ def marcar_entregue(modeladmin, request, queryset):
     todas_esquecidas_ids = []
 
     for enc in encomendas_esquecidas_qs:
-        c_nome = enc.cliente.nome
+        # Formata o nome para a aba de esquecidas
+        c_nome = f"{enc.cliente.nome} ({enc.cliente.observacao})" if enc.cliente.observacao else enc.cliente.nome
         if c_nome not in esquecidas_agrupadas:
             esquecidas_agrupadas[c_nome] = []
         esquecidas_agrupadas[c_nome].append({
@@ -288,7 +289,7 @@ def marcar_entregue(modeladmin, request, queryset):
     # --- DICIONÁRIO COMPLETO DE CLIENTES PARA O JS ---
     clientes_dados = {
         str(c.id): {
-            'nome': c.nome,
+            'nome': f"{c.nome} ({c.observacao})" if c.observacao else c.nome,
             'cpf': c.cpf or '',
             'rg': c.rg or '',
             'telefone': c.telefone or '',
@@ -409,11 +410,11 @@ class RetiradaStatusFilter(admin.SimpleListFilter):
 class RetiradaAdmin(admin.ModelAdmin):
     list_display = ('id', 'get_retirado_por_nome', 'get_qtd_clientes', 'get_qtd_encomendas', 'get_data_hora', 'get_valor_total_fmt')
     list_filter = (RetiradaStatusFilter, 'data_retirada', 'operador')
-    search_fields = ('=id', 'retirado_por__nome', 'retirado_por__cpf', 'encomendas__cliente__nome')
+    search_fields = ('=id', 'retirado_por__nome', 'retirado_por__cpf', 'encomendas__cliente__nome', 'retirado_por__observacao')
     
     @admin.display(description='Retirado Por', ordering='retirado_por__nome')
     def get_retirado_por_nome(self, obj):
-        return obj.retirado_por.nome
+        return f"{obj.retirado_por.nome} ({obj.retirado_por.observacao})" if obj.retirado_por.observacao else obj.retirado_por.nome
 
     @admin.display(description='Qtd de Clientes')
     def get_qtd_clientes(self, obj):
@@ -541,7 +542,7 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     form = ClienteAdminForm # Aplica o formulário criado acima
     actions = None
     list_display = ('id', 'get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
-    search_fields = ('=id', 'nome', 'cpf', 'rg')
+    search_fields = ('=id', 'nome', 'cpf', 'rg', 'observacao')
     list_per_page = 25
     list_max_show_all = 10000
     readonly_fields = ('id',)
@@ -554,11 +555,12 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     @admin.display(ordering='nome', description='Nome')
     def get_nome_status(self, obj):
+        nome_exibicao = f"{obj.nome} ({obj.observacao})" if obj.observacao else obj.nome
         tem_documento = obj.cpf or obj.rg
         tem_contato = obj.telefone or obj.email
         if not tem_documento or not tem_contato:
-            return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', obj.nome)
-        return obj.nome
+            return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', nome_exibicao)
+        return nome_exibicao
 
     def get_urls(self):
         urls = super().get_urls()
@@ -597,7 +599,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     )
     
     list_filter = (StatusFilter,) 
-    search_fields = ('=id', 'cliente__nome', 'remetente')
+    search_fields = ('=id', 'cliente__nome', 'remetente', 'cliente__observacao')
     autocomplete_fields = ['cliente']
     actions = [marcar_entregue]
     
@@ -717,11 +719,12 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     @admin.display(ordering='cliente__nome', description='Cliente')
     def get_cliente_nome(self, obj):
         cliente = obj.cliente
+        nome_exibicao = f"{cliente.nome} ({cliente.observacao})" if cliente.observacao else cliente.nome
         tem_documento = cliente.cpf or cliente.rg
         tem_contato = cliente.telefone or cliente.email
         if not tem_documento or not tem_contato:
-            return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', cliente.nome)
-        return self._get_colored_text(obj, cliente.nome)
+            return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', nome_exibicao)
+        return self._get_colored_text(obj, nome_exibicao)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

@@ -71,7 +71,7 @@ def relatorio_entregas(request):
     tempo_medio_dias = media_timedelta.days if media_timedelta else 0
 
     # Top 5 Clientes
-    top_clientes = encomendas_entregues.values('cliente__nome') \
+    top_clientes = encomendas_entregues.values('cliente__nome', 'cliente__observacao') \
         .annotate(total_gasto=Sum('valor_cobrado'), qtd=Count('id')) \
         .order_by('-total_gasto')[:5]
 
@@ -84,7 +84,7 @@ def relatorio_entregas(request):
     estoque_valor_base = pendentes.aggregate(Sum('valor_base'))['valor_base__sum'] or 0
     
     # NOVO: Lista de clientes com maior volume de encomendas pendentes
-    clientes_pendentes_agrupado = pendentes.values('cliente__nome').annotate(
+    clientes_pendentes_agrupado = pendentes.values('cliente__nome', 'cliente__observacao').annotate(
         qtd_pendentes=Count('id'),
         data_mais_antiga=Min('data_chegada')
     ).order_by('-qtd_pendentes', 'cliente__nome')
@@ -93,8 +93,9 @@ def relatorio_entregas(request):
     for c in clientes_pendentes_agrupado:
         dias = (hoje - c['data_mais_antiga']).days if c['data_mais_antiga'] else 0
         if dias < 0: dias = 0
+        nome_exibicao = f"{c['cliente__nome']} ({c['cliente__observacao']})" if c['cliente__observacao'] else c['cliente__nome']
         clientes_pendentes_list.append({
-            'nome': c['cliente__nome'],
+            'nome': nome_exibicao,
             'qtd': c['qtd_pendentes'],
             'dias_mais_antiga': dias
         })

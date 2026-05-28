@@ -123,6 +123,8 @@
                 e.preventDefault();
                 modal.style.display = 'flex';
                 document.body.style.overflow = 'hidden';
+                sessionStorage.setItem('reopen_keywords_modal', 'true');
+                window.location.reload();
             });
         }
         if(btnClose) {

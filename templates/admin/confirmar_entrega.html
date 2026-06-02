@@ -451,6 +451,18 @@
         location.reload(); 
     };
 
+    window.dismissDeleteRelatedObjectPopup = function(win, objId) {
+        const isEncomendaPopup = win.name === "EditarEncomenda" || (win.location && win.location.href.includes("encomenda"));
+        win.close();
+        safeToLeaveConfirm = true; 
+        salvarEstadoCheckboxes();
+        
+        if (isEncomendaPopup) {
+            salvarEstadoRetirante(); 
+        }
+        location.reload(); 
+    };
+
     function abrirPopupCliente(url) {
         const w = 900;
         const h = 700;

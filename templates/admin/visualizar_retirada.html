@@ -391,6 +391,20 @@
         return false;
     }
 
+    // Escutadores nativos para forçar o fechamento da janela do Pop-up quando o formulário é enviado (Salvar/Deletar)
+    window.dismissChangeRelatedObjectPopup = function(win, objId, newRepr, newId) {
+        win.close();
+        location.reload();
+    };
+    window.dismissAddRelatedObjectPopup = function(win, newId, newRepr) {
+        win.close();
+        location.reload();
+    };
+    window.dismissDeleteRelatedObjectPopup = function(win, objId) {
+        win.close();
+        location.reload();
+    };
+
     // Função de enviar pelo Whatsapp usando os números extraídos
     function abrirWhatsapp(telefone) {
         let nums = telefone.replace(/\D/g, '');

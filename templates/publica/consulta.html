@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -396,15 +396,15 @@
                             <tr>
                                 <th>Item</th>
                                 <th>Chegada</th>
-                                <th>Armazenamento</th>
-                                <th>Valor Taxa</th>
+                                <th>Tempo</th>
+                                <th>Taxa</th>
                                 <th>Valor Final</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in resultados %}
                             <tr>
-                                <td>Encomenda {{ forloop.counter }}</td>
+                                <td>#{{ forloop.counter }}</td>
                                 <td>{{ item.data_chegada|date:"d/m/Y" }}</td>
                                 
                                 <td {% if item.is_atrasado %}style="color: #C51625; font-weight: bold;"{% endif %}>

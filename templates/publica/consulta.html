@@ -364,14 +364,14 @@
                                 <th>Item</th>
                                 <th>Chegada</th>
                                 <th>Tempo</th>
-                                <th>Valor Taxa</th>
+                                <th>Taxa</th>
                                 <th>Valor Final</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in resultados %}
                             <tr>
-                                <td>Encomenda {{ forloop.counter }}</td>
+                                <td>#{{ forloop.counter }}</td>
                                 <td>{{ item.data_chegada|date:"d/m/Y" }}</td>
                                 
                                 <td {% if item.is_atrasado %}style="color: #C51625; font-weight: bold;"{% endif %}>

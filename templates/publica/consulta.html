@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -135,6 +135,32 @@
             background-color: var(--vermelho-hover); 
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+        }
+
+        /* --- BOTAO AVALIAÇÃO TOPO --- */
+        .btn-avaliacao-topo {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #ffffff;
+            color: var(--azul-drogafoz);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-decoration: none;
+            border: 1px solid var(--borda-suave);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            transition: var(--transicao);
+        }
+        
+        .btn-avaliacao-topo:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            border-color: #ffc107;
+            color: #333;
         }
 
         /* --- RESPONSIVIDADE PARA A TABELA --- */
@@ -293,8 +319,8 @@
             padding: 10px 18px;
             border-radius: 6px;
             display: inline-flex;
-            text-decoration: none !important; /* REMOVE O SUBLINHADO */
-            width: fit-content; /* LIMITA AO TAMANHO DO TEXTO */
+            text-decoration: none !important;
+            width: fit-content;
             margin-top: 10px;
             font-weight: 600;
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
@@ -333,6 +359,11 @@
 
     <div class="container">
         <div class="search-box">
+            
+            <a href="https://g.page/r/CSeSfzwSYYu5EAE/review" target="_blank" class="btn-avaliacao-topo">
+                <i class="fas fa-star" style="color: #ffc107;"></i> Avalie nosso serviço no Google
+            </a>
+
             <h2>Consulte suas Encomendas</h2>
             <p>Para sua segurança, informe seu <strong>CPF ou RG</strong> abaixo para verificar se existem pacotes aguardando retirada.</p>
             
@@ -365,15 +396,15 @@
                             <tr>
                                 <th>Item</th>
                                 <th>Chegada</th>
-                                <th>Tempo</th>
-                                <th>Taxa</th>
+                                <th>Armazenamento</th>
+                                <th>Valor Taxa</th>
                                 <th>Valor Final</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in resultados %}
                             <tr>
-                                <td>#{{ forloop.counter }}</td>
+                                <td>Encomenda {{ forloop.counter }}</td>
                                 <td>{{ item.data_chegada|date:"d/m/Y" }}</td>
                                 
                                 <td {% if item.is_atrasado %}style="color: #C51625; font-weight: bold;"{% endif %}>

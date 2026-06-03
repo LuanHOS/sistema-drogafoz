@@ -137,6 +137,13 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.35);
         }
 
+        /* --- RESPONSIVIDADE PARA A TABELA --- */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         /* --- TABELA DE RESULTADOS (Estrutura original com estilo novo) --- */
         table { 
             width: 100%; 
@@ -309,6 +316,7 @@
         @media (max-width: 600px) {
             th, td { font-size: 13px; padding: 12px 8px; }
             .container { padding: 25px; width: 95%; margin-top: 30px;}
+            table { min-width: 500px; } /* Força a tabela a manter tamanho para ativar o scroll na div */
         }
     </style>
 </head>
@@ -348,38 +356,40 @@
             </div>
         {% elif query %}
             {% if resultados %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Chegada</th>
-                            <th>Armazenamento</th>
-                            <th>Valor Taxa</th>
-                            <th>Valor Final</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in resultados %}
-                        <tr>
-                            <td>Encomenda {{ forloop.counter }}</td>
-                            <td>{{ item.data_chegada|date:"d/m/Y" }}</td>
-                            
-                            <td {% if item.is_atrasado %}style="color: #C51625; font-weight: bold;"{% endif %}>
-                                {{ item.dias_display }} dias
-                            </td>
-                            
-                            <td>R$ {{ item.valor_base|floatformat:2 }}</td>
-                            <td>R$ {{ item.valor_final_display|floatformat:2 }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        <tr class="total-row">
-                            <td colspan="4" style="text-align: right;">TOTAL A PAGAR:</td>
-                            <td>R$ {{ total_geral|floatformat:2 }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Chegada</th>
+                                <th>Armazenamento</th>
+                                <th>Valor Taxa</th>
+                                <th>Valor Final</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in resultados %}
+                            <tr>
+                                <td>Encomenda {{ forloop.counter }}</td>
+                                <td>{{ item.data_chegada|date:"d/m/Y" }}</td>
+                                
+                                <td {% if item.is_atrasado %}style="color: #C51625; font-weight: bold;"{% endif %}>
+                                    {{ item.dias_display }} dias
+                                </td>
+                                
+                                <td>R$ {{ item.valor_base|floatformat:2 }}</td>
+                                <td>R$ {{ item.valor_final_display|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="4" style="text-align: right;">TOTAL A PAGAR:</td>
+                                <td>R$ {{ total_geral|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
                 <div class="obs-text">
                     * Observação: A taxa é cobrada a cada 10 dias de armazenamento.
                 </div>

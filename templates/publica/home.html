@@ -7,7 +7,9 @@
     <title>DrogaFoz - Recebimento de Encomendas</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
     
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -810,12 +812,14 @@
 </head>
 <body>
 
+    <!-- CABEÇALHO -->
     <header>
         <div class="container header-content">
             <div class="logo">
                 <a href="#"><img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas"></a>
             </div>
             
+            <!-- Checkbox Hack para Menu Responsivo -->
             <input type="checkbox" id="menu-toggle" class="menu-toggle">
             <label for="menu-toggle" class="menu-icon">
                 <i class="fa-solid fa-bars"></i>
@@ -835,10 +839,11 @@
         </div>
     </header>
 
+    <!-- SEÇÃO HERO (PRINCIPAL) -->
     <section id="inicio" class="hero">
         <div class="container">
-            <h1>A sua caixa postal segura na fronteira: nós recebemos, armazenamos e esperamos você retirar.</h1>
-            <p>Não importa se é uma compra online, uma correspondência ou um presente da família: use nosso CEP como o seu endereço no Brasil. Um serviço independente de guarda-volumes na Farmácia DrogaFoz para quem mora no Paraguai ou passa o dia fora de casa.</p>
+            <h1>A sua caixa postal segura na fronteira: nós recebemos, armazenamos e esperamos você buscar.</h1>
+            <p>Não importa se é uma compra online, uma correspondência ou um presente da família: use nosso CEP como o seu endereço no Brasil.</p>
             
             <div class="hero-buttons">
                 <a href="{% url 'consulta_publica' %}" class="btn btn-primario">
@@ -851,10 +856,12 @@
         </div>
     </section>
 
+    <!-- SEÇÃO COMO FUNCIONA -->
     <section id="como-funciona" class="bg-cinza">
         <div class="container">
             <h2 class="section-title">Como Funciona Nosso Serviço?</h2>
             
+            <!-- Resumo Rápido -->
             <div class="grid-passos">
                 <div class="passo-card">
                     <i class="fa-solid fa-user-check passo-icon"></i>
@@ -881,6 +888,7 @@
                 </div>
             </div>
 
+            <!-- Explicação Detalhada Expandível -->
             <details class="detalhes-explicacao" id="detalhes-como-funciona">
                 <summary>
                     <i class="fa-solid fa-circle-info"></i> Clique aqui para ver a explicação detalhada passo a passo <i class="fa-solid fa-chevron-down icon-seta"></i>
@@ -907,11 +915,13 @@
         </div>
     </section>
 
+    <!-- SEÇÃO VALORES E REGRAS -->
     <section id="regras-valores" class="bg-branco">
         <div class="container">
             <h2 class="section-title">Valores e Regras de Utilização</h2>
             <div class="rv-container">
                 
+                <!-- Tabela de Preços -->
                 <div class="rv-box destaque">
                     <h3><i class="fa-solid fa-hand-holding-dollar" style="color: var(--vermelho-drogafoz);"></i> Taxa de Armazenamento</h3>
                     <p style="margin-bottom: 15px;">Cobramos uma taxa pelo recebimento e segurança da sua encomenda.</p>
@@ -924,6 +934,7 @@
                     </ul>
                 </div>
 
+                <!-- Regras Importantes -->
                 <div class="rv-box">
                     <h3><i class="fa-solid fa-clipboard-list" style="color: var(--azul-drogafoz);"></i> Regras de Retirada</h3>
                     <p style="margin-bottom: 15px;">Mantenha a segurança da sua encomenda seguindo nossas diretrizes.</p>
@@ -939,6 +950,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO ENDEREÇO E COMO PREENCHER -->
     <section id="endereco" class="bg-cinza">
         <div class="container">
             <h2 class="section-title">Endereço e Preenchimento</h2>
@@ -965,6 +977,7 @@
                 </div>
             </div>
 
+            <!-- ALERTA DE COMPLEMENTO -->
             <div class="alerta-complemento" id="regras-endereco">
                 <h3><i class="fa-solid fa-triangle-exclamation" style="color: #ffb300;"></i> Como preencher a ficha de endereço nos sites de compras</h3>
                 <p style="margin-bottom: 15px; font-size: 1rem; color: #555;">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados exatamente desta forma:</p>
@@ -985,23 +998,27 @@
         </div>
     </section>
 
+    <!-- SEÇÃO HORÁRIOS DE FUNCIONAMENTO -->
     <section id="horarios" class="bg-branco">
         <div class="container">
             <h2 class="section-title">Horário de Funcionamento</h2>
             <div class="horarios-grid">
                 
+                <!-- Segunda a Sexta -->
                 <div class="horario-card">
                     <i class="fa-regular fa-calendar-days"></i>
                     <h3>Segunda a Sexta-feira</h3>
                     <p>8h00 às 18h00</p>
                 </div>
                 
+                <!-- Sábados -->
                 <div class="horario-card">
                     <i class="fa-regular fa-calendar-check"></i>
                     <h3>Sábados</h3>
                     <p>8h00 às 17h00</p>
                 </div>
                 
+                <!-- Domingo -->
                 <div class="horario-card fechado">
                     <i class="fa-solid fa-door-closed"></i>
                     <h3>Domingos</h3>
@@ -1012,6 +1029,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO QUEM SOMOS -->
     <section id="quem-somos" class="bg-cinza">
         <div class="container">
             <div class="sobre-grid">
@@ -1028,6 +1046,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO FAQ -->
     <section id="faq" class="bg-branco">
         <div class="container">
             <h2 class="section-title">Dúvidas (FAQ)</h2>
@@ -1103,7 +1122,7 @@
                     <summary>Outra pessoa pode retirar a encomenda por mim?</summary>
                     <p><strong>Sim, é totalmente possível!</strong> Porém, o processo é rigoroso para garantir que a sua encomenda não seja entregue à pessoa errada. Para que um familiar ou amigo retire a encomenda no seu lugar, siga <strong>obrigatoriamente</strong> estes três passos:</p>
                     <ol>
-                        <li><strong>O aviso prévio:</strong> O titular da encomenda (quem comprou) deve nos enviar uma mensagem no <a href="https://wa.me/5545999422240" target="_blank" style="color: var(--azul-drogafoz); font-weight: 600; text-decoration: underline;">WhatsApp</a> avisando expressamente o nome da pessoa que irá buscar a encomenda.</li>
+                        <li><strong>O aviso prévio:</strong> O titular da encomenda (quem comprou) deve nos enviar uma mensagem no WhatsApp avisando expressamente o nome da pessoa que irá buscar a encomenda.</li>
                         <li><strong>O cadastro de terceiros:</strong> A pessoa que for retirar a encomenda também precisa realizar um cadastro básico conosco no sistema para identificação (O cadastro pode ser feito na hora da retirada).</li>
                         <li><strong>O documento no balcão:</strong> A pessoa autorizada que for fisicamente à farmácia deverá apresentar uma <strong>foto nítida e legível do documento do titular da encomenda</strong> (RG ou CNH).</li>
                     </ol>
@@ -1145,6 +1164,7 @@
         </div>
     </section>
 
+    <!-- FOOTER E CONTATO -->
     <footer id="contato">
         <div class="container">
             <div class="footer-grid">
@@ -1181,6 +1201,7 @@
         </div>
     </footer>
 
+    <!-- BOTÕES FLUTUANTES -->
     <div class="flutuantes">
         <a href="https://wa.me/5545999422240" target="_blank" class="btn-float float-wpp" title="Fale conosco no WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
@@ -1190,6 +1211,7 @@
         </a>
     </div>
 
+    <!-- SCRIPT PARA INTERAÇÕES (NOVO CLIENTE E MENU MOBILE) -->
     <script>
         // Fecha o menu mobile ao clicar em um link
         document.querySelectorAll('#menu-lista a').forEach(link => {

@@ -1,358 +1,1219 @@
-{% load static %} <!DOCTYPE html>
-<html lang="pt-br">
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <meta name="description" content="Serviço oficial de ponto de retirada de encomendas em Foz do Iguaçu. Receba suas compras do Brasil e internet na Farmácia Drogafoz com segurança. Valores a partir de R$ 10,00.">
-    
-    <title>Drogafoz Encomendas - Ponto de Retirada</title>
+    <title>DrogaFoz - Recebimento de Encomendas</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
     
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        /* Variáveis de Cores e Medidas */
+        :root {
+            --azul-drogafoz: #123C65;
+            --vermelho-drogafoz: #C51625;
+            --vermelho-hover: #a0121e;
+            --azul-hover: #0d2c4a;
+            --cor-texto: #444444;
+            --cor-fundo-alt: #F8F9FA;
+            --branco: #ffffff;
+            --borda-suave: #e2e8f0;
+            --transicao: all 0.3s ease;
+        }
+
+        /* Reset e Estilos Globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            margin: 0; padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #123C65; /* Azul Escuro */
-            color: white;
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh;
+            font-family: 'Roboto', sans-serif;
+            color: var(--cor-texto);
+            background-color: var(--branco);
+            line-height: 1.6;
+            font-size: 16px;
         }
 
-        /* Botão Admin (Canto Superior Direito) */
-        .admin-link {
-            position: absolute; top: 20px; right: 20px;
-            color: rgba(255, 255, 255, 0.6);
-            text-decoration: none; font-size: 12px; font-weight: bold;
-            text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 5px 10px; border-radius: 4px; transition: 0.3s;
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--azul-drogafoz);
         }
-        .admin-link:hover { background: rgba(255, 255, 255, 0.1); color: white; }
 
-        /* Conteúdo Principal */
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
         .container {
-            width: 90%; max-width: 1050px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .bg-branco { background-color: var(--branco); }
+        .bg-cinza { background-color: var(--cor-fundo-alt); }
+
+        /* --- CABEÇALHO (HEADER) --- */
+        header {
+            background-color: var(--azul-drogafoz);
+            color: var(--branco);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 80px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            max-height: 50px; /* Ajuste do tamanho da logo */
+            width: auto;
+        }
+
+        /* Checkbox e Ícone do Menu Hamburguer */
+        .menu-toggle {
+            display: none;
+        }
+        
+        .menu-icon {
+            display: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--branco);
+            transition: var(--transicao);
+        }
+        
+        .menu-icon:hover {
+            color: var(--vermelho-drogafoz);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            align-items: center;
+        }
+
+        nav a {
+            font-weight: 500;
+            transition: var(--transicao);
+            font-size: 15px;
+        }
+
+        nav a:hover {
+            color: var(--vermelho-drogafoz);
+        }
+
+        /* --- SEÇÃO HERO (TOPO) --- */
+        .hero {
+            background: linear-gradient(rgba(18, 60, 101, 0.85), rgba(18, 60, 101, 0.85)), url('{% static "banner_background.avif" %}') center/cover;
+            color: var(--branco);
+            padding: 100px 0;
             text-align: center;
-            margin-top: 50px;
-            margin-bottom: 40px;
         }
 
-        /* Logo / Título */
-        h1 {
-            font-size: 52px; margin: 0;
-            font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
-            line-height: 1;
-            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.6);
-        }
-        h1 span { color: #C51625; } 
-        .subtitle { 
-            font-size: 18px; color: #cbd5e1; margin-top: 15px; 
-            font-weight: 300; margin-bottom: 40px; letter-spacing: 1px; 
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            color: var(--branco);
         }
 
-        /* Botão de Ação Principal (Topo) */
-        .btn-big-top {
-            display: block; width: 100%; max-width: 600px; margin: 0 auto 50px auto;
-            background: #28a745; color: white;
-            padding: 22px; border-radius: 10px;
-            font-size: 20px; font-weight: 900; text-decoration: none;
-            text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            transition: all 0.3s; border: 2px solid #218838;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-            
-            /* Correção para não vazar a tela no celular */
-            box-sizing: border-box; 
+        .hero p {
+            font-size: 1.15rem;
+            margin-bottom: 35px;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 300;
+            color: #e2e8f0;
         }
-        .btn-big-top:hover { background: #218838; transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.5); }
-        .btn-big-top i { margin-right: 10px; }
 
-        /* Bloco de Endereço */
-        .address-box {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 25px; border-radius: 12px;
-            margin: 0 auto 50px auto; max-width: 700px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            text-align: center;
-            display: flex; align-items: center; justify-content: center; gap: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .address-icon { 
-            font-size: 40px; color: #C51625; 
-            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.5));
-        } 
-        .address-text { font-size: 16px; line-height: 1.6; color: #e2e8f0; text-align: left; }
-        .address-text strong { color: white; font-size: 18px; }
-        .btn-maps {
-            display: inline-block; background: white; color: #123C65;
-            padding: 12px 25px; border-radius: 30px; text-decoration: none;
-            font-weight: bold; font-size: 14px; transition: 0.3s;
-            white-space: nowrap;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .btn-maps:hover { background: #f0f0f0; transform: scale(1.05); }
-
-        /* --- GRID DE REGRAS --- */
-        .rules-grid {
-            display: flex; gap: 25px;
+        .hero-buttons {
+            display: flex;
             justify-content: center;
-            margin-bottom: 40px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            transition: var(--transicao);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        }
+
+        .btn-primario {
+            background-color: var(--vermelho-drogafoz);
+            color: var(--branco);
+        }
+
+        .btn-primario:hover {
+            background-color: var(--vermelho-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
+        }
+
+        .btn-secundario {
+            background-color: transparent;
+            color: var(--branco);
+            border: 2px solid var(--branco);
+        }
+
+        .btn-secundario:hover {
+            background-color: var(--branco);
+            color: var(--azul-drogafoz);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        /* --- SEÇÕES GERAIS --- */
+        section {
+            padding: 70px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 45px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background-color: var(--vermelho-drogafoz);
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
+
+        /* --- COMO FUNCIONA --- */
+        .grid-passos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .passo-card {
+            background: var(--branco);
+            padding: 35px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.22);
+            border: 1px solid var(--borda-suave);
+            transition: var(--transicao);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .passo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.35);
+        }
+
+        .passo-icon {
+            font-size: 32px;
+            color: var(--vermelho-drogafoz);
+            margin-bottom: 15px;
+        }
+
+        .passo-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .passo-card p {
+            font-size: 0.95rem;
+            color: #666;
+            flex-grow: 1;
+        }
+
+        /* Aba Detalhada de Como Funciona */
+        .detalhes-explicacao {
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 8px;
+            border: 1px solid var(--azul-drogafoz);
+            background-color: var(--branco);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+        }
+
+        .detalhes-explicacao summary {
+            background-color: #f0f4f8;
+            color: var(--azul-drogafoz);
+            font-weight: 600;
+            padding: 15px 20px;
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            list-style: none;
+            transition: var(--transicao);
+        }
+
+        .detalhes-explicacao summary:hover {
+            background-color: #e2eaf3;
+        }
+
+        .detalhes-explicacao summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .icon-seta {
+            transition: transform 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .detalhes-explicacao[open] .icon-seta {
+            transform: rotate(180deg);
+        }
+
+        .conteudo-detalhado {
+            padding: 25px 30px;
             text-align: left;
         }
-        
-        .rule-col {
+
+        .conteudo-detalhado h4 {
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .conteudo-detalhado h4:first-child {
+            margin-top: 0;
+        }
+
+        .conteudo-detalhado p {
+            color: #444;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding-left: 28px;
+            margin-bottom: 10px;
+        }
+
+        .btn-link-interno {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #fef2f2;
+            color: var(--vermelho-drogafoz);
+            border: 1px solid var(--vermelho-drogafoz);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            margin-left: 28px;
+            transition: var(--transicao);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); 
+        }
+
+        .btn-link-interno:hover {
+            background-color: var(--vermelho-drogafoz);
+            color: var(--branco);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        /* --- REGRAS E VALORES --- */
+        .rv-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .rv-box {
             flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 25px; border-radius: 12px;
-            border-top: 4px solid #C51625;
-            min-width: 280px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            min-width: 300px;
+            background: var(--branco);
+            padding: 35px;
+            border-radius: 12px;
+            border-top: 4px solid var(--azul-drogafoz);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            transition: var(--transicao);
         }
 
-        /* --- TÍTULOS DAS COLUNAS --- */
-        .rule-col h3 {
-            color: #ffffff;
-            text-transform: uppercase; 
-            margin-top: 0; font-size: 18px; font-weight: 900;
-            border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; margin-bottom: 20px;
-            display: flex; align-items: center; gap: 10px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.6); 
+        .rv-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.35);
         }
 
-        .rule-col h3 i { color: #C51625; }
+        .rv-box.destaque {
+            border-top: 4px solid var(--vermelho-drogafoz);
+        }
 
-        .rule-list { padding-left: 0; list-style: none; margin: 0; }
-        .rule-list li { 
-            margin-bottom: 18px; font-size: 15px; line-height: 1.5; 
+        .rv-box h3 {
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rv-box ul {
+            list-style: none;
+        }
+
+        .rv-box ul li {
+            margin-bottom: 12px;
+            padding-left: 22px;
+            position: relative;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .rv-box ul li::before {
+            content: '\f00c';
+            font-family: 'FontAwesome';
+            position: absolute;
+            left: 0;
+            color: var(--vermelho-drogafoz);
+            font-size: 0.9rem;
+            top: 3px;
+        }
+
+        /* --- ENDEREÇO E TUTORIAL DE PREENCHIMENTO --- */
+        .endereco-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            background: var(--branco);
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+            margin-bottom: 30px;
+            border: 1px solid var(--borda-suave);
+        }
+
+        .endereco-texto {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .endereco-texto p {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .alerta-ponte {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--azul-drogafoz);
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 0.95rem;
+            color: var(--azul-drogafoz);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .endereco-mapa {
+            flex: 1;
+            min-width: 300px;
+            height: 300px;
+            background-color: #eaeaea;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #777;
+        }
+
+        /* Alerta de Complemento */
+        .alerta-complemento {
+            background-color: var(--branco);
+            border: 1px solid var(--borda-suave);
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+        }
+        
+        .alerta-complemento h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .formulario-exemplo {
+            background-color: #f8f9fc;
+            padding: 20px 25px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 15px;
+            color: #4a4a4a;
+            list-style-type: none;
+            font-size: 0.95rem;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.05); 
+        }
+
+        .formulario-exemplo li {
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+            padding-bottom: 5px;
+        }
+
+        .formulario-exemplo li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .destaque-id {
+            color: var(--vermelho-drogafoz);
+            font-weight: 700;
+        }
+
+        /* --- HORÁRIOS VISUAIS --- */
+        .horarios-grid {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .horario-card {
+            background: var(--branco);
+            border-top: 4px solid var(--azul-drogafoz);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+            text-align: center;
+            flex: 1;
+            min-width: 250px;
+            max-width: 350px;
+            transition: var(--transicao);
+        }
+
+        .horario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.32);
+        }
+
+        .horario-card.fechado {
+            border-top: 4px solid #9ca3af;
+            background-color: #f3f4f6;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15); 
+        }
+
+        .horario-card i {
+            font-size: 3rem;
+            color: var(--azul-drogafoz);
+            margin-bottom: 20px;
+        }
+
+        .horario-card.fechado i {
+            color: #9ca3af;
+        }
+
+        .horario-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .horario-card.fechado h3 {
+            color: #6b7280;
+        }
+
+        .horario-card p {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--vermelho-drogafoz);
+        }
+
+        .horario-card.fechado p {
+            color: #6b7280;
+        }
+
+        /* --- QUEM SOMOS --- */
+        .sobre-grid {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .sobre-texto {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .sobre-texto p {
+            margin-bottom: 15px;
+            color: #555;
+            font-size: 1rem;
+        }
+
+        .sobre-imagem {
+            flex: 1;
+            min-width: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+        }
+
+        .sobre-imagem img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* --- FAQ --- */
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        details.faq-item {
+            background-color: var(--branco);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid var(--borda-suave);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            transition: var(--transicao);
+        }
+
+        details.faq-item:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+
+        details.faq-item summary {
+            padding: 18px 20px;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--azul-drogafoz);
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        details.faq-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.faq-item summary::after {
+            content: '\f067';
+            font-family: 'FontAwesome';
+            color: var(--vermelho-drogafoz);
+            transition: var(--transicao);
+            font-size: 0.9rem;
+        }
+
+        details.faq-item[open] summary::after {
+            content: '\f068';
+        }
+
+        details.faq-item p, details.faq-item ul, details.faq-item ol {
+            padding: 0 20px 20px;
+            color: #444;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        details.faq-item ul, details.faq-item ol {
+            padding-left: 40px;
+        }
+
+        details.faq-item li {
+            margin-bottom: 6px;
+        }
+
+        /* --- FOOTER E CONTATOS --- */
+        footer {
+            background-color: var(--azul-drogafoz);
+            color: var(--branco);
+            padding: 60px 0 20px;
+            font-size: 0.95rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .footer-box h3 {
+            margin-bottom: 15px;
+            color: var(--vermelho-drogafoz);
+            font-size: 1.2rem;
+        }
+
+        .footer-box p, .footer-box a {
             color: #e2e8f0;
-            display: flex; align-items: flex-start; gap: 12px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        }
-        
-        .li-icon { 
-            color: #C51625; font-size: 18px; margin-top: 3px; min-width: 20px; text-align: center; 
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
-        } 
-
-        .highlight-box {
-            background: rgba(197, 22, 37, 0.15); 
-            border: 2px solid #C51625;
-            padding: 15px; border-radius: 8px;
-            text-align: center; font-weight: 900; color: white;
-            margin-bottom: 20px; font-size: 16px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-        
-        .schedule-box {
-            background: rgba(0,0,0,0.4);
-            padding: 15px; border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 15px; color: #fff;
-            border-left: 3px solid #28a745;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .alert-box {
-            margin-top: 25px; padding: 15px;
-            background: rgba(197, 22, 37, 0.2); 
-            border-radius: 8px; color: #ffcccc;
-            font-size: 13px; display: flex; gap: 10px; align-items: center;
-            border-left: 4px solid #C51625;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        }
-        .alert-box i {
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
-        }
-
-        /* Botões Flutuantes (WhatsApp e Instagram) */
-        .whatsapp-float {
-            position: fixed;
-            width: 60px;
-            height: 60px;
-            bottom: 40px;
-            right: 40px;
-            background-color: #25d366;
-            color: #FFF;
-            border-radius: 50px;
-            text-align: center;
-            font-size: 30px;
-            box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
-            z-index: 100;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: all 0.3s ease;
+            gap: 8px;
         }
 
-        .whatsapp-float:hover {
-            background-color: #128c7e;
-            transform: scale(1.1);
-            color: #FFF;
+        .footer-box a:hover {
+            color: var(--branco);
         }
 
-        .instagram-float {
+        .btn-whatsapp-footer {
+            background-color: #25D366;
+            color: white !important;
+            padding: 10px 18px;
+            border-radius: 6px;
+            display: inline-flex;
+            margin-top: 10px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            transition: var(--transicao);
+        }
+
+        .btn-whatsapp-footer:hover {
+            background-color: #128C7E;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+        }
+
+        .copyright {
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+        /* --- BOTÕES FLUTUANTES --- */
+        .flutuantes {
             position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 999;
+        }
+
+        .btn-float {
             width: 60px;
             height: 60px;
-            bottom: 115px; /* Fica logo acima do WhatsApp */
-            right: 40px;
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            color: #FFF;
-            border-radius: 50px;
-            text-align: center;
-            font-size: 30px;
-            box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
-            z-index: 100;
+            border-radius: 50%;
             display: flex;
-            align-items: center;
             justify-content: center;
-            text-decoration: none;
-            transition: all 0.3s ease;
+            align-items: center;
+            font-size: 32px;
+            color: white;
+            box-shadow: none; 
+            transition: var(--transicao);
         }
 
-        .instagram-float:hover {
-            transform: scale(1.1);
-            color: #FFF;
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+        .btn-float:hover {
+            transform: scale(1.1) translateY(-3px);
+            box-shadow: none; 
         }
 
-        @media (max-width: 900px) {
-            .rules-grid { flex-direction: column; }
-            .address-box { flex-direction: column; text-align: center; gap: 20px; }
-            .address-text { text-align: center; }
-            h1 { font-size: 36px; }
+        .float-wpp { background-color: #25D366; }
+        .float-insta { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%); }
+
+        /* --- RESPONSIVIDADE - MENU HAMBURGUER --- */
+        @media (max-width: 850px) {
+            .header-content {
+                flex-wrap: wrap;
+                padding: 15px 0;
+                height: auto;
+                min-height: 70px;
+            }
             
-            /* Ajuste Fino para o Botão no Celular */
-            .btn-big-top {
-                font-size: 16px; /* Letra menor */
-                padding: 15px;   /* Menos espaço interno */
-                width: 95%;      /* Margem segura nas laterais */
+            .logo {
+                padding-left: 10px;
+            }
+
+            .menu-icon {
+                display: block;
+                padding-right: 10px;
+            }
+
+            nav {
+                width: 100%;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+            }
+
+            .menu-toggle:checked ~ nav {
+                max-height: 600px;
+            }
+
+            nav ul {
+                flex-direction: column;
+                width: 100%;
+                text-align: center;
+                padding: 15px 0;
+                gap: 15px;
+                background-color: var(--azul-hover);
+                margin-top: 15px;
+            }
+
+            nav a {
+                display: block;
+                padding: 10px;
+                font-size: 16px;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
 
-    <a href="/admin/" class="admin-link"><i class="fas fa-lock"></i> Acesso Restrito</a>
-
-    <div class="container">
-        <h1>Droga<span>foz</span></h1>
-        <div class="subtitle">SERVIÇO DE RECEBIMENTO DE ENCOMENDAS</div>
-
-        <a href="{% url 'consulta_publica' %}" class="btn-big-top">
-            <i class="fas fa-box-open"></i> CONSULTAR MINHA ENCOMENDA
-        </a>
-
-        <div class="address-box">
-            <i class="fas fa-map-marker-alt address-icon"></i>
-            <div class="address-text">
-                <strong>Farmácia DrogaFoz</strong><br>
-                Rua Santo Rafagnin, 40 - Vila Portes<br>
-                Foz do Iguaçu - PR (CEP 85.865-370)
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <a href="#"><img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas"></a>
             </div>
-            <a href="https://www.google.com/maps/dir//R.+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Igua%C3%A7u+-+PR,+85865-370/@-25.5146896,-54.5978543,17z" target="_blank" class="btn-maps">
-                <i class="fas fa-location-arrow"></i> Abrir no Maps
-            </a>
-        </div>
-
-        <div class="rules-grid">
             
-            <div class="rule-col">
-                <h3><i class="fas fa-coins"></i> Valores</h3>
-                <ul class="rule-list">
-                    <li>
-                        <i class="fas fa-money-bill-wave li-icon"></i>
-                        <div>Os valores cobrados são a partir de <strong>R$10</strong>, dependendo do tamanho e do peso da encomenda.</div>
-                    </li>
-                    <li>
-                        <i class="fas fa-box li-icon"></i>
-                        <div>O valor é cobrado por <strong>volume</strong> (cada encomenda recebida).</div>
-                    </li>
-                    <li>
-                        <i class="fas fa-calendar-alt li-icon"></i>
-                        <div>O valor é cobrado a cada <strong>10 dias</strong> de armazenamento.</div>
-                    </li>
+            <input type="checkbox" id="menu-toggle" class="menu-toggle">
+            <label for="menu-toggle" class="menu-icon">
+                <i class="fa-solid fa-bars"></i>
+            </label>
+            
+            <nav>
+                <ul id="menu-lista">
+                    <li><a href="#inicio">Início</a></li>
+                    <li><a href="#como-funciona">Como Funciona</a></li>
+                    <li><a href="#regras-valores">Valores e Regras</a></li>
+                    <li><a href="#endereco">Endereço</a></li>
+                    <li><a href="#horarios">Horários</a></li>
+                    <li><a href="#quem-somos">Quem Somos</a></li>
+                    <li><a href="#faq">Dúvidas (FAQ)</a></li>
+                    <li><a href="/admin/" title="Acesso Restrito" style="color: #cbd5e1; opacity: 0.5;"><i class="fas fa-lock"></i></a></li>
                 </ul>
-            </div>
+            </nav>
+        </div>
+    </header>
 
-            <div class="rule-col">
-                <h3><i class="fas fa-exclamation-triangle"></i> Importante</h3>
-                
-                <div class="highlight-box">
-                    PAGAMENTO SOMENTE NA RETIRADA.
+    <section id="inicio" class="hero">
+        <div class="container">
+            <h1>A sua caixa postal segura na fronteira: nós recebemos, armazenamos e esperamos você retirar.</h1>
+            <p>Não importa se é uma compra online, uma correspondência ou um presente da família: use nosso CEP como o seu endereço no Brasil. Um serviço independente de guarda-volumes na Farmácia DrogaFoz para quem mora no Paraguai ou passa o dia fora de casa.</p>
+            
+            <div class="hero-buttons">
+                <a href="{% url 'consulta_publica' %}" class="btn btn-primario">
+                    <i class="fa-solid fa-box-open"></i> Já sou Cliente (Consultar Encomenda)
+                </a>
+                <a href="#" id="btn-novo-cliente" class="btn btn-secundario">
+                    <i class="fa-solid fa-info-circle"></i> Ainda não sou Cliente
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="como-funciona" class="bg-cinza">
+        <div class="container">
+            <h2 class="section-title">Como Funciona Nosso Serviço?</h2>
+            
+            <div class="grid-passos">
+                <div class="passo-card">
+                    <i class="fa-solid fa-user-check passo-icon"></i>
+                    <h3>1. Faça seu Cadastro</h3>
+                    <p>Primeiramente, cadastre-se chamando a nossa equipe no <a href="https://wa.me/5545999422240" target="_blank" style="color: var(--azul-drogafoz); font-weight: 600; text-decoration: underline;">WhatsApp</a> ou <a href="https://www.instagram.com/drogafoz/" target="_blank" style="color: var(--azul-drogafoz); font-weight: 600; text-decoration: underline;">Instagram</a>. Você precisará informar seu <strong>NOME COMPLETO</strong>, <strong>CPF/RG</strong> e <strong>TELEFONE</strong>.</p>
                 </div>
 
-                <ul class="rule-list">
-                    <li>
-                        <i class="fas fa-trash-alt li-icon"></i>
-                        <div style="font-weight: bold; color: #ffcccc;">
-                            Encomendas devem ser retiradas em até 120 dias ou serão descartadas.
-                        </div>
-                    </li>
-                    <li>
-                        <i class="fas fa-map-pin li-icon"></i>
-                        <div>Use nosso endereço comercial (acima) para a entrega.</div>
-                    </li>
-                    <li>
-                        <i class="fas fa-truck-loading li-icon"></i>
-                        <div>Encomendas muito grandes ou pesadas: <strong>AVISAR ANTES</strong> pelo WhatsApp.</div>
-                    </li>
-                    <li>
-                        <i class="fas fa-user-tag li-icon"></i>
-                        <div>Obrigatório constar <strong>SEU NOME COMPLETO</strong> na etiqueta da encomenda.</div>
-                    </li>
-                </ul>
-
-                <div class="alert-box">
-                    <i class="fas fa-ban fa-2x"></i>
-                    <div><strong>Proibido:</strong> Não recebemos cargas ilícitas, perigosas ou que necessitem de refrigeração (perecíveis).</div>
+                <div class="passo-card">
+                    <i class="fa-solid fa-pen-to-square passo-icon"></i>
+                    <h3>2. Preencha o Endereço</h3>
+                    <p>No site da loja onde você irá comprar, preencha o formulário de endereço de entrega com os dados de endereço da farmácia.<br><a href="#regras-endereco" style="color: var(--vermelho-drogafoz); font-weight: 600; text-decoration: underline; display: inline-block; margin-top: 5px;">Veja como preencher corretamente abaixo</a>.</p>
+                </div>
+                
+                <div class="passo-card">
+                    <i class="fa-solid fa-magnifying-glass passo-icon"></i>
+                    <h3>3. Acompanhe a Chegada</h3>
+                    <p>Pelo nosso site você pode <a href="{% url 'consulta_publica' %}" style="color: var(--azul-drogafoz); font-weight: 600; text-decoration: underline;">pesquisar</a> se suas encomendas já chegaram, basta usar seu CPF/RG.</p>
+                </div>
+                
+                <div class="passo-card">
+                    <i class="fa-solid fa-store passo-icon"></i>
+                    <h3>4. Retire e Pague</h3>
+                    <p>Traga seu documento de identidade ou uma foto dele na farmácia. O pagamento deve ser feito no balcão no dia da retirada.</p>
                 </div>
             </div>
 
-            <div class="rule-col">
-                <h3><i class="fas fa-clock"></i> Retirada</h3>
+            <details class="detalhes-explicacao" id="detalhes-como-funciona">
+                <summary>
+                    <i class="fa-solid fa-circle-info"></i> Clique aqui para ver a explicação detalhada passo a passo <i class="fa-solid fa-chevron-down icon-seta"></i>
+                </summary>
+                <div class="conteudo-detalhado">
+                    <h4><i class="fa-solid fa-1" style="color: var(--vermelho-drogafoz);"></i> O cadastro inicial (Para sua segurança)</h4>
+                    <p>O primeiro passo de todos é nos chamar no WhatsApp ou Instagram. Nossa equipe vai pedir o seu Nome Completo, CPF/RG e número de Telefone. <strong>Por que isso é necessário?</strong> Porque precisamos garantir que a encomenda que chegará na Farmácia DrogaFoz é realmente sua. Com o cadastro feito, o seu nome já existirá no nosso sistema de segurança e estaremos prontos para receber a sua encomenda sem nenhum problema.</p>
+                    
+                    <h4><i class="fa-solid fa-2" style="color: var(--vermelho-drogafoz);"></i> A hora da compra: Como usar o nosso endereço</h4>
+                    <p>Você vai acessar o site da sua loja preferida (Shopee, Mercado Livre, Amazon, etc.) e escolher o seu produto. Quando chegar na etapa de "Endereço de Entrega", você não vai colocar a sua casa, vai preencher com a rua, número e CEP da Farmácia DrogaFoz. </p>
+                    <p><strong>Atenção máxima a dois detalhes aqui:</strong><br>1º - O campo "Destinatário" (ou "Nome e Sobrenome") deve conter o seu nome, e não o da farmácia.<br>2º - Existe um campo chamado <strong>"Complemento"</strong>. Nele, você tem que digitar a palavra <strong>#ID</strong> seguida dos <strong>seus 4 últimos números do CPF</strong> (Ex: #ID1234). Isso é como se fosse a sua "senha" na etiqueta da encomenda.</p>
+                    <a href="#regras-endereco" class="btn-link-interno"><i class="fa-solid fa-arrow-down"></i> Ver regra detalhada sobre como preencher o Endereço</a>
+                    
+                    <h4><i class="fa-solid fa-3" style="color: var(--vermelho-drogafoz);"></i> A encomenda chegou! E agora?</h4>
+                    <p>O aplicativo da loja vai avisar que a encomenda "Saiu para entrega" e depois "Entregue". Quando a encomenda é deixada pelo entregador no balcão da Farmácia DrogaFoz, nossa equipe lê o código de barras e ela entra automaticamente no nosso sistema.</p>
+                    <p>Para ter certeza de que você não vai dar uma viagem perdida até a farmácia, basta abrir o nosso site, clique no botão <a href="{% url 'consulta_publica' %}" style="color: var(--vermelho-drogafoz); font-weight: 600; text-decoration: underline;">Consultar Encomenda</a> no topo da página e pesquisar pelo seu CPF/RG. Se o site disser que a encomenda está aguardando, significa que você já pode vir buscar.</p>
+                    
+                    <h4><i class="fa-solid fa-4" style="color: var(--vermelho-drogafoz);"></i> Buscando a sua encomenda na farmácia</h4>
+                    <p>Vá até a Farmácia DrogaFoz dentro do <a href="#horarios" style="color: var(--azul-drogafoz); font-weight: 600; text-decoration: underline;">horário de funcionamento</a> (atenção: não abrimos aos domingos). Ao chegar ao balcão, apresente o seu documento de identidade (físico ou uma foto nítida no celular). Nossa equipe confirmará a sua identidade, fará a cobrança do tempo de armazenagem e entregará a sua encomenda em mãos.</p>
+                    <p><strong>Outra pessoa vai buscar por você?</strong> É permitido! Basta que você (titular) nos avise antes pelo WhatsApp. A pessoa autorizada também precisa ter um cadastro conosco e apresentar uma <strong>foto do seu documento (titular)</strong> no momento da retirada.</p>
+                </div>
+            </details>
+
+        </div>
+    </section>
+
+    <section id="regras-valores" class="bg-branco">
+        <div class="container">
+            <h2 class="section-title">Valores e Regras de Utilização</h2>
+            <div class="rv-container">
                 
-                <div style="margin-bottom: 20px;">
-                    <strong style="display: block; margin-bottom: 10px; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.6);"><i class="far fa-calendar-check"></i> Horários de Atendimento:</strong>
-                    <div class="schedule-box">
-                        Seg à Sex: 8h00 - 18h00<br>
-                        Sáb: 8h00 - 17h00<br>
-                        Dom: Fechado
+                <div class="rv-box destaque">
+                    <h3><i class="fa-solid fa-hand-holding-dollar" style="color: var(--vermelho-drogafoz);"></i> Taxa de Armazenamento</h3>
+                    <p style="margin-bottom: 15px;">Cobramos uma taxa pelo recebimento e segurança da sua encomenda.</p>
+                    <ul>
+                        <li>Valor base a partir de R$ 10,00 por encomenda (pode variar conforme tamanho e peso).</li>
+                        <li>A taxa base é válida por um ciclo de 10 dias.</li>
+                        <li>A cada 10 dias adicionais, é cobrado novamente o valor base.</li>
+                        <li>O pagamento é efetuado presencialmente na hora da retirada.</li>
+                        <li>Encomendas grandes (móveis, pneus) exigem aviso prévio para reserva de espaço.</li>
+                    </ul>
+                </div>
+
+                <div class="rv-box">
+                    <h3><i class="fa-solid fa-clipboard-list" style="color: var(--azul-drogafoz);"></i> Regras de Retirada</h3>
+                    <p style="margin-bottom: 15px;">Mantenha a segurança da sua encomenda seguindo nossas diretrizes.</p>
+                    <ul>
+                        <li>Apresentação obrigatória de RG ou CNH (documento físico ou foto no celular).</li>
+                        <li>Paciência no Balcão: Os atendimentos de saúde da farmácia são prioritários.</li>
+                        <li>Prazo limite: Encomendas esquecidas por mais de 120 dias serão descartadas.</li>
+                        <li>É proibido o envio de itens perecíveis, ilícitos ou ilegais.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="endereco" class="bg-cinza">
+        <div class="container">
+            <h2 class="section-title">Endereço e Preenchimento</h2>
+            
+            <div class="endereco-container">
+                <div class="endereco-texto">
+                    <h3 style="margin-bottom: 15px; font-size: 1.5rem;"><i class="fa-solid fa-location-dot" style="color: var(--vermelho-drogafoz);"></i> Farmácia DrogaFoz</h3>
+                    <p>Rua Santo Rafagnin, 40</p>
+                    <p>Vila Portes, Foz do Iguaçu - PR</p>
+                    <p style="margin-bottom: 15px;">CEP: 85865-370</p>
+                    
+                    <div class="alerta-ponte">
+                        <p style="font-weight: 600; margin-bottom: 3px;"><i class="fa-solid fa-bridge-water"></i> Localização Privilegiada</p>
+                        <p style="font-size: 0.9rem;">Ficamos localizados bem próximos à Ponte da Amizade.</p>
+                    </div>
+
+                    <a href="https://maps.google.com/?q=Rua+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Iguacu" target="_blank" class="btn btn-primario" style="padding: 10px 20px;">
+                        <i class="fa-solid fa-map-location-dot"></i> Abrir no Google Maps
+                    </a>
+                </div>
+                
+                <div class="endereco-mapa">
+                    <div>
+                        <i class="fa-solid fa-map" style="font-size: 2.5rem; margin-bottom: 10px; color: #aaa;"></i>
+                        <p style="font-size: 0.9rem;">Mapa da Localização</p>
                     </div>
                 </div>
+            </div>
 
-                <ul class="rule-list">
-                    <li>
-                        <i class="fas fa-id-card li-icon"></i>
-                        <div>Apresentação de <strong>Documento com foto (RG/CNH)</strong> é obrigatória.</div>
-                    </li>
-                    <li>
-                        <i class="fas fa-hourglass-half li-icon"></i>
-                        <div><strong>Venha com tempo:</strong> devido ao movimento da farmácia, a retirada pode demorar alguns minutos.</div>
-                    </li>
+            <div class="alerta-complemento" id="regras-endereco">
+                <h3><i class="fa-solid fa-triangle-exclamation" style="color: #ffb300;"></i> Como preencher a ficha de endereço nos sites de compras</h3>
+                <p style="margin-bottom: 15px; font-size: 1rem; color: #555;">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados exatamente desta forma:</p>
+                
+                <ul class="formulario-exemplo">
+                    <li>Destinatário: <strong>O SEU Nome Completo</strong> <span style="font-size: 0.85rem; color: #888;">(Nunca coloque "Farmácia DrogaFoz")</span></li>
+                    <li>CEP: <strong>85865-370</strong></li>
+                    <li>Rua: <strong>Santo Rafagnin</strong></li>
+                    <li>Número: <strong>40</strong></li>
+                    <li>Complemento: <span class="destaque-id">#ID + seus 4 últimos números do CPF</span></li>
+                    <li>Bairro: <strong>Vila Portes</strong></li>
+                    <li>Cidade/Estado: <strong>Foz do Iguaçu - PR</strong></li>
                 </ul>
+                
+                <p style="font-size: 0.95rem; color: #444; margin-top: 15px;"><strong>Por que pedimos isso?</strong> A farmácia recebe dezenas de encomendas diariamente. O campo Complemento, quando preenchido com o seu número de identificação (#ID + 4 últimos digitos do CPF) garante um controle exato de quem é o titular da encomenda, evitando recusas na entrega, devoluções para a loja ou extravios.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="horarios" class="bg-branco">
+        <div class="container">
+            <h2 class="section-title">Horário de Funcionamento</h2>
+            <div class="horarios-grid">
+                
+                <div class="horario-card">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <h3>Segunda a Sexta-feira</h3>
+                    <p>8h00 às 18h00</p>
+                </div>
+                
+                <div class="horario-card">
+                    <i class="fa-regular fa-calendar-check"></i>
+                    <h3>Sábados</h3>
+                    <p>8h00 às 17h00</p>
+                </div>
+                
+                <div class="horario-card fechado">
+                    <i class="fa-solid fa-door-closed"></i>
+                    <h3>Domingos</h3>
+                    <p>Fechado</p>
+                </div>
+
             </div>
         </div>
+    </section>
 
-    </div>
+    <section id="quem-somos" class="bg-cinza">
+        <div class="container">
+            <div class="sobre-grid">
+                <div class="sobre-texto">
+                    <h2 class="section-title" style="text-align: left; margin-bottom: 25px;">Sobre a Farmácia DrogaFoz</h2>
+                    <p>A Farmácia DrogaFoz atua há anos em Foz do Iguaçu aliando ética, compromisso com a saúde e inovação no atendimento aos nossos clientes.</p>
+                    <p>Criamos o serviço de <strong>Ponto de Retirada</strong> para facilitar a vida de quem não pode aguardar entregas em casa durante o horário comercial. Sua encomenda é recebida, catalogada e armazenada com o máximo rigor e segurança em nosso estoque.</p>
+                    <p>Tradição de farmácia combinada com logística inteligente para descomplicar a sua rotina.</p>
+                </div>
+                <div class="sobre-imagem">
+                    <img src="{% static 'farmacia_ilustracao.avif' %}" alt="Balcão de Atendimento Farmácia DrogaFoz">
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <footer style="margin-top: auto; padding: 30px; font-size: 13px; opacity: 0.6;">
-        © {{ now.year }} Drogafoz Encomendas - Foz do Iguaçu. Todos os direitos reservados.
+    <section id="faq" class="bg-branco">
+        <div class="container">
+            <h2 class="section-title">Dúvidas (FAQ)</h2>
+            <div class="faq-container">
+
+                <details class="faq-item">
+                    <summary>Qual o endereço exato que preencho no site de compras?</summary>
+                    <p>Para evitar que a sua encomenda seja recusada ou devolvida por falta de identificação, você deve copiar os dados abaixo e colar <strong>exatamente desta forma</strong> nos campos de endereço da loja onde você está comprando (Shopee, Mercado Livre, Amazon, etc.):</p>
+                    <ul>
+                        <li><strong>Destinatário / Nome:</strong> O SEU NOME COMPLETO. (<strong>Nunca</strong> escreva o nome da farmácia aqui. Se a encomenda não vier no seu nome, nós não recebemos).</li>
+                        <li><strong>Rua / Logradouro:</strong> Santo Rafagnin</li>
+                        <li><strong>Número:</strong> 40</li>
+                        <li><strong>Complemento:</strong> Escreva <strong>#ID</strong> seguido dos <strong>4 últimos números do seu CPF</strong>. (Exemplo: Se o seu CPF terminar em 1234, preencha o complemento apenas com: #ID1234).</li>
+                        <li><strong>Bairro:</strong> Vila Portes</li>
+                        <li><strong>Cidade / Estado:</strong> Foz do Iguaçu - PR</li>
+                        <li><strong>CEP:</strong> 85865-370</li>
+                    </ul>
+                    <p><strong>Por que o complemento é assim?</strong><br>Porque recebemos centenas de encomendas por dia. O seu #ID é o que garante que a encomenda será bipada e vinculada ao seu nome no nosso sistema de forma imediata e sem confusões!</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Como eu me cadastro através do site?</summary>
+                    <p><strong>Não é possível fazer o cadastro sozinho pelo site.</strong> A única maneira de se cadastrar é entrando em contato com a nossa equipe pelo <strong>WhatsApp ou Instagram</strong>.</p>
+                    <p>Você precisará enviar os seus dados básicos (Nome Completo, CPF ou RG e Telefone) para os nossos funcionários. Eles criarão o seu cadastro diretamente no nosso <strong>sistema interno de segurança</strong>. Só depois dessa confirmação da equipe é que você estará pronto para enviar as suas encomendas para o nosso endereço!</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Não tenho CPF/RG Brasileiro, posso usar o serviço?</summary>
+                    <p><strong>Sim, com certeza!</strong> O nosso serviço está disponível para todos, inclusive moradores de países vizinhos.</p>
+                    <p>No momento do cadastro, nós permitimos o uso de <strong>CPF, RG, CNPJ</strong> ou <strong>qualquer Número de Identificação de outro país</strong> (como Cédula de Identidad ou Passaporte).</p>
+                    <p>A regra para o preenchimento da etiqueta é exatamente a mesma nesses casos. Independentemente do documento que você escolheu usar no cadastro, o campo Complemento deverá sempre ser preenchido com a palavra <strong>#ID + os 4 últimos dígitos do documento escolhido</strong>.</p>
+                </details>
+                
+                <details class="faq-item">
+                    <summary>Como tenho certeza de que a encomenda já chegou e não vou perder viagem?</summary>
+                    <p>A forma mais segura é acompanhar o rastreio da própria loja onde você comprou (ou o código dos Correios). Assim que o site avisar que a encomenda foi <strong>"Entregue"</strong>, significa que o nosso atendente já recebeu e escaneou a sua encomenda na farmácia.</p>
+                    <p>Nossos lançamentos no sistema são imediatos. Para ter 100% de certeza antes de sair de casa, clique no botão <strong>"Consultar Encomenda"</strong> no topo da nossa página inicial e <strong>digite o seu CPF ou RG</strong>. Se o nosso site mostrar que a encomenda está aguardando, pode vir buscar com tranquilidade!</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Qual é o horário para buscar as encomendas?</summary>
+                    <p>A retirada de encomendas pode ser feita durante o nosso horário comercial normal:</p>
+                    <ul>
+                        <li><strong>Segunda a Sexta-feira:</strong> das 8h00 às 18h00</li>
+                        <li><strong>Sábados:</strong> das 8h00 às 17h00</li>
+                        <li><strong>Domingos:</strong> Fechado</li>
+                    </ul>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Como funciona a cobrança pelos dias guardados?</summary>
+                    <p>A taxa de armazenamento é cobrada por encomenda e por <strong>ciclos exatos de 10 dias</strong>. O valor base começa a partir de R$ 10,00 (podendo variar de acordo com o tamanho e o peso da encomenda). Funciona da seguinte forma:</p>
+                    <ul>
+                        <li>Se você retirar a encomenda <strong>entre o dia 1 e o dia 19</strong> (ou seja, não completou 20 dias): Você paga apenas <strong>1 taxa base</strong>.</li>
+                        <li>Se você retirar no <strong>dia 20</strong> (início do segundo ciclo exato): A taxa é cobrada <strong>2 vezes</strong>.</li>
+                        <li>Se você retirar no <strong>dia 30</strong> (início do terceiro ciclo): A taxa é cobrada <strong>3 vezes</strong>, e assim sucessivamente.</li>
+                    </ul>
+                    <p><strong>Atenção:</strong> Encomendas esquecidas por mais de 120 dias no nosso estoque serão consideradas abandonadas e descartadas pelo nosso sistema de forma automática.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Quais são as formas de pagamento aceitas?</summary>
+                    <p>Para sua segurança, não aceitamos pagamentos antecipados por links ou sites. O pagamento da taxa de armazenamento é feito <strong>exclusivamente de forma presencial no momento da retirada</strong> da sua encomenda no balcão da farmácia.</p>
+                    <p>Aceitamos as seguintes opções de pagamento na loja:</p>
+                    <ul>
+                        <li><strong>Dinheiro em espécie:</strong> Aceitamos Real (R$), Guarani (Gs), Peso Argentino (ARS$) e Dólar (US$).</li>
+                        <li><strong>PIX:</strong> Temos o QR Code disponível no balcão.</li>
+                        <li><strong>Cartões:</strong> Aceitamos cartões de Crédito ou Débito diretamente na nossa maquininha.</li>
+                    </ul>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Outra pessoa pode retirar a encomenda por mim?</summary>
+                    <p><strong>Sim, é totalmente possível!</strong> Porém, o processo é rigoroso para garantir que a sua encomenda não seja entregue à pessoa errada. Para que um familiar ou amigo retire a encomenda no seu lugar, siga <strong>obrigatoriamente</strong> estes três passos:</p>
+                    <ol>
+                        <li><strong>O aviso prévio:</strong> O titular da encomenda (quem comprou) deve nos enviar uma mensagem no WhatsApp avisando expressamente o nome da pessoa que irá buscar a encomenda.</li>
+                        <li><strong>O cadastro de terceiros:</strong> A pessoa que for retirar a encomenda também precisa realizar um cadastro básico conosco no sistema para identificação (O cadastro pode ser feito na hora da retirada).</li>
+                        <li><strong>O documento no balcão:</strong> A pessoa autorizada que for fisicamente à farmácia deverá apresentar uma <strong>foto nítida e legível do documento do titular da encomenda</strong> (RG ou CNH).</li>
+                    </ol>
+                    <p>Sem o cumprimento destas 3 regras, o nosso sistema bloqueia a entrega e a encomenda não será liberada. É a nossa garantia de segurança para você!</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>A Farmácia se responsabiliza por encomendas perdidas ou danificadas?</summary>
+                    <p>A nossa responsabilidade é <strong>total</strong> sobre qualquer encomenda que tenha sido recebida intacta e devidamente <strong>registrada em nosso sistema interno</strong>. Se a sua encomenda deu entrada no nosso estoque e for extraviada internamente, nós garantimos o ressarcimento integral. <em>Temos muito orgulho em afirmar que isso nunca aconteceu: <strong>nunca perdemos nenhuma encomenda em nosso estoque</strong>.</em></p>
+                    <p>No entanto, <strong>não nos responsabilizamos</strong> por problemas logísticos ocorridos antes da entrega em nosso balcão. Isso inclui:</p>
+                    <ul>
+                        <li>Encomendas entregues no endereço errado pela transportadora.</li>
+                        <li>Pacotes que cheguem com a embalagem rasgada, violada ou aberta.</li>
+                        <li>Produtos que cheguem danificados ou quebrados no interior da caixa.</li>
+                    </ul>
+                    <p>A nossa responsabilidade inicia-se exclusivamente no exato momento em que recebemos a encomenda em mãos e a lançamos no sistema.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>A Farmácia DrogaFoz tem vínculo com os Correios, Shopee ou Mercado Livre?</summary>
+                    <p><strong>Não. Nós somos um ponto de retirada totalmente autônomo e independente.</strong></p>
+                    <p>Não possuímos <strong>nenhuma ligação oficial</strong>, parceria ou contrato com empresas transportadoras, Correios, Shopee, Mercado Livre, Amazon ou qualquer outra loja virtual.</p>
+                    <p>Nosso serviço consiste apenas em disponibilizar o nosso espaço e tempo para receber e guardar a sua encomenda com segurança. Portanto, não respondemos por atrasos na entrega, extravios durante o transporte ou problemas com o vendedor. <strong>A nossa responsabilidade começa apenas no momento em que a caixa é entregue em nossas mãos no balcão.</strong></p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Vocês fazem postagens ou envios para outras cidades?</summary>
+                    <p><strong>Não.</strong> O nosso serviço atua estritamente como um <strong>Ponto de Recebimento e Retirada</strong> para compras que você realiza na internet. Nós <strong>não</strong> somos uma transportadora ou agência de Correios.</p>
+                    <p>Portanto, não efetuamos serviços de postagens de encomendas, não fazemos envios de mercadorias para outras cidades ou estados, e não enviamos nenhum tipo de encomenda para o exterior ou para dentro do Brasil.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>A Farmácia DrogaFoz paga fretes a cobrar ou taxas de alfândega?</summary>
+                    <p><strong>Não. Nós não efetuamos nenhum tipo de pagamento antecipado em nome do cliente.</strong></p>
+                    <p>As suas encomendas devem chegar à farmácia com o valor do frete e quaisquer impostos governamentais já totalmente <strong>pré-pagos</strong> na hora da sua compra online. Se o entregador (carteiro ou transportadora) exigir que a farmácia pague qualquer valor ou taxa alfandegária no ato da entrega, a encomenda será <strong>automaticamente recusada</strong> pela nossa equipe e voltará para o remetente.</p>
+                </details>
+
+            </div>
+        </div>
+    </section>
+
+    <footer id="contato">
+        <div class="container">
+            <div class="footer-grid">
+                
+                <div class="footer-box">
+                    <h3>FARMÁCIA DROGA<span>FOZ</span></h3>
+                    <p>Farmácia e Ponto de Retirada de encomendas em Foz do Iguaçu.</p>
+                </div>
+
+                <div class="footer-box">
+                    <h3 style="font-size: 1.1rem;">Endereço</h3>
+                    <p><i class="fa-solid fa-location-dot"></i> Rua Santo Rafagnin, 40</p>
+                    <p style="padding-left: 20px;">Vila Portes, Foz do Iguaçu - PR</p>
+                    <p style="padding-left: 20px;">CEP: 85865-370</p>
+                    <a href="https://maps.google.com/?q=Rua+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Iguacu" target="_blank" style="margin-top: 10px; color: #90caf9;">
+                        <i class="fa-solid fa-map-location-dot"></i> Ver no Google Maps
+                    </a>
+                </div>
+
+                <div class="footer-box">
+                    <h3 style="font-size: 1.1rem;">Horários de Retirada</h3>
+                    <p><i class="fa-solid fa-clock"></i> Seg a Sex: 8h00 - 18h00</p>
+                    <p><i class="fa-solid fa-clock"></i> Sábados: 8h00 - 17h00</p>
+                    <p><i class="fa-solid fa-door-closed"></i> Domingo: Fechado</p>
+                    <a href="https://wa.me/5545999422240" target="_blank" class="btn-whatsapp-footer">
+                        <i class="fa-brands fa-whatsapp"></i> (45) 9 9942-2240
+                    </a>
+                </div>
+
+            </div>
+            <div class="copyright">
+                <p>© 2026 Farmácia DrogaFoz. Todos os direitos reservados.</p>
+            </div>
+        </div>
     </footer>
 
-    <!-- Botão Instagram Flutuante -->
-    <a href="https://www.instagram.com/drogafoz/" class="instagram-float" target="_blank">
-        <i class="fab fa-instagram"></i>
-    </a>
+    <div class="flutuantes">
+        <a href="https://wa.me/5545999422240" target="_blank" class="btn-float float-wpp" title="Fale conosco no WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+        <a href="https://www.instagram.com/drogafoz/" target="_blank" class="btn-float float-insta" title="Siga no Instagram">
+            <i class="fa-brands fa-instagram"></i>
+        </a>
+    </div>
 
-    <!-- Botão WhatsApp Flutuante -->
-    <a href="https://wa.me/5545999422240" class="whatsapp-float" target="_blank">
-        <i class="fab fa-whatsapp"></i>
-    </a>
+    <script>
+        // Fecha o menu mobile ao clicar em um link
+        document.querySelectorAll('#menu-lista a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('menu-toggle').checked = false;
+            });
+        });
 
+        // Ação do Botão "Ainda não sou cliente" (Desce e Abre os Detalhes)
+        document.getElementById('btn-novo-cliente').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // 1. Abre a tag de detalhes automaticamente
+            const detalhesExplicacao = document.getElementById('detalhes-como-funciona');
+            if(detalhesExplicacao) {
+                detalhesExplicacao.open = true;
+            }
+
+            // 2. Desce suavemente até a seção
+            const sectionComoFunciona = document.getElementById('como-funciona');
+            if(sectionComoFunciona) {
+                sectionComoFunciona.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
 </body>
 </html>

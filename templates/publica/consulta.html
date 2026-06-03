@@ -1,4 +1,5 @@
-{% load static %} <!DOCTYPE html>
+{% load static %}
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -6,63 +7,308 @@
     <title>Consulta de Encomendas - Drogafoz</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
 
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        
-        /* Cabeçalho */
-        header { background-color: #123C65; width: 100%; padding: 20px 0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        header h1 { color: white; margin: 0; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; font-size: 24px; }
-        header span { color: #C51625; }
-        header a { text-decoration: none; }
-
-        /* Container Principal */
-        .container { width: 90%; max-width: 800px; margin-top: 40px; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-
-        /* Busca */
-        .search-box { text-align: center; margin-bottom: 30px; }
-        .search-box h2 { color: #333; margin-bottom: 10px; font-size: 20px; }
-        .search-box p { color: #666; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
-        
-        .input-group { display: flex; justify-content: center; }
-        
-        /* Input estilizado */
-        .search-box input[type="text"] { 
-            width: 70%; padding: 12px; border: 2px solid #ddd; 
-            border-radius: 5px 0 0 5px; font-size: 16px; outline: none; 
-            text-align: center; letter-spacing: 1px; 
+        /* Variáveis de Cores e Estilos Globais da Home */
+        :root {
+            --azul-drogafoz: #123C65;
+            --vermelho-drogafoz: #C51625;
+            --vermelho-hover: #a0121e;
+            --azul-hover: #0d2c4a;
+            --cor-texto: #444444;
+            --cor-fundo-alt: #F8F9FA;
+            --branco: #ffffff;
+            --borda-suave: #e2e8f0;
+            --transicao: all 0.3s ease;
         }
-        .search-box input[type="text"]:focus { border-color: #123C65; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: var(--cor-fundo-alt); 
+            color: var(--cor-texto);
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--azul-drogafoz);
+        }
         
-        .search-box button { padding: 12px 25px; background-color: #28a745; color: white; border: none; border-radius: 0 5px 5px 0; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
-        .search-box button:hover { background-color: #218838; }
-
-        /* Tabela de Resultados */
-        table { width: 100%; border-collapse: collapse; margin-top: 30px; border: 1px solid #eee; }
-        th { background-color: #123C65; color: white; padding: 12px; text-align: center; font-size: 14px; text-transform: uppercase; }
-        td { padding: 15px; border-bottom: 1px solid #eee; color: #555; font-size: 15px; text-align: center; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
+        /* --- CABEÇALHO NOVO (Apenas Logo Centralizada) --- */
+        header { 
+            background-color: var(--azul-drogafoz); 
+            width: 100%; 
+            padding: 15px 0; 
+            text-align: center; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25); 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         
-        /* Estilos de Rodapé */
-        .total-row { background-color: #e9ecef !important; font-weight: bold; color: #333; }
-        .obs-text { font-size: 12px; color: #888; margin-top: 10px; text-align: right; font-style: italic; }
+        header img {
+            width: 180px;
+            height: auto;
+            display: block;
+        }
 
-        /* Mensagem de Ajuda (WhatsApp) */
-        .help-box { margin-top: 40px; padding: 20px; background: #e9ecef; border-radius: 8px; text-align: center; border-left: 5px solid #25D366; }
-        .help-box h3 { margin: 0 0 10px; font-size: 16px; color: #333; }
-        .help-box p { font-size: 13px; color: #555; margin-bottom: 15px; }
-        .btn-whatsapp { background-color: #25D366; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; display: inline-block; transition: 0.3s; }
-        .btn-whatsapp:hover { background-color: #1ebd59; }
+        /* --- CONTAINER PRINCIPAL --- */
+        .container { 
+            width: 90%; 
+            max-width: 800px; 
+            margin: 40px auto 60px auto; 
+            background: var(--branco); 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-top: 4px solid var(--azul-drogafoz);
+            flex-grow: 1; /* Empurra o footer para baixo */
+        }
 
-        .empty-msg { text-align: center; color: #C51625; margin-top: 20px; font-weight: bold; }
+        /* --- BUSCA E FORMULÁRIO --- */
+        .search-box { text-align: center; margin-bottom: 40px; }
+        .search-box h2 { font-size: 1.8rem; margin-bottom: 15px; }
+        .search-box p { font-size: 1rem; color: #555; margin-bottom: 25px; line-height: 1.6; }
+        
+        .input-group { 
+            display: flex; 
+            flex-direction: column; /* Deixa os itens separados como solicitado */
+            align-items: center; 
+            gap: 15px; 
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        /* Input estilizado padrão Home */
+        .search-box input[type="text"] { 
+            width: 100%; 
+            padding: 16px 20px; 
+            font-size: 1.1rem; 
+            border: 2px solid var(--borda-suave); 
+            border-radius: 8px; 
+            outline: none; 
+            text-align: center; 
+            letter-spacing: 1px; 
+            font-family: 'Roboto', sans-serif;
+            color: var(--cor-texto);
+            transition: var(--transicao);
+        }
+        
+        .search-box input[type="text"]:focus { 
+            border-color: var(--azul-drogafoz); 
+            box-shadow: 0 0 0 4px rgba(18, 60, 101, 0.1);
+        }
+        
+        /* Botão estilizado padrão Home */
+        .search-box button { 
+            width: 100%;
+            padding: 16px; 
+            background-color: var(--vermelho-drogafoz); 
+            color: var(--branco); 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer; 
+            transition: var(--transicao); 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        }
+        
+        .search-box button:hover { 
+            background-color: var(--vermelho-hover); 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+        }
+
+        /* --- TABELA DE RESULTADOS (Estrutura original com estilo novo) --- */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 30px; 
+            border: 1px solid var(--borda-suave);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        th { 
+            background-color: var(--azul-drogafoz); 
+            color: var(--branco); 
+            padding: 15px; 
+            text-align: center; 
+            font-size: 0.95rem; 
+            text-transform: uppercase; 
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        td { 
+            padding: 18px 15px; 
+            border-bottom: 1px solid var(--borda-suave); 
+            color: #555; 
+            font-size: 1rem; 
+            text-align: center; 
+        }
+        
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:last-child td { border-bottom: none; }
+        
+        .total-row { 
+            background-color: var(--azul-drogafoz) !important; 
+            color: var(--branco) !important; 
+        }
+        .total-row td {
+            color: var(--branco);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .obs-text { 
+            font-size: 0.85rem; 
+            color: #888; 
+            margin-top: 15px; 
+            text-align: right; 
+            font-style: italic; 
+        }
+
+        /* --- MENSAGENS E ALERTAS --- */
+        .empty-msg { 
+            text-align: center; 
+            margin-top: 25px; 
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+        }
+        
+        .empty-msg p { margin-bottom: 8px; }
+
+        /* --- CAIXA DE AJUDA E WHATSAPP --- */
+        .help-box { 
+            margin-top: 50px; 
+            padding: 30px; 
+            background: var(--cor-fundo-alt); 
+            border-radius: 8px; 
+            text-align: center; 
+            border: 1px solid var(--borda-suave);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        
+        .help-box h3 { 
+            margin: 0 0 15px; 
+            font-size: 1.2rem; 
+        }
+        
+        .help-box p { 
+            font-size: 1rem; 
+            color: #555; 
+            margin-bottom: 20px; 
+        }
+        
+        /* Botão do WhatsApp reestilizado para a Home */
+        .btn-whatsapp { 
+            background-color: #25D366; 
+            color: var(--branco); 
+            text-decoration: none; 
+            padding: 14px 24px; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transicao); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
+        .btn-whatsapp:hover { 
+            background-color: #128C7E; 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        }
+
+        /* --- FOOTER E CONTATOS (Novo Padrão) --- */
+        footer {
+            background-color: var(--azul-drogafoz);
+            color: var(--branco);
+            padding: 60px 0 20px;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 20px;
+        }
+
+        .footer-box h3 {
+            margin-bottom: 15px;
+            color: var(--vermelho-drogafoz);
+            font-size: 1.2rem;
+        }
+
+        .footer-box p, .footer-box a {
+            color: #e2e8f0;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-box a:hover {
+            color: var(--branco);
+        }
+
+        .btn-whatsapp-footer {
+            background-color: #25D366;
+            color: white !important;
+            padding: 10px 18px;
+            border-radius: 6px;
+            display: inline-flex;
+            margin-top: 10px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            transition: var(--transicao);
+        }
+
+        .btn-whatsapp-footer:hover {
+            background-color: #128C7E;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+        }
+
+        .copyright {
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
 
         @media (max-width: 600px) {
-            .input-group { flex-direction: column; gap: 10px; }
-            .search-box input[type="text"] { width: 100%; border-radius: 5px; box-sizing: border-box;}
-            .search-box button { width: 100%; border-radius: 5px; }
-            th, td { font-size: 12px; padding: 8px 5px; }
-            .container { padding: 20px; width: 95%; }
+            th, td { font-size: 13px; padding: 12px 8px; }
+            .container { padding: 25px; width: 95%; margin-top: 30px;}
         }
     </style>
 </head>
@@ -70,37 +316,34 @@
 
     <header>
         <a href="{% url 'home' %}">
-            <h1>Droga<span>foz</span> Encomendas</h1>
+            <img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas">
         </a>
     </header>
 
     <div class="container">
         <div class="search-box">
             <h2>Consulte suas Encomendas</h2>
-            <p>Para sua segurança, informe seu <strong>CPF ou RG</strong> (apenas números) abaixo para verificar se existem pacotes aguardando retirada.</p>
+            <p>Para sua segurança, informe seu <strong>CPF ou RG</strong> abaixo para verificar se existem pacotes aguardando retirada.</p>
             
-            <form method="post" class="input-group" style="flex-direction: column; align-items: center; gap: 15px;">
+            <form method="post" class="input-group">
                 {% csrf_token %}
-                <div style="display: flex; width: 100%; justify-content: center;">
-                    <input 
-                        type="text" 
-                        name="q" 
-                        placeholder="Digite seu CPF ou RG (Apenas números)" 
-                        value="{{ query|default:'' }}" 
-                        required
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                        maxlength="14"
-                        style="width: 70%;"
-                    >
-                    <button type="submit">Consultar</button>
-                </div>
+                <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="Digite seu CPF ou RG" 
+                    value="{{ query|default:'' }}" 
+                    required
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    maxlength="14"
+                >
+                <button type="submit"><i class="fas fa-search"></i> Consultar</button>
                 
                 <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-action="LOGIN"></div>
             </form>
         </div>
 
         {% if erro_recaptcha %}
-            <div class="empty-msg" style="color: #dc3545;">
+            <div class="empty-msg" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb;">
                 <p>⚠️ Verificação de segurança falhou. Por favor, marque a caixa "Não sou um robô".</p>
             </div>
         {% elif query %}
@@ -143,11 +386,11 @@
             {% else %}
                 <div class="empty-msg">
                     {% if cliente_existe %}
-                        <p style="color: #28a745;">Cliente encontrado em nosso sistema.</p>
-                        <p style="font-size: 13px; color: #666; font-weight: normal;">No entanto, para este cliente, não há nenhuma encomenda para retirada no momento.</p>
+                        <p style="color: #28a745; font-weight: bold;"><i class="fas fa-check-circle"></i> Cliente encontrado em nosso sistema.</p>
+                        <p style="font-size: 14px; color: #666; font-weight: normal; margin-top: 8px;">No entanto, para este cliente, não há nenhuma encomenda para retirada no momento.</p>
                     {% else %}
-                        <p>CPF/RG não cadastrado em nosso sistema.</p>
-                        <p style="font-size: 13px; color: #666; font-weight: normal;">Instruímos você a entrar em contato através do botão do WhatsApp logo abaixo para cadastrar seus dados no sistema.</p>
+                        <p style="color: #C51625; font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> CPF/RG não cadastrado em nosso sistema.</p>
+                        <p style="font-size: 14px; color: #666; font-weight: normal; margin-top: 8px;">Instruímos você a entrar em contato através do botão do WhatsApp logo abaixo para cadastrar seus dados no sistema.</p>
                     {% endif %}
                 </div>
             {% endif %}
@@ -162,6 +405,38 @@
             </a>
         </div>
     </div>
+
+    <footer id="contato">
+        <div class="footer-grid">
+            <div class="footer-box">
+                <h3>FARMÁCIA DROGA<span>FOZ</span></h3>
+                <p>Farmácia e Ponto de Retirada de encomendas em Foz do Iguaçu.</p>
+            </div>
+
+            <div class="footer-box">
+                <h3 style="font-size: 1.1rem;">Endereço</h3>
+                <p><i class="fa-solid fa-location-dot"></i> Rua Santo Rafagnin, 40</p>
+                <p style="padding-left: 20px;">Vila Portes, Foz do Iguaçu - PR</p>
+                <p style="padding-left: 20px;">CEP: 85865-370</p>
+                <a href="https://maps.google.com/?q=Rua+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Iguacu" target="_blank" style="margin-top: 10px; color: #90caf9;">
+                    <i class="fa-solid fa-map-location-dot"></i> Ver no Google Maps
+                </a>
+            </div>
+
+            <div class="footer-box">
+                <h3 style="font-size: 1.1rem;">Horários de Retirada</h3>
+                <p><i class="fa-solid fa-clock"></i> Seg a Sex: 8h00 - 18h00</p>
+                <p><i class="fa-solid fa-clock"></i> Sábados: 8h00 - 17h00</p>
+                <p><i class="fa-solid fa-door-closed"></i> Domingo: Fechado</p>
+                <a href="https://wa.me/5545999422240" target="_blank" class="btn-whatsapp-footer">
+                    <i class="fa-brands fa-whatsapp"></i> (45) 9 9942-2240
+                </a>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>© 2026 Farmácia DrogaFoz. Todos os direitos reservados.</p>
+        </div>
+    </footer>
 
 </body>
 </html>

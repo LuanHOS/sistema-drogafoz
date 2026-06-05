@@ -365,13 +365,14 @@
             </a>
 
             <h2>Consulte suas Encomendas</h2>
+            <p>No campo abaixo digite seu CPF, RG, CNPJ ou o Documento informado no momento do cadastro.</p>
             
             <form method="post" class="input-group">
                 {% csrf_token %}
                 <input 
                     type="text" 
                     name="q" 
-                    placeholder="Digite seu CPF, RG ou o Documento que usou no cadastro" 
+                    placeholder="Digite seu Documento (CPF, RG, ...)" 
                     value="{{ query|default:'' }}" 
                     required
                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"

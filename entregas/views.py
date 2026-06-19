@@ -290,39 +290,44 @@ def consulta_publica(request):
             # Remove caracteres especiais para comparar apenas números
             termo_limpo = query.replace('.', '').replace('-', '').strip()
             
-            # Verifica se o cliente existe no banco independentemente de ter encomendas pendentes
-            cliente_existe = Cliente.objects.filter(Q(cpf=termo_limpo) | Q(rg=termo_limpo)).exists()
-            
-            # Busca EXATA pelo CPF ou RG.
-            qs = Encomenda.objects.filter(
-                Q(cliente__cpf=termo_limpo) | 
-                Q(cliente__rg=termo_limpo),
-                status='PENDENTE',
-                descartado=False
-            ).order_by('-data_chegada')
+            # BLOQUEIO DE SEGURANÇA: Evita "força bruta" com pesquisas vazias ou muito curtas.
+            if termo_limpo and len(termo_limpo) >= 4:
+                # Verifica se o cliente existe no banco independentemente de ter encomendas pendentes
+                cliente_existe = Cliente.objects.filter(Q(cpf=termo_limpo) | Q(rg=termo_limpo)).exists()
+                
+                # Busca EXATA pelo CPF ou RG. Impede SQL Injection e extração massiva em banco de dados
+                qs = Encomenda.objects.filter(
+                    Q(cliente__cpf=termo_limpo) | 
+                    Q(cliente__rg=termo_limpo),
+                    status='PENDENTE',
+                    descartado=False
+                ).order_by('-data_chegada')
 
-            agora = timezone.now()
+                agora = timezone.now()
 
-            for item in qs:
-                # 1. Calcular dias em estoque
-                dias_estoque = (agora - item.data_chegada).days
-                if dias_estoque < 0: dias_estoque = 0
-                
-                # 2. Calcular multiplicador
-                multiplicador = max(1, dias_estoque // 10)
-                
-                # 3. Calcular valor atualizado
-                valor_final = float(item.valor_base) * multiplicador
+                for item in qs:
+                    # 1. Calcular dias em estoque
+                    dias_estoque = (agora - item.data_chegada).days
+                    if dias_estoque < 0: dias_estoque = 0
+                    
+                    # 2. Calcular multiplicador
+                    multiplicador = max(1, dias_estoque // 10)
+                    
+                    # 3. Calcular valor atualizado
+                    valor_final = float(item.valor_base) * multiplicador
 
-                # Atributos para o template
-                item.dias_display = dias_estoque
-                item.valor_final_display = valor_final
-                
-                # Flag para destacar SOMENTE se ultrapassar 10 dias
-                item.is_atrasado = (dias_estoque > 10) 
-                
-                resultados.append(item)
-                total_geral += valor_final
+                    # Atributos para o template
+                    item.dias_display = dias_estoque
+                    item.valor_final_display = valor_final
+                    
+                    # Flag para destacar SOMENTE se ultrapassar 10 dias
+                    item.is_atrasado = (dias_estoque > 10) 
+                    
+                    resultados.append(item)
+                    total_geral += valor_final
+            else:
+                # Se o termo digitado for muito curto (menor que 4 caracteres), anula a busca
+                cliente_existe = False
 
     return render(request, 'publica/consulta.html', {
         'resultados': resultados, 

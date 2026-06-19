@@ -346,11 +346,25 @@
             font-size: 0.85rem;
         }
 
+        /* --- CORREÇÃO DO POP-UP DO RECAPTCHA --- */
+        /* Força o container do desafio do reCAPTCHA a ficar fixo e centralizado na tela */
+        div[style*="z-index: 2000000000"] {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+        }
+
         @media (max-width: 600px) {
             body { zoom: 0.8; }
             th, td { font-size: 13px; padding: 12px 8px; }
             .container { padding: 25px; width: 95%; margin-top: 30px;}
             table { min-width: 500px; } /* Força a tabela a manter tamanho para ativar o scroll na div */
+            
+            /* Ajuste extra de escala no mobile para garantir que o pop-up caiba perfeitamente na tela */
+            div[style*="z-index: 2000000000"] {
+                transform: translate(-50%, -50%) scale(0.9) !important;
+            }
         }
     </style>
 </head>

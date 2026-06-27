@@ -7,9 +7,7 @@
     <title>DrogaFoz - Recebimento de Encomendas</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
     
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-    <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -88,7 +86,7 @@
         }
         
         .logo img {
-            max-height: 60px; /* Ajuste do tamanho da logo */
+            max-height: 45px; /* Tamanho ajustado a pedido */
             width: auto;
         }
 
@@ -112,18 +110,33 @@
         nav ul {
             display: flex;
             list-style: none;
-            gap: 25px;
+            gap: 20px;
             align-items: center;
         }
 
         nav a {
-            font-weight: 500;
+            font-weight: 400; /* Fonte mais fina a pedido */
             transition: var(--transicao);
-            font-size: 15px;
+            font-size: 14px; /* Tamanho reduzido a pedido */
         }
 
         nav a:hover {
             color: var(--vermelho-drogafoz);
+        }
+
+        /* Botão do Header */
+        .btn-header {
+            padding: 8px 16px !important;
+            font-size: 13px !important;
+            color: var(--branco) !important;
+            background-color: var(--vermelho-drogafoz);
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .btn-header:hover {
+            background-color: var(--vermelho-hover) !important;
+            color: var(--branco) !important;
         }
 
         /* --- SEÇÃO HERO (TOPO) --- */
@@ -170,6 +183,12 @@
             gap: 10px;
             font-size: 0.95rem;
             box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        }
+
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+            margin-top: 15px;
         }
 
         .btn-primario {
@@ -235,6 +254,18 @@
             background-color: var(--vermelho-drogafoz);
             margin: 15px auto 0;
             border-radius: 2px;
+        }
+
+        /* Mini Títulos */
+        .mini-title {
+            display: block;
+            color: var(--vermelho-drogafoz);
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            font-family: 'Montserrat', sans-serif;
         }
 
         /* --- COMO FUNCIONA --- */
@@ -690,7 +721,7 @@
 
         .footer-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 30px;
             margin-bottom: 40px;
         }
@@ -822,6 +853,10 @@
                 font-size: 16px;
             }
 
+            .li-btn-header {
+                margin-top: 10px;
+            }
+
             .hero h1 {
                 font-size: 2.2rem;
             }
@@ -834,14 +869,12 @@
 </head>
 <body>
 
-    <!-- CABEÇALHO -->
     <header>
         <div class="container header-content">
             <div class="logo">
                 <a href="#"><img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas"></a>
             </div>
             
-            <!-- Checkbox Hack para Menu Responsivo -->
             <input type="checkbox" id="menu-toggle" class="menu-toggle">
             <label for="menu-toggle" class="menu-icon">
                 <i class="fa-solid fa-bars"></i>
@@ -856,39 +889,42 @@
                     <li><a href="#horarios">Horários</a></li>
                     <li><a href="#quem-somos">Quem Somos</a></li>
                     <li><a href="#faq">Dúvidas (FAQ)</a></li>
+                    <li class="li-btn-header">
+                        <a href="{% url 'consulta_publica' %}" class="btn-header">
+                            <i class="fa-solid fa-magnifying-glass"></i> Consultar Encomenda <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </div>
     </header>
 
-    <!-- SEÇÃO HERO (PRINCIPAL) -->
     <section id="inicio" class="hero">
         <div class="container">
-            <h1>A sua caixa postal segura na fronteira: nós recebemos, armazenamos e esperamos você buscar.</h1>
+            <h1>A sua <span style="color: var(--vermelho-drogafoz);">caixa postal</span> segura na fronteira: nós recebemos, armazenamos e esperamos você buscar.</h1>
             <p>Não importa se é uma compra online, uma correspondência ou um presente da família: use nosso CEP como o seu endereço no Brasil.</p>
             
             <div class="hero-buttons">
                 <a href="{% url 'consulta_publica' %}" class="btn btn-primario">
-                    <i class="fa-solid fa-box-open"></i> Já sou Cliente (Consultar Encomenda)
+                    <i class="fa-solid fa-magnifying-glass"></i> Consultar Encomenda <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
                 </a>
                 <a href="#" id="btn-novo-cliente" class="btn btn-secundario">
-                    <i class="fa-solid fa-info-circle"></i> Ainda não sou Cliente (Saber Mais)
+                    <i class="fa-solid fa-info-circle"></i> Ainda não sou Cliente
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- SEÇÃO COMO FUNCIONA -->
     <section id="como-funciona" class="bg-cinza">
         <div class="container">
-            <h2 class="section-title">Como Funciona Nosso Serviço?</h2>
+            <h2 class="section-title"><span class="mini-title">Em 4 passos</span>Como Funciona Nosso Serviço?</h2>
             
-            <!-- Resumo Rápido -->
             <div class="grid-passos">
                 <div class="passo-card">
-                    <i class="fa-solid fa-user-check passo-icon"></i>
+                    <i class="fa-brands fa-whatsapp passo-icon"></i>
                     <h3>1. Faça seu Cadastro pelo WhatsApp</h3>
                     <p>Primeiramente, chame a nossa equipe no WhatsApp para que eles criem seu cadastro.<br>Não é possível fazer o cadastro sozinho diretamente pelo site, apenas pelo WhatsApp.</p>
+                    <a href="https://wa.me/5545999145151?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20fazer%20meu%20cadastro!" target="_blank" class="btn btn-primario btn-block">Criar Cadastro</a>
                 </div>
 
                 <div class="passo-card">
@@ -910,16 +946,17 @@
                 </div>
             </div>
 
-            <!-- Explicação Detalhada Expandível -->
             <details class="detalhes-explicacao" id="detalhes-como-funciona">
                 <summary>
-                    <i class="fa-solid fa-circle-info"></i> Clique aqui para ver a explicação detalhada passo a passo <i class="fa-solid fa-chevron-down icon-seta"></i>
+                    <span id="summary-text"><i class="fa-solid fa-circle-info"></i> Quer entender melhor? Toque aqui para ler nossa explicação detalhada</span>
+                    <i class="fa-solid fa-chevron-down icon-seta"></i>
                 </summary>
                 <div class="conteudo-detalhado">
                     <h4><i class="fa-solid fa-1" style="color: var(--vermelho-drogafoz);"></i> O cadastro inicial (Para sua segurança)</h4>
                     <p>O primeiro passo de todos é nos chamar no WhatsApp. Nossa equipe vai pedir o seu Nome Completo, CPF/RG e número de Telefone.</p> 
                     <p><strong>Por que isso é necessário?</strong> Porque precisamos garantir que a encomenda que chegará na Farmácia DrogaFoz é realmente sua. Com o cadastro feito, o seu nome já existirá no nosso sistema de segurança e estaremos prontos para receber a sua encomenda sem nenhum problema.</p>
                     <p><strong>Sou estrangeiro e não tem CPF/RG, como faço?</strong> Não tem problema! Você pode se cadastrar informando qualquer Número de Identificação oficial do seu país (como Cédula de Identidad ou Passaporte).</p>
+                    <a href="https://wa.me/5545999145151?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20fazer%20meu%20cadastro!" target="_blank" class="btn btn-primario" style="margin-left: 28px; margin-bottom: 15px;">Criar Cadastro</a>
                     
                     <h4><i class="fa-solid fa-2" style="color: var(--vermelho-drogafoz);"></i> A hora da compra: Como usar o nosso endereço</h4>
                     <p>Você vai acessar o site da sua loja preferida (Shopee, Mercado Livre, Amazon, etc.) e escolher o seu produto. Quando chegar na etapa de "Endereço de Entrega", você não vai colocar a sua casa, vai preencher com a rua, número e CEP da Farmácia DrogaFoz. </p>
@@ -940,13 +977,11 @@
         </div>
     </section>
 
-    <!-- SEÇÃO VALORES E REGRAS -->
     <section id="regras-valores" class="bg-branco">
         <div class="container">
-            <h2 class="section-title">Valores e Regras de Utilização</h2>
+            <h2 class="section-title"><span class="mini-title">O combinado</span>Valores e Regras de Utilização</h2>
             <div class="rv-container">
                 
-                <!-- Tabela de Preços -->
                 <div class="rv-box destaque">
                     <h3><i class="fa-solid fa-hand-holding-dollar" style="color: var(--vermelho-drogafoz);"></i> Taxa de Armazenamento</h3>
                     <p style="margin-bottom: 15px;">Cobramos uma taxa pelo recebimento e segurança da sua encomenda.</p>
@@ -959,7 +994,6 @@
                     </ul>
                 </div>
 
-                <!-- Regras Importantes -->
                 <div class="rv-box">
                     <h3><i class="fa-solid fa-clipboard-list" style="color: var(--azul-drogafoz);"></i> Regras de Retirada</h3>
                     <p style="margin-bottom: 15px;">Mantenha a segurança da sua encomenda seguindo nossas diretrizes.</p>
@@ -975,10 +1009,9 @@
         </div>
     </section>
 
-    <!-- SEÇÃO ENDEREÇO E COMO PREENCHER -->
     <section id="endereco" class="bg-cinza">
         <div class="container">
-            <h2 class="section-title">Endereço e Preenchimento</h2>
+            <h2 class="section-title"><span class="mini-title">Onde nos encontrar</span>Endereço e Preenchimento</h2>
             
             <div class="endereco-container">
                 <div class="endereco-texto">
@@ -1002,7 +1035,6 @@
                 </div>
             </div>
 
-            <!-- ALERTA DE COMPLEMENTO -->
             <div class="alerta-complemento" id="regras-endereco">
                 <h3><i class="fa-solid fa-triangle-exclamation" style="color: #ffb300;"></i> Como preencher a ficha de endereço nos sites de compras</h3>
                 <p style="margin-bottom: 15px; font-size: 1rem; color: #555;">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados exatamente desta forma:</p>
@@ -1023,27 +1055,23 @@
         </div>
     </section>
 
-    <!-- SEÇÃO HORÁRIOS DE FUNCIONAMENTO -->
     <section id="horarios" class="bg-branco">
         <div class="container">
-            <h2 class="section-title">Horário de Funcionamento</h2>
+            <h2 class="section-title"><span class="mini-title">Quando abrimos</span>Horário de Funcionamento</h2>
             <div class="horarios-grid">
                 
-                <!-- Segunda a Sexta -->
                 <div class="horario-card">
                     <i class="fa-regular fa-calendar-days"></i>
                     <h3>Segunda a Sexta-feira</h3>
                     <p>8h00 às 18h00</p>
                 </div>
                 
-                <!-- Sábados -->
                 <div class="horario-card">
                     <i class="fa-regular fa-calendar-check"></i>
                     <h3>Sábados</h3>
                     <p>8h00 às 17h00</p>
                 </div>
                 
-                <!-- Domingo -->
                 <div class="horario-card fechado">
                     <i class="fa-solid fa-door-closed"></i>
                     <h3>Domingos</h3>
@@ -1054,12 +1082,11 @@
         </div>
     </section>
 
-    <!-- SEÇÃO QUEM SOMOS -->
     <section id="quem-somos" class="bg-cinza">
         <div class="container">
             <div class="sobre-grid">
                 <div class="sobre-texto">
-                    <h2 class="section-title" style="text-align: left; margin-bottom: 25px;">Sobre a Farmácia DrogaFoz</h2>
+                    <h2 class="section-title" style="text-align: left; margin-bottom: 25px;"><span class="mini-title">Quem somos</span>Sobre a Farmácia DrogaFoz</h2>
                     <p>Somos a sua parceira de saúde e bem-estar na fronteira. A Farmácia DrogaFoz atua há anos em Foz do Iguaçu oferecendo uma linha completa de medicamentos, perfumaria e um atendimento farmacêutico humanizado e ético.</p>
                     <p>Além de cuidar da sua saúde, inovamos para descomplicar a sua rotina criando o nosso exclusivo serviço de <strong>Ponto de Retirada</strong>. Ele foi pensado para facilitar a vida de quem não pode aguardar entregas em casa durante o horário comercial ou mora no país vizinho.</p>
                     <p>Sua encomenda é recebida, catalogada e armazenada com o máximo rigor e segurança em nosso estoque. É a tradição de uma farmácia de confiança combinada com logística inteligente.</p>
@@ -1077,7 +1104,6 @@
         </div>
     </section>
 
-    <!-- SEÇÃO FAQ -->
     <section id="faq" class="bg-branco">
         <div class="container">
             <h2 class="section-title">Dúvidas (FAQ)</h2>
@@ -1195,14 +1221,13 @@
         </div>
     </section>
 
-    <!-- FOOTER E CONTATO -->
     <footer id="contato">
         <div class="container">
             <div class="footer-grid">
                 
                 <div class="footer-box">
-                    <h3>FARMÁCIA DROGA<span>FOZ</span></h3>
-                    <p>Farmácia e Ponto de Retirada de encomendas em Foz do Iguaçu.</p>
+                    <img src="{% static 'logo.png' %}" alt="DrogaFoz Logo" style="max-height: 50px; margin-bottom: 15px;">
+                    <p style="font-size: 0.9rem;">A Farmácia DrogaFoz é sua parceira de confiança na fronteira. Recebemos e armazenamos suas encomendas com total segurança até que você possa retirá-las na comodidade do seu tempo.</p>
                 </div>
 
                 <div class="footer-box">
@@ -1216,10 +1241,15 @@
                 </div>
 
                 <div class="footer-box">
-                    <h3 style="font-size: 1.1rem;">Horários de Retirada</h3>
+                    <h3 style="font-size: 1.1rem;">Horários de retirada</h3>
                     <p><i class="fa-solid fa-clock"></i> Seg a Sex: 8h00 - 18h00</p>
                     <p><i class="fa-solid fa-clock"></i> Sábados: 8h00 - 17h00</p>
                     <p><i class="fa-solid fa-door-closed"></i> Domingo: Fechado</p>
+                </div>
+                
+                <div class="footer-box">
+                    <h3 style="font-size: 1.1rem;">Fale conosco</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 10px;">Dúvidas? Entre em contato com a nossa equipe agora mesmo pelo WhatsApp.</p>
                     <a href="https://wa.me/5545999145151" target="_blank" class="btn-whatsapp-footer">
                         <i class="fa-brands fa-whatsapp"></i> (45) 99914-5151
                     </a>
@@ -1232,7 +1262,6 @@
         </div>
     </footer>
 
-    <!-- BOTÕES FLUTUANTES -->
     <div class="flutuantes">
         <a href="https://wa.me/5545999145151" target="_blank" class="btn-float float-wpp" title="Fale conosco no WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
@@ -1242,10 +1271,9 @@
         </a>
     </div>
 
-    <!-- SCRIPT PARA INTERAÇÕES (NOVO CLIENTE E MENU MOBILE) -->
     <script>
         // Fecha o menu mobile ao clicar em um link
-        document.querySelectorAll('#menu-lista a').forEach(link => {
+        document.querySelectorAll('#menu-lista a:not(.btn-header)').forEach(link => {
             link.addEventListener('click', () => {
                 document.getElementById('menu-toggle').checked = false;
             });
@@ -1257,8 +1285,12 @@
             
             // 1. Abre a tag de detalhes automaticamente
             const detalhesExplicacao = document.getElementById('detalhes-como-funciona');
+            const summaryText = document.getElementById('summary-text');
             if(detalhesExplicacao) {
                 detalhesExplicacao.open = true;
+                if(summaryText) {
+                    summaryText.innerHTML = '<i class="fa-solid fa-circle-info"></i> Ocultar explicação detalhada';
+                }
             }
 
             // 2. Desce suavemente até a seção
@@ -1267,6 +1299,20 @@
                 sectionComoFunciona.scrollIntoView({ behavior: 'smooth' });
             }
         });
+
+        // Alterna o texto de explicação detalhada
+        const detalhesExplicacao = document.getElementById('detalhes-como-funciona');
+        const summaryText = document.getElementById('summary-text');
+        
+        if(detalhesExplicacao && summaryText) {
+            detalhesExplicacao.addEventListener('toggle', function() {
+                if (this.open) {
+                    summaryText.innerHTML = '<i class="fa-solid fa-circle-info"></i> Ocultar explicação detalhada';
+                } else {
+                    summaryText.innerHTML = '<i class="fa-solid fa-circle-info"></i> Quer entender melhor? Toque aqui para ler nossa explicação detalhada';
+                }
+            });
+        }
     </script>
 </body>
 </html>

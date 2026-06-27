@@ -138,6 +138,16 @@
             animation: shine 0.8s ease-in-out;
         }
 
+        /* Efeito de pulso suave (respiro) para o botão Criar Cadastro */
+        @keyframes pulse-subtle {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .btn-pulse-soft {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+
         /* Componentes de Títulos */
         .section-header {
             text-align: center;
@@ -303,7 +313,8 @@
                     </div>
                     <h3 class="font-display font-bold text-lg lg:text-xl text-azul mb-3">1. Faça seu Cadastro pelo WhatsApp</h3>
                     <p class="text-gray-500 text-sm flex-grow mb-6">Primeiramente, chame a nossa equipe no WhatsApp para que eles criem seu cadastro.</p>
-                    <a href="https://wa.me/5545999145151?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20fazer%20meu%20cadastro!" target="_blank" class="w-full bg-azul hover:bg-azul-hover text-white py-3 rounded-lg font-semibold text-sm transition-colors shadow-sm">Criar Cadastro</a>
+                    <!-- Alterado para Vermelho com Pulse -->
+                    <a href="https://wa.me/5545999145151?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20fazer%20meu%20cadastro!" target="_blank" class="btn-pulse-soft w-full bg-vermelho hover:bg-vermelho-hover text-white py-3 rounded-lg font-semibold text-sm transition-colors shadow-sm inline-block">Criar Cadastro</a>
                 </div>
 
                 <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 transform hover:-translate-y-2 hover:shadow-[0_15px_40px_rgba(0,0,0,0.18)] transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="200">
@@ -350,7 +361,8 @@
                                 <p>O primeiro passo de todos é nos chamar no WhatsApp. Nossa equipe vai pedir o seu Nome Completo, CPF/RG e número de Telefone.</p> 
                                 <p><strong class="text-azul font-semibold">Por que isso é necessário?</strong> Porque precisamos garantir que a encomenda que chegará na Farmácia DrogaFoz é realmente sua. Com o cadastro feito, o seu nome já existirá no nosso sistema de segurança e estaremos prontos para receber a sua encomenda sem nenhum problema.</p>
                                 <p><strong class="text-azul font-semibold">Sou estrangeiro e não tem CPF/RG, como faço?</strong> Não tem problema! Você pode se cadastrar informando qualquer Número de Identificação oficial do seu país (como Cédula de Identidad ou Passaporte).</p>
-                                <a href="https://wa.me/5545999145151?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20fazer%20meu%20cadastro!" target="_blank" class="inline-block mt-3 bg-vermelho hover:bg-vermelho-hover text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-all transform hover:-translate-y-0.5 w-full sm:w-auto text-center">Criar Cadastro</a>
+                                <!-- Alterado para Vermelho com Pulse -->
+                                <a href="https://wa.me/5545999145151?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20fazer%20meu%20cadastro!" target="_blank" class="btn-pulse-soft inline-block mt-3 bg-vermelho hover:bg-vermelho-hover text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-all w-full sm:w-auto text-center">Criar Cadastro</a>
                             </div>
                         </div>
 
@@ -530,7 +542,8 @@
                         </li>
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3 bg-white/20 -mx-4 px-4 py-3 rounded-lg shadow-sm border border-white/30">
                             <span class="w-full sm:w-40 font-bold text-white mb-1 sm:mb-0">Complemento:</span>
-                            <span class="flex-1 text-vermelho font-bold text-sm sm:text-base lg:text-lg">#ID + seus 4 últimos números do CPF (Ex: #ID1234)</span>
+                            <!-- Alterado aqui para pílula vermelha -->
+                            <span class="flex-1"><span class="inline-block text-white font-sans font-bold bg-vermelho px-2 sm:px-3 py-1 rounded shadow-sm text-xs sm:text-sm lg:text-base mt-1 sm:mt-0">#ID + seus 4 últimos números do CPF (Ex: #ID1234)</span></span>
                         </li>
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3 pt-3">
                             <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Bairro:</span>

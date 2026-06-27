@@ -267,7 +267,7 @@
             {% if query and resultados %}
                 <div class="mb-8" data-aos="fade-up">
                     
-                    <div id="titulo-resultados" class="flex items-center gap-2 mb-4 px-2 scroll-mt-24">
+                    <div id="titulo-resultados" class="flex items-center gap-2 mb-4 px-2 scroll-mt-[120px]">
                         <span class="w-2.5 h-2.5 rounded-full bg-vermelho animate-pulse"></span>
                         <h3 class="font-display font-bold text-azul text-sm sm:text-base uppercase tracking-wider">Resultados da Consulta</h3>
                     </div>
@@ -430,23 +430,19 @@
             }
         });
 
-        // Lógica de Auto-Scroll: Aguarda as animações do AOS terminarem e vai exatamente para o título
+        // Lógica de Auto-Scroll Nativa e Precisa
         document.addEventListener("DOMContentLoaded", function() {
-            // Aguarda exatos 850ms (tempo da animação AOS + margem de segurança) para a tela "assentar"
             setTimeout(function() {
                 const tituloResultados = document.getElementById('titulo-resultados');
                 if(tituloResultados) {
-                    const headerHeight = document.querySelector('header').offsetHeight;
-                    const elementPosition = tituloResultados.getBoundingClientRect().top;
-                    // Calcula a rolagem: Posição do título - Altura do Cabeçalho - 40px de "respiro"
-                    const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 40;
-                    
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: "smooth"
+                    // O comando scrollIntoView aliado ao scroll-mt-[120px] do Tailwind
+                    // faz com que o navegador lide perfeitamente com a altura do header fixo.
+                    tituloResultados.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
                     });
                 }
-            }, 850); 
+            }, 800); // Aguarda o fim das animações para fazer o scroll
         });
     </script>
 </body>

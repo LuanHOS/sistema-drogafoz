@@ -480,17 +480,22 @@
             }
         });
 
-        // Lógica de Auto-Scroll Nativa e Precisa
+        // Lógica de Auto-Scroll Absoluta e Forçada para a Tabela
         document.addEventListener("DOMContentLoaded", function() {
             setTimeout(function() {
                 const tituloResultados = document.getElementById('titulo-resultados');
                 if(tituloResultados) {
-                    tituloResultados.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
+                    // Posição exata do elemento
+                    const elementPosition = tituloResultados.getBoundingClientRect().top + window.scrollY;
+                    
+                    const offsetPosition = elementPosition - 200;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
                     });
                 }
-            }, 800); 
+            }, 850); 
         });
     </script>
 </body>

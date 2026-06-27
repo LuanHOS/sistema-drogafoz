@@ -7,14 +7,19 @@
     <title>Consulta de Encomendas - Drogafoz</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
 
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
+    <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- AOS (Animate on Scroll) CSS -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
+    <!-- Configuração de cores e design system (Padrão Home) -->
     <script>
         tailwind.config = {
             theme: {
@@ -26,7 +31,7 @@
                             light: '#1e5b96'
                         },
                         vermelho: {
-                            DEFAULT: '#E83A43', /* Atualizado para a cor padrão do sistema (era #C51625 no antigo) */
+                            DEFAULT: '#E83A43',
                             hover: '#a0121e',
                         },
                         cinza: {
@@ -46,6 +51,7 @@
         }
     </script>
 
+    <!-- Script Oficial do reCAPTCHA (INTOCADO) -->
     <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
 
     <style>
@@ -57,14 +63,14 @@
 
         body {
             color: #444444;
-            background-color: #F8F9FA; /* Fundo Cinza base */
+            background-color: #F8F9FA; 
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        /* --- BACKGROUND DO HERO (Herdado da Home) --- */
+        /* --- BACKGROUND DO HERO --- */
         .bg-hero-parallax {
             background-image: linear-gradient(135deg, rgba(18, 60, 101, 0.95) 0%, rgba(13, 44, 74, 0.98) 100%), url('{% static "banner_background.avif" %}');
             background-position: center;
@@ -94,7 +100,17 @@
             animation: shine 0.8s ease-in-out;
         }
 
-        /* Shape Divider (Onda Perfeita e Corrigida) */
+        /* Efeito de pulso suave (respiro) */
+        @keyframes pulse-subtle {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .btn-pulse-soft {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+
+        /* Shape Divider */
         .shape-divider {
             position: absolute;
             bottom: -2px;
@@ -137,15 +153,18 @@
 </head>
 <body class="antialiased selection:bg-vermelho selection:text-white relative">
 
+    <!-- CABEÇALHO -->
     <header class="fixed top-0 w-full z-50 bg-azul/95 backdrop-blur-md shadow-glass border-b border-white/10 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center">
                     <a href="{% url 'home' %}" class="transform hover:scale-105 transition-transform duration-300">
                         <img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas" class="h-10 sm:h-12 w-auto">
                     </a>
                 </div>
                 
+                <!-- Botão Voltar -->
                 <nav class="flex items-center">
                     <a href="{% url 'home' %}" class="text-white hover:text-vermelho px-3 py-2 rounded-md text-sm font-display font-semibold transition-all duration-300 flex items-center gap-2">
                         <i class="fa-solid fa-arrow-left text-xs"></i> <span class="hidden sm:inline">Voltar ao Início</span><span class="sm:hidden">Voltar</span>
@@ -155,14 +174,59 @@
         </div>
     </header>
 
-    <section class="relative pt-32 pb-16 lg:pt-40 lg:pb-24 flex items-center justify-center bg-hero-parallax">
+    <!-- SEÇÃO HERO (FORMULÁRIO E AVISOS) -->
+    <section class="relative pt-32 pb-24 lg:pt-40 lg:pb-32 flex flex-col items-center justify-center bg-hero-parallax">
         
-        <div class="w-full max-w-2xl mx-auto px-4 sm:px-6 relative z-10" data-aos="fade-up" data-aos-duration="1000">
+        <div class="w-full max-w-2xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col gap-6" data-aos="fade-up" data-aos-duration="1000">
             
-            <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.2)] p-6 sm:p-10 border-t-8 border-vermelho relative overflow-hidden">
+            <!-- ALERTS (Subidos para o topo, antes do card) -->
+            {% if erro_recaptcha %}
+                <div class="bg-red-50 border-l-8 border-vermelho p-4 sm:p-6 rounded-r-2xl shadow-lg flex items-start sm:items-center gap-4 animate-pulse">
+                    <i class="fas fa-shield-alt text-vermelho text-3xl"></i>
+                    <div>
+                        <h3 class="text-vermelho font-display font-bold text-lg mb-1">Atenção à Segurança</h3>
+                        <p class="text-gray-700 text-sm sm:text-base">A verificação de segurança falhou. Por favor, marque a caixa <strong>"Não sou um robô"</strong> e tente novamente.</p>
+                    </div>
+                </div>
+
+            {% elif query and not resultados %}
+                
+                {% if cliente_existe %}
+                    <!-- Cliente Existe mas sem encomendas -->
+                    <div class="bg-white border-l-8 border-green-500 p-5 sm:p-6 rounded-r-2xl shadow-lg flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4" data-aos="zoom-in">
+                        <div class="w-14 h-14 rounded-full bg-green-50 flex justify-center items-center flex-shrink-0">
+                            <i class="fas fa-check-circle text-green-500 text-3xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-green-700 font-display font-bold text-lg mb-1">Cliente encontrado no sistema!</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed">Seu cadastro está ativo. No entanto, para o documento digitado, <strong>não há nenhuma encomenda aguardando retirada</strong> no momento.</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Cliente Não Existe -->
+                    <div class="bg-white border-l-8 border-yellow-400 p-5 sm:p-6 rounded-r-2xl shadow-lg flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4" data-aos="zoom-in">
+                        <div class="w-14 h-14 rounded-full bg-yellow-50 flex justify-center items-center flex-shrink-0 animate-pulse">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-yellow-600 font-display font-bold text-lg mb-1">Documento não cadastrado</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-3">Este CPF/RG não foi encontrado em nosso sistema de controle.</p>
+                            <p class="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                Instruímos você a entrar em contato através do botão do WhatsApp logo abaixo para <strong>cadastrar seus dados de forma rápida</strong> antes de nos enviar encomendas.
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                
+            {% endif %}
+
+            <!-- Card do Formulário -->
+            <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.2)] p-6 sm:p-10 border-t-8 border-vermelho relative overflow-hidden mt-2">
+                
+                <!-- Botão de Avaliação Redesenhado -->
                 <div class="text-center mb-6">
-                    <a href="https://g.page/r/CSeSfzwSYYu5EAE/review" target="_blank" class="inline-flex items-center gap-2 bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 hover:border-yellow-400 px-5 py-2 rounded-full font-bold text-sm transition-all duration-300 shadow-sm transform hover:-translate-y-0.5">
-                        <i class="fas fa-star text-yellow-500"></i> Avaliar Serviço
+                    <a href="https://g.page/r/CSeSfzwSYYu5EAE/review" target="_blank" class="btn-pulse-soft inline-flex items-center gap-2 bg-white text-azul border-2 border-azul hover:bg-gray-50 px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-sm">
+                        <i class="fas fa-star text-yellow-400 text-lg"></i> Avaliar Serviço
                     </a>
                 </div>
 
@@ -174,6 +238,7 @@
                     </p>
                 </div>
                 
+                <!-- Formulário com lógica Django Intocada -->
                 <form method="post" class="flex flex-col items-center gap-5 w-full max-w-md mx-auto">
                     {% csrf_token %}
                     
@@ -197,14 +262,16 @@
                         <i class="fas fa-search"></i> Consultar
                     </button>
                     
+                    <!-- DIV DO RECAPTCHA (Normal Width, sem compact) -->
                     <div class="mt-2 flex justify-center w-full">
-                        <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-action="LOGIN" data-size="compact"></div>
+                        <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-action="LOGIN"></div>
                     </div>
                 </form>
 
             </div>
         </div>
         
+        <!-- Shape Divider - Onda Perfeita -->
         <div class="shape-divider">
             <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
                 <path fill="#F8F9FA" fill-opacity="1" d="M0,128L48,138.7C96,149,192,171,288,170.7C384,171,480,149,576,133.3C672,117,768,107,864,117.3C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
@@ -212,101 +279,71 @@
         </div>
     </section>
 
+    <!-- SEÇÃO RESULTADOS DA BUSCA -->
+    <!-- Flex-grow 1 empurra o rodapé para baixo se não houver conteúdo suficiente -->
     <main class="flex-grow bg-cinza pb-20">
         <div class="max-w-4xl mx-auto px-4 sm:px-6">
 
-            {% if erro_recaptcha %}
-                <div class="bg-red-50 border-l-8 border-vermelho p-6 rounded-r-2xl shadow-md mb-8 flex items-start sm:items-center gap-4 animate-pulse">
-                    <i class="fas fa-shield-alt text-vermelho text-3xl"></i>
-                    <div>
-                        <h3 class="text-vermelho font-display font-bold text-lg mb-1">Atenção à Segurança</h3>
-                        <p class="text-gray-700 text-sm sm:text-base">A verificação de segurança falhou. Por favor, marque a caixa <strong>"Não sou um robô"</strong> e tente novamente.</p>
+            <!-- TABELA DE RESULTADOS (Se houver encomendas) -->
+            {% if query and resultados %}
+                <div id="resultados-busca" class="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-gray-200 overflow-hidden mb-4 relative" data-aos="fade-up">
+                    
+                    <!-- Pílula Flutuante Indicadora de Scroll (Apenas Mobile) -->
+                    <div id="scroll-hint" class="sm:hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-azul/90 text-white px-5 py-2.5 rounded-full shadow-lg z-20 flex items-center gap-2 pointer-events-none transition-opacity duration-500 animate-pulse whitespace-nowrap">
+                        <i class="fa-solid fa-arrows-left-right"></i> <span class="font-bold text-sm">Deslize para ver</span>
+                    </div>
+
+                    <div class="w-full overflow-x-auto relative" id="table-container">
+                        <!-- TABELA INTOCADA NA ESTRUTURA E TAGS, APENAS ESTILIZADA COM TAILWIND -->
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="bg-azul text-white font-display text-sm uppercase tracking-wide border-b border-azul-hover">
+                                    <th class="px-6 py-5 text-center font-bold">Item</th>
+                                    <th class="px-6 py-5 text-center font-bold">Chegada</th>
+                                    <th class="px-6 py-5 text-center font-bold">Tempo</th>
+                                    <th class="px-6 py-5 text-center font-bold">Taxa</th>
+                                    <th class="px-6 py-5 text-center font-bold">Valor Final</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white">
+                                {% for item in resultados %}
+                                <tr class="hover:bg-blue-50/50 transition-colors duration-200">
+                                    <td class="px-6 py-4 text-center font-semibold text-gray-500">#{{ forloop.counter }}</td>
+                                    <td class="px-6 py-4 text-center text-gray-700">{{ item.data_chegada|date:"d/m/Y" }}</td>
+                                    
+                                    <!-- Apenas o texto fica vermelho se atrasado -->
+                                    <td class="px-6 py-4 text-center {% if item.is_atrasado %}text-vermelho font-bold{% else %}text-gray-700{% endif %}">
+                                        {{ item.dias_display }} dias
+                                    </td>
+                                    
+                                    <td class="px-6 py-4 text-center text-gray-600">R$ {{ item.valor_base|floatformat:2 }}</td>
+                                    <td class="px-6 py-4 text-center font-bold text-azul text-lg">R$ {{ item.valor_final_display|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-blue-50 border-t-2 border-azul/20">
+                                    <td colspan="4" class="px-6 py-5 text-right font-display font-bold text-azul uppercase text-sm sm:text-base">
+                                        TOTAL A PAGAR:
+                                    </td>
+                                    <td class="px-6 py-5 text-center font-black text-vermelho text-xl sm:text-2xl whitespace-nowrap">
+                                        R$ {{ total_geral|floatformat:2 }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
-
-            {% elif query %}
                 
-                {% if resultados %}
-                    
-                    <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-gray-200 overflow-hidden mb-4" data-aos="fade-up">
-                        <div class="w-full overflow-x-auto">
-                            <table class="w-full text-left border-collapse min-w-[600px]">
-                                <thead>
-                                    <tr class="bg-azul text-white font-display text-sm uppercase tracking-wide border-b border-azul-hover">
-                                        <th class="px-6 py-5 text-center font-bold">Item</th>
-                                        <th class="px-6 py-5 text-center font-bold">Chegada</th>
-                                        <th class="px-6 py-5 text-center font-bold">Tempo</th>
-                                        <th class="px-6 py-5 text-center font-bold">Taxa</th>
-                                        <th class="px-6 py-5 text-center font-bold">Valor Final</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100 bg-white">
-                                    {% for item in resultados %}
-                                    <tr class="hover:bg-blue-50/50 transition-colors duration-200">
-                                        <td class="px-6 py-4 text-center font-semibold text-gray-500">#{{ forloop.counter }}</td>
-                                        <td class="px-6 py-4 text-center text-gray-700">{{ item.data_chegada|date:"d/m/Y" }}</td>
-                                        
-                                        <td class="px-6 py-4 text-center {% if item.is_atrasado %}text-vermelho font-bold bg-red-50 rounded-lg{% else %}text-gray-700{% endif %}">
-                                            {{ item.dias_display }} dias
-                                        </td>
-                                        
-                                        <td class="px-6 py-4 text-center text-gray-600">R$ {{ item.valor_base|floatformat:2 }}</td>
-                                        <td class="px-6 py-4 text-center font-bold text-azul text-lg">R$ {{ item.valor_final_display|floatformat:2 }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot>
-                                    <tr class="bg-blue-50 border-t-2 border-azul/20">
-                                        <td colspan="4" class="px-6 py-5 text-right font-display font-bold text-azul uppercase text-sm sm:text-base">
-                                            TOTAL A PAGAR:
-                                        </td>
-                                        <td class="px-6 py-5 text-center font-black text-vermelho text-xl sm:text-2xl whitespace-nowrap">
-                                            R$ {{ total_geral|floatformat:2 }}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div class="text-right mb-10 px-2" data-aos="fade-in" data-aos-delay="200">
-                        <p class="text-gray-500 text-xs sm:text-sm italic"><i class="fa-solid fa-circle-info text-blue-300"></i> Observação: A taxa é cobrada novamente a cada 10 dias de armazenamento.</p>
-                    </div>
-
-                {% else %}
-                    
-                    {% if cliente_existe %}
-                        <div class="bg-white border-l-8 border-green-500 p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-100 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6" data-aos="zoom-in">
-                            <div class="w-16 h-16 rounded-full bg-green-50 flex justify-center items-center flex-shrink-0">
-                                <i class="fas fa-check-circle text-green-500 text-4xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-green-700 font-display font-bold text-xl mb-2">Cliente encontrado no sistema!</h3>
-                                <p class="text-gray-600 text-sm sm:text-base leading-relaxed">Seu cadastro está ativo. No entanto, para o documento digitado, <strong>não há nenhuma encomenda aguardando retirada</strong> no momento.</p>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="bg-white border-l-8 border-yellow-400 p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-100 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6" data-aos="zoom-in">
-                            <div class="w-16 h-16 rounded-full bg-yellow-50 flex justify-center items-center flex-shrink-0 animate-pulse">
-                                <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-yellow-600 font-display font-bold text-xl mb-2">Documento não cadastrado</h3>
-                                <p class="text-gray-600 text-sm sm:text-base leading-relaxed mb-4">Este CPF/RG não foi encontrado em nosso sistema de segurança.</p>
-                                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                    <p class="text-sm text-gray-700">Instruímos você a entrar em contato através do botão do WhatsApp logo abaixo para <strong>cadastrar seus dados de forma rápida</strong> antes de nos enviar encomendas.</p>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-
-                {% endif %}
-
+                <div class="text-right mb-10 px-2" data-aos="fade-in" data-aos-delay="200">
+                    <p class="text-gray-500 text-xs sm:text-sm italic"><i class="fa-solid fa-circle-info text-blue-300"></i> Observação: A taxa é cobrada novamente a cada 10 dias de armazenamento.</p>
+                </div>
             {% endif %}
 
+            <!-- Botão de Ajuda/Suporte no final da página -->
             <div class="mt-16 text-center" data-aos="fade-up">
                 <p class="text-gray-500 font-medium mb-4 text-sm sm:text-base">Encontrou algum problema ou tem dúvidas?</p>
-                <a href="https://wa.me/5545999145151" target="_blank" class="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#128C7E] text-white px-8 py-3.5 rounded-xl font-display font-bold shadow-[0_8px_20px_rgba(37,211,102,0.3)] hover:shadow-[0_12px_25px_rgba(37,211,102,0.4)] transition-all transform hover:-translate-y-1">
+                <a href="https://wa.me/5545999145151" target="_blank" class="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#128C7E] text-white px-8 py-3.5 rounded-xl font-display font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1">
                     <i class="fab fa-whatsapp text-2xl"></i> Fale com nossa equipe
                 </a>
             </div>
@@ -314,19 +351,23 @@
         </div>
     </main>
 
+    <!-- FOOTER E CONTATO (Padrão Home Unificado) -->
     <footer id="contato" class="bg-azul pt-16 lg:pt-20 pb-8 text-white relative overflow-hidden">
         
+        <!-- Decoration Segura -->
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-vermelho via-blue-400 to-azul"></div>
         <div class="absolute -right-20 -bottom-20 w-72 h-72 lg:w-96 lg:h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12 lg:mb-16">
                 
+                <!-- Coluna 1 -->
                 <div>
                     <img src="{% static 'logo.png' %}" alt="DrogaFoz Logo" class="h-16 sm:h-20 w-auto mb-6">
                     <p class="text-blue-100 text-sm leading-relaxed">A Farmácia DrogaFoz é sua parceira de confiança na fronteira. Recebemos e armazenamos suas encomendas com total segurança até que você possa retirá-las na comodidade do seu tempo.</p>
                 </div>
 
+                <!-- Coluna 2 -->
                 <div>
                     <h3 class="font-display font-bold text-lg text-vermelho mb-6">Endereço</h3>
                     <ul class="space-y-3 text-blue-100 text-sm">
@@ -340,6 +381,7 @@
                     </a>
                 </div>
 
+                <!-- Coluna 3 -->
                 <div>
                     <h3 class="font-display font-bold text-lg text-vermelho mb-6">Horários de retirada</h3>
                     <ul class="space-y-3 text-blue-100 text-sm">
@@ -355,6 +397,7 @@
                     </ul>
                 </div>
                 
+                <!-- Coluna 4 -->
                 <div>
                     <h3 class="font-display font-bold text-lg text-vermelho mb-6">Fale conosco</h3>
                     <p class="text-blue-100 text-sm mb-4">Dúvidas? Entre em contato com a nossa equipe agora mesmo pelo WhatsApp.</p>
@@ -371,16 +414,20 @@
         </div>
     </footer>
 
+    <!-- BOTÕES FLUTUANTES (Padrão Home Unificado) -->
     <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col gap-3 z-50">
+        <!-- WhatsApp -->
         <a href="https://wa.me/5545999145151" target="_blank" title="Fale conosco no WhatsApp" class="w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-md transform hover:scale-110 hover:-translate-y-2 transition-all duration-300 relative group">
             <span class="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-75"></span>
             <i class="fa-brands fa-whatsapp relative z-10"></i>
         </a>
+        <!-- Instagram -->
         <a href="https://www.instagram.com/drogafoz/" target="_blank" title="Siga no Instagram" class="w-12 h-12 sm:w-14 sm:h-14 text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-md transform hover:scale-110 hover:-translate-y-2 transition-all duration-300" style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);">
             <i class="fa-brands fa-instagram"></i>
         </a>
     </div>
 
+    <!-- AOS (Animate on Scroll) JS -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init({
@@ -389,13 +436,49 @@
             duration: 800,
             easing: 'ease-out-cubic',
         });
-        
-        // Fecha o menu mobile ao clicar (se for incluído links no futuro)
-        document.querySelectorAll('#menu-mobile a').forEach(link => {
-            link.addEventListener('click', () => {
-                document.getElementById('menu-toggle').checked = false;
-            });
+
+        // Lógica da Animação do Scroll Horizontal Mobile na Tabela
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableContainer = document.getElementById('table-container');
+            const scrollHint = document.getElementById('scroll-hint');
+            
+            if(tableContainer && scrollHint) {
+                // Função para esconder a pílula de dica
+                const hideHint = () => {
+                    scrollHint.style.opacity = '0';
+                    setTimeout(() => {
+                        if(scrollHint.parentNode) {
+                            scrollHint.parentNode.removeChild(scrollHint);
+                        }
+                    }, 500); // aguarda a transição terminar
+                };
+
+                // Esconde ao rolar ou ao tocar na tabela
+                tableContainer.addEventListener('scroll', hideHint, { once: true });
+                tableContainer.addEventListener('touchstart', hideHint, { once: true });
+                tableContainer.addEventListener('click', hideHint, { once: true });
+            }
         });
+
+        // Lógica de Auto-Scroll caso encontre resultados de Busca
+        {% if query and resultados %}
+        document.addEventListener("DOMContentLoaded", function() {
+            // Pequeno delay para garantir que as animações do AOS renderizem o layout primeiro
+            setTimeout(function() {
+                const tabela = document.getElementById('resultados-busca');
+                if(tabela) {
+                    const headerOffset = 90; // Altura do header fixo
+                    const elementPosition = tabela.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }
+            }, 400); 
+        });
+        {% endif %}
     </script>
 </body>
 </html>

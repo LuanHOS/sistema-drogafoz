@@ -7,14 +7,19 @@
     <title>DrogaFoz - Recebimento de Encomendas</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
     
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
+    <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Tailwind CSS (CDN para visual moderno e design system) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- AOS (Animate on Scroll) CSS -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
+    <!-- Configuração de cores originais no Tailwind -->
     <script>
         tailwind.config = {
             theme: {
@@ -39,7 +44,6 @@
                         display: ['Montserrat', 'sans-serif'],
                     },
                     boxShadow: {
-                        'glow-vermelho': '0 0 20px rgba(232, 58, 67, 0.4)',
                         'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
                     }
                 }
@@ -60,7 +64,7 @@
             overflow-x: hidden; /* Evita rolagem horizontal indesejada no mobile */
         }
 
-        /* --- BACKGROUND DO HERO (Seguro para o Django) --- */
+        /* --- BACKGROUND DO HERO --- */
         .bg-hero-parallax {
             background-image: linear-gradient(135deg, rgba(18, 60, 101, 0.92) 0%, rgba(13, 44, 74, 0.98) 100%), url('{% static "banner_background.avif" %}');
             background-position: center;
@@ -151,14 +155,15 @@
         ::-webkit-scrollbar-thumb { background: #123C65; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #E83A43; }
         
-        /* Shape Divider (Onda abaixo do topo) */
+        /* Shape Divider (Onda abaixo do topo corrigida) */
         .shape-divider {
             position: absolute;
-            bottom: 0;
+            bottom: -2px; /* Corrigido para evitar linha quebrada em monitores de alta resolução */
             left: 0;
             width: 100%;
             overflow: hidden;
             line-height: 0;
+            z-index: 10;
         }
         .shape-divider svg {
             position: relative;
@@ -173,16 +178,19 @@
 </head>
 <body class="antialiased selection:bg-vermelho selection:text-white relative">
 
+    <!-- CABEÇALHO -->
     <header class="fixed top-0 w-full z-50 bg-azul/95 backdrop-blur-md shadow-glass border-b border-white/10 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 
+                <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center">
                     <a href="#" class="transform hover:scale-105 transition-transform duration-300">
                         <img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas" class="h-10 sm:h-12 w-auto drop-shadow-md">
                     </a>
                 </div>
                 
+                <!-- Menu Desktop -->
                 <nav class="hidden lg:flex items-center space-x-1 xl:space-x-3" id="menu-lista">
                     <a href="#inicio" class="text-white/90 hover:text-vermelho hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300">Início</a>
                     <a href="#como-funciona" class="text-white/90 hover:text-vermelho hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300">Como Funciona</a>
@@ -192,16 +200,18 @@
                     <a href="#quem-somos" class="text-white/90 hover:text-vermelho hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300">Quem Somos</a>
                     <a href="#faq" class="text-white/90 hover:text-vermelho hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300">Dúvidas (FAQ)</a>
                     
-                    <a href="{% url 'consulta_publica' %}" class="bg-vermelho hover:bg-vermelho-hover text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-vermelho/30 hover:shadow-glow-vermelho transform hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2 ml-2">
+                    <a href="{% url 'consulta_publica' %}" class="bg-vermelho hover:bg-vermelho-hover text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:shadow-lg shadow-black/20 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2 ml-2">
                         <i class="fa-solid fa-magnifying-glass"></i> Consultar Encomenda <i class="fa-solid fa-arrow-right text-xs"></i>
                     </a>
                 </nav>
 
+                <!-- Toggle Menu Mobile -->
                 <input type="checkbox" id="menu-toggle" class="menu-toggle hidden peer">
                 <label for="menu-toggle" class="lg:hidden text-white hover:text-vermelho cursor-pointer p-2 transition-colors">
                     <i class="fa-solid fa-bars text-3xl"></i>
                 </label>
 
+                <!-- Menu Mobile (Totalmente Responsivo) -->
                 <nav id="menu-mobile" class="absolute top-20 left-0 w-full bg-azul/98 backdrop-blur-xl border-t border-white/10 shadow-2xl max-h-0 opacity-0 overflow-hidden lg:hidden flex flex-col items-center gap-2 text-center">
                     <a href="#inicio" class="text-white hover:text-vermelho text-base font-medium w-full py-3 border-b border-white/5">Início</a>
                     <a href="#como-funciona" class="text-white hover:text-vermelho text-base font-medium w-full py-3 border-b border-white/5">Como Funciona</a>
@@ -211,7 +221,7 @@
                     <a href="#quem-somos" class="text-white hover:text-vermelho text-base font-medium w-full py-3 border-b border-white/5">Quem Somos</a>
                     <a href="#faq" class="text-white hover:text-vermelho text-base font-medium w-full py-3">Dúvidas (FAQ)</a>
                     <div class="px-6 w-full mt-4 pb-4">
-                        <a href="{% url 'consulta_publica' %}" class="block w-full bg-vermelho text-white px-5 py-4 rounded-xl font-bold shadow-lg shadow-vermelho/30 flex items-center justify-center gap-2">
+                        <a href="{% url 'consulta_publica' %}" class="block w-full bg-vermelho hover:bg-vermelho-hover text-white px-5 py-4 rounded-xl font-bold shadow-lg shadow-black/20 flex items-center justify-center gap-2">
                             <i class="fa-solid fa-magnifying-glass"></i> Consultar Encomenda
                         </a>
                     </div>
@@ -221,31 +231,35 @@
         </div>
     </header>
 
+    <!-- SEÇÃO HERO (PRINCIPAL) -->
     <section id="inicio" class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 flex items-center justify-center bg-hero-parallax">
         
-        <div class="absolute top-1/4 left-1/4 w-72 h-72 lg:w-96 lg:h-96 bg-blue-500/20 rounded-full mix-blend-overlay filter blur-[80px] animate-pulse"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-72 h-72 lg:w-96 lg:h-96 bg-red-500/20 rounded-full mix-blend-overlay filter blur-[80px] animate-pulse delay-700"></div>
+        <!-- Elementos decorativos animados (Glow bg) -->
+        <div class="absolute top-1/4 left-1/4 w-72 h-72 lg:w-96 lg:h-96 bg-blue-500/20 rounded-full mix-blend-overlay filter blur-[80px] animate-pulse pointer-events-none"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-72 h-72 lg:w-96 lg:h-96 bg-red-500/20 rounded-full mix-blend-overlay filter blur-[80px] animate-pulse delay-700 pointer-events-none"></div>
 
         <div class="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 text-center" data-aos="fade-up" data-aos-duration="1000">
             
             <h1 class="font-display font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6 tracking-tight">
-                A sua <span class="text-transparent bg-clip-text bg-gradient-to-r from-vermelho to-red-400 drop-shadow-[0_0_10px_rgba(232,58,67,0.4)]">caixa postal</span> segura na fronteira: nós recebemos, armazenamos e esperamos você buscar.
+                A sua <span class="text-transparent bg-clip-text bg-gradient-to-r from-vermelho to-red-400 drop-shadow-md">caixa postal</span> segura na fronteira: nós recebemos, armazenamos e esperamos você buscar.
             </h1>
             
             <p class="text-base sm:text-lg lg:text-xl text-blue-100 font-light mb-10 max-w-2xl mx-auto leading-relaxed px-2">
                 Não importa se é uma compra online, uma correspondência ou um presente da família: use nosso CEP como o seu endereço no Brasil.
             </p>
             
+            <!-- Botões Responsivos (Empilham no mobile, lado a lado no desktop) -->
             <div class="flex flex-col sm:flex-row justify-center items-center gap-4 w-full px-4 sm:px-0">
-                <a href="{% url 'consulta_publica' %}" class="w-full sm:w-auto bg-vermelho hover:bg-vermelho-hover text-white font-display font-semibold py-4 px-8 rounded-xl shadow-lg shadow-vermelho/30 hover:shadow-glow-vermelho transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3">
+                <a href="{% url 'consulta_publica' %}" class="w-full sm:w-auto bg-vermelho hover:bg-vermelho-hover text-white font-display font-semibold py-4 px-8 rounded-xl shadow-lg shadow-black/20 transform hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3">
                     <i class="fa-solid fa-magnifying-glass text-lg"></i> Consultar Encomenda <i class="fa-solid fa-arrow-right text-sm"></i>
                 </a>
-                <a href="#" id="btn-novo-cliente" class="w-full sm:w-auto bg-transparent border-2 border-white/70 hover:border-white text-white hover:bg-white hover:text-azul font-display font-semibold py-4 px-8 rounded-xl transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3">
+                <a href="#" id="btn-novo-cliente" class="w-full sm:w-auto bg-transparent border-2 border-white/70 hover:border-white text-white hover:bg-white hover:text-azul font-display font-semibold py-4 px-8 rounded-xl shadow-lg shadow-black/10 transform hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3">
                     <i class="fa-solid fa-info-circle text-lg"></i> Ainda não sou Cliente
                 </a>
             </div>
         </div>
         
+        <!-- Shape Divider para conectar a próxima seção perfeitamente -->
         <div class="shape-divider">
             <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
                 <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118,130.9,132.8,204,129.4,244.6,127.5,283.7,117.8,321.39,56.44Z" fill="#F8F9FA"></path>
@@ -253,6 +267,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO COMO FUNCIONA -->
     <section id="como-funciona" class="bg-cinza py-16 lg:py-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="section-header" data-aos="fade-up">
@@ -260,9 +275,10 @@
                 <h2 class="section-title-text">Como Funciona Nosso Serviço?</h2>
             </div>
             
+            <!-- Resumo Rápido (Grid totalmente responsivo com sombras fortes) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-16">
                 
-                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-sm border border-gray-100 transform hover:-translate-y-2 hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="100">
+                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border border-gray-200 transform hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="100">
                     <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-vermelho transition-all duration-300">
                         <i class="fa-brands fa-whatsapp text-4xl text-vermelho group-hover:text-white transition-colors"></i>
                     </div>
@@ -271,7 +287,7 @@
                     <a href="https://wa.me/5545999145151?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20fazer%20meu%20cadastro!" target="_blank" class="w-full bg-azul hover:bg-azul-hover text-white py-3 rounded-lg font-semibold text-sm transition-colors shadow-md">Criar Cadastro</a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-sm border border-gray-100 transform hover:-translate-y-2 hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="200">
+                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border border-gray-200 transform hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="200">
                     <div class="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-azul transition-all duration-300">
                         <i class="fa-solid fa-pen-to-square text-4xl text-azul group-hover:text-white transition-colors"></i>
                     </div>
@@ -280,7 +296,7 @@
                     <a href="#regras-endereco" class="text-vermelho hover:text-vermelho-hover font-semibold text-xs underline mt-4 block">Veja como preencher corretamente abaixo</a>
                 </div>
                 
-                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-sm border border-gray-100 transform hover:-translate-y-2 hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="300">
+                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border border-gray-200 transform hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="300">
                     <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-vermelho transition-all duration-300">
                         <i class="fa-solid fa-magnifying-glass text-4xl text-vermelho group-hover:text-white transition-colors"></i>
                     </div>
@@ -288,7 +304,7 @@
                     <p class="text-gray-500 text-sm flex-grow">Pelo nosso site você pode pesquisar se suas encomendas já chegaram, basta clicar no botão acima "Consultar Encomenda".<br><span class="block mt-2 font-medium text-gray-700">Caso sua encomenda tenha Palavra-Chave, avise-nos pelo WhatsApp.</span></p>
                 </div>
                 
-                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-sm border border-gray-100 transform hover:-translate-y-2 hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="400">
+                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border border-gray-200 transform hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="400">
                     <div class="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-azul transition-all duration-300">
                         <i class="fa-solid fa-store text-4xl text-azul group-hover:text-white transition-colors"></i>
                     </div>
@@ -297,13 +313,14 @@
                 </div>
             </div>
 
+            <!-- Explicação Detalhada Expandível -->
             <div class="max-w-4xl mx-auto" data-aos="fade-up" data-aos-delay="100">
                 <details class="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden group cursor-pointer" id="detalhes-como-funciona">
-                    <summary class="bg-gradient-to-r from-blue-50 to-white text-azul font-display font-bold p-5 sm:p-6 text-sm sm:text-base lg:text-lg flex justify-between items-center hover:bg-blue-50 transition-colors">
+                    <summary class="bg-gradient-to-r from-blue-50 to-white text-azul font-display font-bold p-5 sm:p-6 text-sm sm:text-base lg:text-lg flex justify-between items-center hover:bg-blue-100 transition-colors">
                         <span id="summary-text" class="flex items-center gap-2 sm:gap-3 leading-snug"><i class="fa-solid fa-circle-info text-vermelho text-lg sm:text-xl"></i> Quer entender melhor? Toque aqui para ler nossa explicação detalhada</span>
                         <i class="fa-solid fa-chevron-down icon-rotacao text-gray-400 group-hover:text-azul text-lg ml-2"></i>
                     </summary>
-                    <div class="p-5 sm:p-8 lg:p-10 border-t border-gray-100 bg-white">
+                    <div class="p-5 sm:p-8 lg:p-10 border-t border-gray-200 bg-white">
                         
                         <div class="mb-8 lg:mb-10">
                             <h4 class="font-display font-bold text-base sm:text-lg text-azul mb-3 flex items-center gap-3">
@@ -325,7 +342,7 @@
                             </h4>
                             <div class="pl-0 sm:pl-11 space-y-3 text-gray-600 text-sm sm:text-base leading-relaxed">
                                 <p>Você vai acessar o site da sua loja preferida (Shopee, Mercado Livre, Amazon, etc.) e escolher o seu produto. Quando chegar na etapa de "Endereço de Entrega", você não vai colocar a sua casa, vai preencher com a rua, número e CEP da Farmácia DrogaFoz. </p>
-                                <div class="bg-red-50 border-l-4 border-vermelho p-4 rounded-r-lg my-4 text-sm sm:text-base">
+                                <div class="bg-blue-50 border-l-4 border-azul p-4 rounded-r-lg my-4 text-sm sm:text-base">
                                     <p class="font-semibold text-azul mb-2">Atenção máxima a dois detalhes aqui:</p>
                                     <p class="mb-2">1º - O campo "Destinatário" (ou "Nome e Sobrenome") deve conter o seu nome, e não o da farmácia.</p>
                                     <p>2º - Existe um campo chamado <strong class="text-vermelho">"Complemento"</strong>. Nele, você tem que digitar a palavra <strong class="text-vermelho">#ID</strong> seguida dos <strong class="text-vermelho">seus 4 últimos números do CPF</strong> (Ex: #ID1234). Isso é como se fosse a sua "senha" na etiqueta da encomenda.</p>
@@ -363,7 +380,9 @@
         </div>
     </section>
 
+    <!-- SEÇÃO VALORES E REGRAS -->
     <section id="regras-valores" class="bg-white py-16 lg:py-24 relative overflow-hidden">
+        <!-- Decoration -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-gray-50 rounded-bl-full -z-10"></div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -374,7 +393,8 @@
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
                 
-                <div class="bg-white p-6 sm:p-8 lg:p-10 rounded-2xl border-t-4 border-vermelho shadow-[0_10px_30px_rgba(0,0,0,0.08)] transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden" data-aos="fade-right">
+                <!-- Taxa de Armazenamento -->
+                <div class="bg-white p-6 sm:p-8 lg:p-10 rounded-2xl border-t-8 border-vermelho shadow-[0_8px_30px_rgba(0,0,0,0.12)] transform hover:-translate-y-2 hover:shadow-[0_15px_40px_rgba(0,0,0,0.15)] transition-all duration-300 relative overflow-hidden" data-aos="fade-right">
                     <div class="absolute -right-10 -top-10 text-red-50 opacity-50 pointer-events-none">
                         <i class="fa-solid fa-hand-holding-dollar text-[150px]"></i>
                     </div>
@@ -385,7 +405,7 @@
                         </h3>
                         <p class="text-gray-500 mb-6 text-sm sm:text-base">Cobramos uma taxa pelo recebimento e segurança da sua encomenda.</p>
                         <ul class="lista-check space-y-4 text-gray-600 text-sm sm:text-base">
-                            <li>Valor base a partir de R$ 10,00 por encomenda (pode variar conforme tamanho e peso).</li>
+                            <li><strong class="text-gray-800">Valor base a partir de R$ 10,00</strong> por encomenda (pode variar conforme tamanho e peso).</li>
                             <li>A taxa base é válida por um ciclo de 10 dias.</li>
                             <li>A cada 10 dias adicionais, é cobrado novamente o valor base.</li>
                             <li>O pagamento é efetuado presencialmente na hora da retirada.</li>
@@ -394,7 +414,8 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-6 sm:p-8 lg:p-10 rounded-2xl border-t-4 border-azul shadow-[0_10px_30px_rgba(0,0,0,0.08)] transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden" data-aos="fade-left">
+                <!-- Regras Importantes -->
+                <div class="bg-white p-6 sm:p-8 lg:p-10 rounded-2xl border-t-8 border-azul shadow-[0_8px_30px_rgba(0,0,0,0.12)] transform hover:-translate-y-2 hover:shadow-[0_15px_40px_rgba(0,0,0,0.15)] transition-all duration-300 relative overflow-hidden" data-aos="fade-left">
                     <div class="absolute -right-10 -top-10 text-blue-50 opacity-50 pointer-events-none">
                         <i class="fa-solid fa-clipboard-list text-[150px]"></i>
                     </div>
@@ -405,9 +426,9 @@
                         </h3>
                         <p class="text-gray-500 mb-6 text-sm sm:text-base">Mantenha a segurança da sua encomenda seguindo nossas diretrizes.</p>
                         <ul class="lista-check space-y-4 text-gray-600 text-sm sm:text-base">
-                            <li>Apresentação obrigatória de RG ou CNH (documento físico ou foto no celular).</li>
+                            <li>Apresentação obrigatória de <strong class="text-gray-800">RG ou CNH</strong> (documento físico ou foto no celular).</li>
                             <li>Paciência no Balcão: Os atendimentos de saúde da farmácia são prioritários.</li>
-                            <li>Prazo limite: Encomendas esquecidas por mais de 120 dias serão descartadas.</li>
+                            <li>Prazo limite: Encomendas esquecidas por <strong class="text-vermelho">mais de 120 dias serão descartadas</strong>.</li>
                             <li>É proibido o envio de itens perecíveis, ilícitos ou ilegais.</li>
                         </ul>
                     </div>
@@ -417,6 +438,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO ENDEREÇO E COMO PREENCHER -->
     <section id="endereco" class="bg-cinza py-16 lg:py-24 relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="section-header" data-aos="fade-up">
@@ -424,7 +446,9 @@
                 <h2 class="section-title-text">Endereço e Preenchimento</h2>
             </div>
             
-            <div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden mb-12 flex flex-col lg:flex-row" data-aos="fade-up" data-aos-delay="100">
+            <!-- Grid Endereço/Mapa -->
+            <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.10)] border border-gray-200 overflow-hidden mb-12 flex flex-col lg:flex-row" data-aos="fade-up" data-aos-delay="100">
+                <!-- Info Texto -->
                 <div class="p-6 sm:p-10 lg:p-12 lg:w-1/2 flex flex-col justify-center relative">
                     <div class="absolute top-0 right-0 p-8 opacity-5 hidden sm:block pointer-events-none">
                         <i class="fa-solid fa-location-dot text-8xl text-vermelho"></i>
@@ -445,31 +469,34 @@
                         <p class="text-sm text-gray-600">Ficamos localizados bem próximos à Ponte da Amizade.</p>
                     </div>
 
-                    <a href="https://maps.google.com/?q=Rua+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Iguacu" target="_blank" class="bg-vermelho hover:bg-vermelho-hover text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-vermelho/30 w-full sm:w-fit text-center transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2">
+                    <a href="https://maps.google.com/?q=Rua+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Iguacu" target="_blank" class="bg-vermelho hover:bg-vermelho-hover text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg shadow-black/20 w-full sm:w-fit text-center transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-map-location-dot"></i> Abrir no Google Maps
                     </a>
                 </div>
                 
+                <!-- Mapa Responsivo -->
                 <div class="lg:w-1/2 h-64 sm:h-80 lg:h-auto bg-gray-200 relative">
                     <iframe src="https://maps.google.com/maps?q=Rua+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Iguacu&t=&z=16&ie=UTF8&iwloc=&output=embed" class="absolute inset-0 w-full h-full border-0" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl p-6 sm:p-10 lg:p-12 shadow-xl border-2 border-yellow-400 relative overflow-hidden" id="regras-endereco" data-aos="fade-up" data-aos-delay="200">
-                <div class="absolute -right-20 -top-20 w-64 h-64 bg-yellow-50 rounded-full mix-blend-multiply blur-3xl -z-10 hidden sm:block"></div>
+            <!-- ALERTA DE COMPLEMENTO - MELHORADO COM AS CORES DA MARCA -->
+            <div class="bg-white rounded-3xl p-6 sm:p-10 lg:p-12 shadow-[0_12px_40px_rgba(0,0,0,0.15)] border-t-8 border-azul relative overflow-hidden" id="regras-endereco" data-aos="fade-up" data-aos-delay="200">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-blue-50 rounded-full mix-blend-multiply blur-3xl -z-10 hidden sm:block"></div>
                 
                 <h3 class="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-azul mb-4 flex items-center gap-3">
-                    <i class="fa-solid fa-triangle-exclamation text-yellow-400 animate-pulse text-2xl lg:text-3xl"></i> 
+                    <i class="fa-solid fa-triangle-exclamation text-vermelho animate-pulse text-2xl lg:text-3xl"></i> 
                     <span class="leading-tight">Como preencher a ficha de endereço nos sites de compras</span>
                 </h3>
                 
                 <p class="text-gray-600 mb-8 text-sm sm:text-base lg:text-lg">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados <strong class="text-azul">exatamente desta forma:</strong></p>
                 
+                <!-- Formulário Exemplo Responsivo -->
                 <div class="bg-gray-50 rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200 mb-8 shadow-inner font-mono text-xs sm:text-sm lg:text-base w-full overflow-x-auto">
                     <ul class="space-y-4 min-w-min">
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3">
                             <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">Destinatário:</span>
-                            <span class="flex-1 text-gray-800"><strong>O SEU Nome Completo</strong> <span class="block sm:inline text-[10px] sm:text-xs text-vermelho sm:ml-2 font-sans font-bold bg-red-50 px-2 py-1 rounded mt-1 sm:mt-0 w-fit">(Nunca coloque "Farmácia DrogaFoz")</span></span>
+                            <span class="flex-1 text-gray-800"><strong>O SEU Nome Completo</strong> <span class="block sm:inline text-[10px] sm:text-xs text-white sm:ml-2 font-sans font-bold bg-vermelho px-2 py-1 rounded mt-1 sm:mt-0 w-fit">(Nunca coloque "Farmácia DrogaFoz")</span></span>
                         </li>
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3">
                             <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">CEP:</span>
@@ -483,7 +510,7 @@
                             <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">Número:</span>
                             <span class="flex-1 text-gray-800"><strong>40</strong></span>
                         </li>
-                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3 bg-yellow-100/60 -mx-4 px-4 py-3 rounded-lg shadow-sm">
+                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3 bg-red-50 -mx-4 px-4 py-3 rounded-lg shadow-sm border border-red-100">
                             <span class="w-full sm:w-40 font-bold text-azul mb-1 sm:mb-0">Complemento:</span>
                             <span class="flex-1 text-vermelho font-bold text-sm sm:text-base lg:text-lg">#ID + seus 4 últimos números do CPF (Ex: #ID1234)</span>
                         </li>
@@ -498,10 +525,10 @@
                     </ul>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 bg-white/80 p-4 sm:p-5 rounded-xl border border-gray-100">
-                    <i class="fa-solid fa-lightbulb text-yellow-400 text-2xl mt-1 hidden sm:block"></i>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        <strong class="text-azul block mb-1"><i class="fa-solid fa-lightbulb text-yellow-400 sm:hidden mr-1"></i>Por que pedimos isso?</strong> 
+                <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 bg-blue-50 p-4 sm:p-5 rounded-xl border border-blue-100">
+                    <i class="fa-solid fa-lightbulb text-azul text-2xl mt-1 hidden sm:block"></i>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                        <strong class="text-azul block mb-1"><i class="fa-solid fa-lightbulb text-azul sm:hidden mr-1"></i>Por que pedimos isso?</strong> 
                         A farmácia recebe dezenas de encomendas diariamente. O campo Complemento, quando preenchido com o seu número de identificação (#ID + 4 últimos digitos do CPF) garante um controle exato de quem é o titular da encomenda, evitando recusas na entrega, devoluções para a loja ou extravios.
                     </p>
                 </div>
@@ -510,6 +537,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO HORÁRIOS DE FUNCIONAMENTO -->
     <section id="horarios" class="bg-white py-16 lg:py-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="section-header" data-aos="fade-up">
@@ -517,9 +545,10 @@
                 <h2 class="section-title-text">Horário de Funcionamento</h2>
             </div>
             
+            <!-- Cards de Horários empilham no mobile -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
                 
-                <div class="bg-white border-t-4 border-azul p-6 sm:p-8 rounded-2xl shadow-[0_5px_20px_rgba(0,0,0,0.06)] transform hover:-translate-y-2 transition-all duration-300 text-center group" data-aos="zoom-in" data-aos-delay="100">
+                <div class="bg-white border-t-4 border-azul p-6 sm:p-8 rounded-2xl shadow-md border border-gray-200 transform hover:-translate-y-2 hover:shadow-xl transition-all duration-300 text-center group" data-aos="zoom-in" data-aos-delay="100">
                     <div class="w-16 h-16 mx-auto bg-blue-50 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <i class="fa-regular fa-calendar-days text-3xl text-azul"></i>
                     </div>
@@ -527,7 +556,7 @@
                     <p class="text-2xl sm:text-3xl font-black text-vermelho tracking-tight">8h00 às 18h00</p>
                 </div>
                 
-                <div class="bg-white border-t-4 border-azul p-6 sm:p-8 rounded-2xl shadow-[0_5px_20px_rgba(0,0,0,0.06)] transform hover:-translate-y-2 transition-all duration-300 text-center group" data-aos="zoom-in" data-aos-delay="200">
+                <div class="bg-white border-t-4 border-azul p-6 sm:p-8 rounded-2xl shadow-md border border-gray-200 transform hover:-translate-y-2 hover:shadow-xl transition-all duration-300 text-center group" data-aos="zoom-in" data-aos-delay="200">
                     <div class="w-16 h-16 mx-auto bg-blue-50 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <i class="fa-regular fa-calendar-check text-3xl text-azul"></i>
                     </div>
@@ -535,7 +564,7 @@
                     <p class="text-2xl sm:text-3xl font-black text-vermelho tracking-tight">8h00 às 17h00</p>
                 </div>
                 
-                <div class="bg-gray-50 border-t-4 border-gray-400 p-6 sm:p-8 rounded-2xl shadow-sm text-center sm:col-span-2 lg:col-span-1 opacity-90" data-aos="zoom-in" data-aos-delay="300">
+                <div class="bg-gray-50 border-t-4 border-gray-400 p-6 sm:p-8 rounded-2xl shadow-md border border-gray-200 text-center sm:col-span-2 lg:col-span-1 opacity-90" data-aos="zoom-in" data-aos-delay="300">
                     <div class="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center mb-6 grayscale">
                         <i class="fa-solid fa-door-closed text-3xl text-gray-500"></i>
                     </div>
@@ -547,10 +576,12 @@
         </div>
     </section>
 
+    <!-- SEÇÃO QUEM SOMOS -->
     <section id="quem-somos" class="bg-cinza py-16 lg:py-28 overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
                 
+                <!-- Texto -->
                 <div class="lg:w-1/2 w-full" data-aos="fade-right">
                     <div class="text-left mb-8">
                         <span class="mini-title">Quem somos</span>
@@ -563,14 +594,15 @@
                         <p>Sua encomenda é recebida, catalogada e armazenada com o máximo rigor e segurança em nosso estoque. É a tradição de uma farmácia de confiança combinada com logística inteligente.</p>
                     </div>
                     
-                    <a href="https://share.google/v22Bprk3OzbvX5OL7" target="_blank" class="inline-flex items-center justify-center w-full sm:w-auto gap-3 bg-transparent text-azul border-2 border-azul hover:bg-azul hover:text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
+                    <a href="https://share.google/v22Bprk3OzbvX5OL7" target="_blank" class="inline-flex items-center justify-center w-full sm:w-auto gap-3 bg-transparent text-azul border-2 border-azul hover:bg-azul hover:text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 transform hover:-translate-y-1 shadow-md hover:shadow-xl">
                         <i class="fa-solid fa-store"></i> Conheça nossa loja
                     </a>
                 </div>
                 
+                <!-- Imagem -->
                 <div class="lg:w-1/2 w-full relative mt-8 lg:mt-0" data-aos="fade-left">
                     <div class="absolute inset-0 bg-gradient-to-tr from-azul to-vermelho blur-3xl opacity-20 transform scale-105 rounded-3xl z-0 hidden sm:block"></div>
-                    <div class="relative z-10 rounded-3xl overflow-hidden shadow-2xl group">
+                    <div class="relative z-10 rounded-3xl overflow-hidden shadow-2xl border border-gray-200 group">
                         <img src="{% static 'farmacia_ilustracao.avif' %}" alt="Balcão de Atendimento Farmácia DrogaFoz" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
                     </div>
                 </div>
@@ -579,6 +611,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO FAQ (PERGUNTAS FREQUENTES 100% MANTIDAS) -->
     <section id="faq" class="bg-white py-16 lg:py-24">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="section-header" data-aos="fade-up">
@@ -588,7 +621,8 @@
             
             <div class="space-y-4" data-aos="fade-up" data-aos-delay="100">
                 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden" open>
+                <!-- 1 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden" open>
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Qual o endereço exato que preencho no site de compras?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -613,7 +647,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 2 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Como eu me cadastro através do site?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -626,7 +661,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 3 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Não tenho CPF/RG Brasileiro, posso usar o serviço?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -640,7 +676,8 @@
                     </div>
                 </details>
                 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 4 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Como tenho certeza de que a encomenda já chegou e não vou perder viagem?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -653,7 +690,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 5 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Qual é o horário para buscar as encomendas?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -670,7 +708,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 6 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Como funciona a cobrança pelos dias guardados?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -688,7 +727,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 7 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Quais são as formas de pagamento aceitas?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -706,7 +746,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 8 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Outra pessoa pode retirar a encomenda por mim?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -724,7 +765,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 9 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">A Farmácia se responsabiliza por encomendas perdidas ou danificadas?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -743,7 +785,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 10 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">A Farmácia DrogaFoz tem vínculo com os Correios, Shopee ou Mercado Livre?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -757,7 +800,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 11 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Vocês fazem postagens ou envios para outras cidades?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -770,7 +814,8 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+                <!-- 12 -->
+                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">A Farmácia DrogaFoz paga fretes a cobrar ou taxas de alfândega?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -787,18 +832,22 @@
         </div>
     </section>
 
+    <!-- FOOTER E CONTATO -->
     <footer id="contato" class="bg-azul pt-16 lg:pt-20 pb-8 text-white relative overflow-hidden">
+        <!-- Decoration -->
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-vermelho via-blue-400 to-azul"></div>
         <div class="absolute -right-20 -bottom-20 w-72 h-72 lg:w-96 lg:h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12 lg:mb-16">
                 
+                <!-- Coluna 1 -->
                 <div>
                     <img src="{% static 'logo.png' %}" alt="DrogaFoz Logo" class="h-10 sm:h-12 w-auto mb-6 drop-shadow-md bg-white/10 p-2 rounded-lg backdrop-blur-sm">
                     <p class="text-blue-100 text-sm leading-relaxed">A Farmácia DrogaFoz é sua parceira de confiança na fronteira. Recebemos e armazenamos suas encomendas com total segurança até que você possa retirá-las na comodidade do seu tempo.</p>
                 </div>
 
+                <!-- Coluna 2 -->
                 <div>
                     <h3 class="font-display font-bold text-lg text-vermelho mb-6">Endereço</h3>
                     <ul class="space-y-3 text-blue-100 text-sm">
@@ -812,6 +861,7 @@
                     </a>
                 </div>
 
+                <!-- Coluna 3 -->
                 <div>
                     <h3 class="font-display font-bold text-lg text-vermelho mb-6">Horários de retirada</h3>
                     <ul class="space-y-3 text-blue-100 text-sm">
@@ -827,6 +877,7 @@
                     </ul>
                 </div>
                 
+                <!-- Coluna 4 -->
                 <div>
                     <h3 class="font-display font-bold text-lg text-vermelho mb-6">Fale conosco</h3>
                     <p class="text-blue-100 text-sm mb-4">Dúvidas? Entre em contato com a nossa equipe agora mesmo pelo WhatsApp.</p>
@@ -843,21 +894,27 @@
         </div>
     </footer>
 
+    <!-- BOTÕES FLUTUANTES -->
     <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col gap-3 z-50">
+        <!-- WhatsApp -->
         <a href="https://wa.me/5545999145151" target="_blank" title="Fale conosco no WhatsApp" class="w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-lg transform hover:scale-110 hover:-translate-y-2 transition-all duration-300 relative group">
             <span class="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-75"></span>
             <i class="fa-brands fa-whatsapp relative z-10"></i>
         </a>
+        <!-- Instagram -->
         <a href="https://www.instagram.com/drogafoz/" target="_blank" title="Siga no Instagram" class="w-12 h-12 sm:w-14 sm:h-14 text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-lg transform hover:scale-110 hover:-translate-y-2 transition-all duration-300" style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);">
             <i class="fa-brands fa-instagram"></i>
         </a>
     </div>
 
+    <!-- SCRIPTS MANTIDOS E BIBLIOTECAS ADICIONADAS -->
+    
+    <!-- Iniciação do AOS (Animate on Scroll) -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init({
             once: true,
-            offset: 50, // Melhorado para responsividade em celular
+            offset: 50, 
             duration: 800,
             easing: 'ease-out-cubic',
         });

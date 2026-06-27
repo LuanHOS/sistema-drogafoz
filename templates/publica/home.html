@@ -7,7 +7,9 @@
     <title>DrogaFoz - Recebimento de Encomendas</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
     
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -869,12 +871,14 @@
 </head>
 <body>
 
+    <!-- CABEÇALHO -->
     <header>
         <div class="container header-content">
             <div class="logo">
                 <a href="#"><img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas"></a>
             </div>
             
+            <!-- Checkbox Hack para Menu Responsivo -->
             <input type="checkbox" id="menu-toggle" class="menu-toggle">
             <label for="menu-toggle" class="menu-icon">
                 <i class="fa-solid fa-bars"></i>
@@ -899,6 +903,7 @@
         </div>
     </header>
 
+    <!-- SEÇÃO HERO (PRINCIPAL) -->
     <section id="inicio" class="hero">
         <div class="container">
             <h1>A sua <span style="color: var(--vermelho-drogafoz);">caixa postal</span> segura na fronteira: nós recebemos, armazenamos e esperamos você buscar.</h1>
@@ -915,10 +920,12 @@
         </div>
     </section>
 
+    <!-- SEÇÃO COMO FUNCIONA -->
     <section id="como-funciona" class="bg-cinza">
         <div class="container">
             <h2 class="section-title"><span class="mini-title">Em 4 passos</span>Como Funciona Nosso Serviço?</h2>
             
+            <!-- Resumo Rápido -->
             <div class="grid-passos">
                 <div class="passo-card">
                     <i class="fa-brands fa-whatsapp passo-icon"></i>
@@ -946,6 +953,7 @@
                 </div>
             </div>
 
+            <!-- Explicação Detalhada Expandível -->
             <details class="detalhes-explicacao" id="detalhes-como-funciona">
                 <summary>
                     <span id="summary-text"><i class="fa-solid fa-circle-info"></i> Quer entender melhor? Toque aqui para ler nossa explicação detalhada</span>
@@ -977,11 +985,13 @@
         </div>
     </section>
 
+    <!-- SEÇÃO VALORES E REGRAS -->
     <section id="regras-valores" class="bg-branco">
         <div class="container">
             <h2 class="section-title"><span class="mini-title">O combinado</span>Valores e Regras de Utilização</h2>
             <div class="rv-container">
                 
+                <!-- Tabela de Preços -->
                 <div class="rv-box destaque">
                     <h3><i class="fa-solid fa-hand-holding-dollar" style="color: var(--vermelho-drogafoz);"></i> Taxa de Armazenamento</h3>
                     <p style="margin-bottom: 15px;">Cobramos uma taxa pelo recebimento e segurança da sua encomenda.</p>
@@ -994,6 +1004,7 @@
                     </ul>
                 </div>
 
+                <!-- Regras Importantes -->
                 <div class="rv-box">
                     <h3><i class="fa-solid fa-clipboard-list" style="color: var(--azul-drogafoz);"></i> Regras de Retirada</h3>
                     <p style="margin-bottom: 15px;">Mantenha a segurança da sua encomenda seguindo nossas diretrizes.</p>
@@ -1009,6 +1020,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO ENDEREÇO E COMO PREENCHER -->
     <section id="endereco" class="bg-cinza">
         <div class="container">
             <h2 class="section-title"><span class="mini-title">Onde nos encontrar</span>Endereço e Preenchimento</h2>
@@ -1035,6 +1047,7 @@
                 </div>
             </div>
 
+            <!-- ALERTA DE COMPLEMENTO -->
             <div class="alerta-complemento" id="regras-endereco">
                 <h3><i class="fa-solid fa-triangle-exclamation" style="color: #ffb300;"></i> Como preencher a ficha de endereço nos sites de compras</h3>
                 <p style="margin-bottom: 15px; font-size: 1rem; color: #555;">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados exatamente desta forma:</p>
@@ -1055,23 +1068,27 @@
         </div>
     </section>
 
+    <!-- SEÇÃO HORÁRIOS DE FUNCIONAMENTO -->
     <section id="horarios" class="bg-branco">
         <div class="container">
             <h2 class="section-title"><span class="mini-title">Quando abrimos</span>Horário de Funcionamento</h2>
             <div class="horarios-grid">
                 
+                <!-- Segunda a Sexta -->
                 <div class="horario-card">
                     <i class="fa-regular fa-calendar-days"></i>
                     <h3>Segunda a Sexta-feira</h3>
                     <p>8h00 às 18h00</p>
                 </div>
                 
+                <!-- Sábados -->
                 <div class="horario-card">
                     <i class="fa-regular fa-calendar-check"></i>
                     <h3>Sábados</h3>
                     <p>8h00 às 17h00</p>
                 </div>
                 
+                <!-- Domingo -->
                 <div class="horario-card fechado">
                     <i class="fa-solid fa-door-closed"></i>
                     <h3>Domingos</h3>
@@ -1082,6 +1099,7 @@
         </div>
     </section>
 
+    <!-- SEÇÃO QUEM SOMOS -->
     <section id="quem-somos" class="bg-cinza">
         <div class="container">
             <div class="sobre-grid">
@@ -1104,12 +1122,13 @@
         </div>
     </section>
 
+    <!-- SEÇÃO FAQ -->
     <section id="faq" class="bg-branco">
         <div class="container">
-            <h2 class="section-title">Dúvidas (FAQ)</h2>
+            <h2 class="section-title"><span class="mini-title">Tire suas dúvidas</span>Perguntas frequentes</h2>
             <div class="faq-container">
 
-                <details class="faq-item">
+                <details class="faq-item" open>
                     <summary>Qual o endereço exato que preencho no site de compras?</summary>
                     <p>Para evitar que a sua encomenda seja recusada ou devolvida por falta de identificação, você deve copiar os dados abaixo e colar <strong>exatamente desta forma</strong> nos campos de endereço da loja onde você está comprando (Shopee, Mercado Livre, Amazon, etc.):</p>
                     <ul>
@@ -1221,15 +1240,18 @@
         </div>
     </section>
 
+    <!-- FOOTER E CONTATO -->
     <footer id="contato">
         <div class="container">
             <div class="footer-grid">
                 
+                <!-- Coluna 1 -->
                 <div class="footer-box">
                     <img src="{% static 'logo.png' %}" alt="DrogaFoz Logo" style="max-height: 50px; margin-bottom: 15px;">
                     <p style="font-size: 0.9rem;">A Farmácia DrogaFoz é sua parceira de confiança na fronteira. Recebemos e armazenamos suas encomendas com total segurança até que você possa retirá-las na comodidade do seu tempo.</p>
                 </div>
 
+                <!-- Coluna 2 -->
                 <div class="footer-box">
                     <h3 style="font-size: 1.1rem;">Endereço</h3>
                     <p><i class="fa-solid fa-location-dot"></i> Rua Santo Rafagnin, 40</p>
@@ -1240,6 +1262,7 @@
                     </a>
                 </div>
 
+                <!-- Coluna 3 -->
                 <div class="footer-box">
                     <h3 style="font-size: 1.1rem;">Horários de retirada</h3>
                     <p><i class="fa-solid fa-clock"></i> Seg a Sex: 8h00 - 18h00</p>
@@ -1247,6 +1270,7 @@
                     <p><i class="fa-solid fa-door-closed"></i> Domingo: Fechado</p>
                 </div>
                 
+                <!-- Coluna 4 -->
                 <div class="footer-box">
                     <h3 style="font-size: 1.1rem;">Fale conosco</h3>
                     <p style="font-size: 0.9rem; margin-bottom: 10px;">Dúvidas? Entre em contato com a nossa equipe agora mesmo pelo WhatsApp.</p>
@@ -1262,6 +1286,7 @@
         </div>
     </footer>
 
+    <!-- BOTÕES FLUTUANTES -->
     <div class="flutuantes">
         <a href="https://wa.me/5545999145151" target="_blank" class="btn-float float-wpp" title="Fale conosco no WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
@@ -1271,6 +1296,7 @@
         </a>
     </div>
 
+    <!-- SCRIPT PARA INTERAÇÕES (NOVO CLIENTE E MENU MOBILE) -->
     <script>
         // Fecha o menu mobile ao clicar em um link
         document.querySelectorAll('#menu-lista a:not(.btn-header)').forEach(link => {

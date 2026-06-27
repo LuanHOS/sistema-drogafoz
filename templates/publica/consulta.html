@@ -267,7 +267,7 @@
             {% if query and resultados %}
                 <div class="mb-8" data-aos="fade-up">
                     
-                    <div id="titulo-resultados" class="flex items-center gap-2 mb-4 px-2 scroll-mt-[120px]">
+                    <div id="titulo-resultados" class="flex items-center gap-2 mb-4 px-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-vermelho animate-pulse"></span>
                         <h3 class="font-display font-bold text-azul text-sm sm:text-base uppercase tracking-wider">Resultados da Consulta</h3>
                     </div>
@@ -430,19 +430,23 @@
             }
         });
 
-        // Lógica de Auto-Scroll Nativa e Precisa
+        // Lógica de Auto-Scroll Absoluta e Forçada
         document.addEventListener("DOMContentLoaded", function() {
             setTimeout(function() {
                 const tituloResultados = document.getElementById('titulo-resultados');
                 if(tituloResultados) {
-                    // O comando scrollIntoView aliado ao scroll-mt-[120px] do Tailwind
-                    // faz com que o navegador lide perfeitamente com a altura do header fixo.
-                    tituloResultados.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
+                    // Pegamos a posição exata do elemento baseada no documento inteiro
+                    const elementPosition = tituloResultados.getBoundingClientRect().top + window.scrollY;
+                    
+                    // Subtraímos 180 pixels inteiros (80px do Header fixo + 100px puros de respiro)
+                    const offsetPosition = elementPosition - 180;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
                     });
                 }
-            }, 800); // Aguarda o fim das animações para fazer o scroll
+            }, 850); 
         });
     </script>
 </body>

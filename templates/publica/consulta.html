@@ -265,9 +265,9 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6">
 
             {% if query and resultados %}
-                <div id="resultados-busca" class="mb-8" data-aos="fade-up">
+                <div class="mb-8" data-aos="fade-up">
                     
-                    <div class="flex items-center gap-2 mb-4 px-2">
+                    <div id="titulo-resultados" class="flex items-center gap-2 mb-4 px-2 scroll-mt-24">
                         <span class="w-2.5 h-2.5 rounded-full bg-vermelho animate-pulse"></span>
                         <h3 class="font-display font-bold text-azul text-sm sm:text-base uppercase tracking-wider">Resultados da Consulta</h3>
                     </div>
@@ -416,40 +416,37 @@
             const scrollHint = document.getElementById('scroll-hint');
             
             if(tableContainer && scrollHint) {
-                // Função para esconder a pílula de dica
                 const hideHint = () => {
                     scrollHint.style.opacity = '0';
                     setTimeout(() => {
                         if(scrollHint.parentNode) {
                             scrollHint.parentNode.removeChild(scrollHint);
                         }
-                    }, 500); // aguarda a transição terminar
+                    }, 500);
                 };
-
-                // Esconde ao rolar ou ao tocar na tabela
                 tableContainer.addEventListener('scroll', hideHint, { once: true });
                 tableContainer.addEventListener('touchstart', hideHint, { once: true });
                 tableContainer.addEventListener('click', hideHint, { once: true });
             }
         });
 
-        // Lógica de Auto-Scroll caso encontre resultados de Busca
+        // Lógica de Auto-Scroll: Aguarda as animações do AOS terminarem e vai exatamente para o título
         document.addEventListener("DOMContentLoaded", function() {
-            // Pequeno delay para garantir que as animações do AOS renderizem o layout primeiro
+            // Aguarda exatos 850ms (tempo da animação AOS + margem de segurança) para a tela "assentar"
             setTimeout(function() {
-                const tabela = document.getElementById('resultados-busca');
-                if(tabela) {
+                const tituloResultados = document.getElementById('titulo-resultados');
+                if(tituloResultados) {
                     const headerHeight = document.querySelector('header').offsetHeight;
-                    const elementPosition = tabela.getBoundingClientRect().top;
-                    // Desconta o Header Fixo e dá uma pequena margem (20px) para o título respirar
-                    const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 20;
+                    const elementPosition = tituloResultados.getBoundingClientRect().top;
+                    // Calcula a rolagem: Posição do título - Altura do Cabeçalho - 40px de "respiro"
+                    const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 40;
                     
                     window.scrollTo({
                         top: offsetPosition,
                         behavior: "smooth"
                     });
                 }
-            }, 400); 
+            }, 850); 
         });
     </script>
 </body>

@@ -116,6 +116,28 @@
             top: 3px;
         }
 
+        /* Animação de Brilho (Shine) para botões principais */
+        @keyframes shine {
+            100% { left: 125%; }
+        }
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-20deg);
+        }
+        .btn-shine:hover::after {
+            animation: shine 0.8s ease-in-out;
+        }
+
         /* Componentes de Títulos */
         .section-header {
             text-align: center;
@@ -156,10 +178,10 @@
         ::-webkit-scrollbar-thumb { background: #123C65; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #E83A43; }
         
-        /* Shape Divider (Corte Diagonal Moderno) */
+        /* Shape Divider (Onda Perfeita e Corrigida) */
         .shape-divider {
             position: absolute;
-            bottom: -1px; /* Evita linha fantasma */
+            bottom: -2px; /* Evita a linha fantasma branca */
             left: 0;
             width: 100%;
             overflow: hidden;
@@ -170,10 +192,10 @@
             position: relative;
             display: block;
             width: calc(100% + 1.3px);
-            height: 40px;
+            height: 60px;
         }
         @media (min-width: 1024px) {
-            .shape-divider svg { height: 80px; }
+            .shape-divider svg { height: 100px; }
         }
     </style>
 </head>
@@ -201,7 +223,7 @@
                     <a href="#quem-somos" class="text-white/90 hover:text-vermelho hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300">Quem Somos</a>
                     <a href="#faq" class="text-white/90 hover:text-vermelho hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300">Dúvidas (FAQ)</a>
                     
-                    <a href="{% url 'consulta_publica' %}" class="bg-vermelho hover:bg-vermelho-hover text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 ml-2">
+                    <a href="{% url 'consulta_publica' %}" class="btn-shine bg-vermelho hover:bg-vermelho-hover text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 ml-2">
                         <i class="fa-solid fa-magnifying-glass"></i> Consultar Encomenda <i class="fa-solid fa-arrow-right text-xs"></i>
                     </a>
                 </nav>
@@ -222,7 +244,7 @@
                     <a href="#quem-somos" class="text-white hover:text-vermelho text-base font-medium w-full py-3 border-b border-white/5">Quem Somos</a>
                     <a href="#faq" class="text-white hover:text-vermelho text-base font-medium w-full py-3">Dúvidas (FAQ)</a>
                     <div class="px-6 w-full mt-4 pb-4">
-                        <a href="{% url 'consulta_publica' %}" class="block w-full bg-vermelho hover:bg-vermelho-hover text-white px-5 py-4 rounded-xl font-bold shadow-md flex items-center justify-center gap-2">
+                        <a href="{% url 'consulta_publica' %}" class="btn-shine block w-full bg-vermelho hover:bg-vermelho-hover text-white px-5 py-4 rounded-xl font-bold shadow-md flex items-center justify-center gap-2">
                             <i class="fa-solid fa-magnifying-glass"></i> Consultar Encomenda
                         </a>
                     </div>
@@ -238,16 +260,16 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 text-center" data-aos="fade-up" data-aos-duration="1000">
             
             <h1 class="font-display font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6 tracking-tight">
-                A sua <span class="text-transparent bg-clip-text bg-gradient-to-r from-vermelho to-red-400">caixa postal</span> segura na fronteira: nós recebemos, armazenamos e esperamos você buscar.
+                A sua <span class="text-vermelho">caixa postal</span> segura na fronteira: nós recebemos, armazenamos e esperamos você buscar.
             </h1>
             
             <p class="text-base sm:text-lg lg:text-xl text-blue-100 font-light mb-10 max-w-2xl mx-auto leading-relaxed px-2">
                 Não importa se é uma compra online, uma correspondência ou um presente da família: use nosso CEP como o seu endereço no Brasil.
             </p>
             
-            <!-- Botões Responsivos (Sem glows coloridos) -->
+            <!-- Botões Responsivos (Sem glows coloridos, com efeito Shine) -->
             <div class="flex flex-col sm:flex-row justify-center items-center gap-4 w-full px-4 sm:px-0">
-                <a href="{% url 'consulta_publica' %}" class="w-full sm:w-auto bg-vermelho hover:bg-vermelho-hover text-white font-display font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-3">
+                <a href="{% url 'consulta_publica' %}" class="btn-shine w-full sm:w-auto bg-vermelho hover:bg-vermelho-hover text-white font-display font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-3">
                     <i class="fa-solid fa-magnifying-glass text-lg"></i> Consultar Encomenda <i class="fa-solid fa-arrow-right text-sm"></i>
                 </a>
                 <a href="#" id="btn-novo-cliente" class="w-full sm:w-auto bg-transparent border-2 border-white/70 hover:border-white text-white hover:bg-white hover:text-azul font-display font-semibold py-4 px-8 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center gap-3">
@@ -256,10 +278,10 @@
             </div>
         </div>
         
-        <!-- Shape Divider Moderno (Corte Diagonal para evitar bug de renderização) -->
+        <!-- Shape Divider - Onda Perfeita Resolvida -->
         <div class="shape-divider">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M0,120 L1200,120 L1200,0 Z" fill="#F8F9FA"></path>
+            <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+                <path fill="#F8F9FA" fill-opacity="1" d="M0,128L48,138.7C96,149,192,171,288,170.7C384,171,480,149,576,133.3C672,117,768,107,864,117.3C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
             </svg>
         </div>
     </section>
@@ -272,7 +294,7 @@
                 <h2 class="section-title-text">Como Funciona Nosso Serviço?</h2>
             </div>
             
-            <!-- Resumo Rápido (Sombras fortes para destacar sobre o fundo) -->
+            <!-- Resumo Rápido (Grid totalmente responsivo com sombras fortes) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-16">
                 
                 <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 transform hover:-translate-y-2 hover:shadow-[0_15px_40px_rgba(0,0,0,0.18)] transition-all duration-300 flex flex-col items-center text-center group" data-aos="fade-up" data-aos-delay="100">
@@ -475,55 +497,56 @@
                 </div>
             </div>
 
-            <!-- ALERTA DE COMPLEMENTO - Focado nas cores do site -->
-            <div class="bg-white rounded-3xl p-6 sm:p-10 lg:p-12 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border-t-8 border-azul relative overflow-hidden" id="regras-endereco" data-aos="fade-up" data-aos-delay="200">
-                <div class="absolute -right-20 -top-20 w-64 h-64 bg-blue-50 rounded-full mix-blend-multiply blur-3xl -z-10 hidden sm:block"></div>
+            <!-- ALERTA DE COMPLEMENTO - DESTAQUE COM CORES DO SISTEMA (AZUL FORTE) -->
+            <div class="bg-azul rounded-3xl p-6 sm:p-10 lg:p-12 shadow-[0_15px_50px_rgba(18,60,101,0.3)] relative overflow-hidden" id="regras-endereco" data-aos="fade-up" data-aos-delay="200">
+                <!-- Efeito visual no fundo do card -->
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full mix-blend-overlay blur-3xl -z-10 hidden sm:block"></div>
                 
-                <h3 class="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-azul mb-4 flex items-center gap-3">
+                <h3 class="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-white mb-4 flex items-center gap-3">
                     <i class="fa-solid fa-triangle-exclamation text-vermelho animate-pulse text-2xl lg:text-3xl"></i> 
                     <span class="leading-tight">Como preencher a ficha de endereço nos sites de compras</span>
                 </h3>
                 
-                <p class="text-gray-600 mb-8 text-sm sm:text-base lg:text-lg">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados <strong class="text-azul">exatamente desta forma:</strong></p>
+                <p class="text-blue-100 mb-8 text-sm sm:text-base lg:text-lg">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados <strong class="text-white">exatamente desta forma:</strong></p>
                 
                 <!-- Formulário Exemplo Responsivo -->
-                <div class="bg-gray-50 rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200 mb-8 shadow-inner font-mono text-xs sm:text-sm lg:text-base w-full overflow-x-auto">
+                <div class="bg-white/10 rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20 mb-8 shadow-inner font-mono text-xs sm:text-sm lg:text-base w-full overflow-x-auto text-white">
                     <ul class="space-y-4 min-w-min">
-                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3">
-                            <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">Destinatário:</span>
-                            <span class="flex-1 text-gray-800"><strong>O SEU Nome Completo</strong> <span class="block sm:inline text-[10px] sm:text-xs text-white sm:ml-2 font-sans font-bold bg-vermelho px-2 py-1 rounded mt-1 sm:mt-0 w-fit">(Nunca coloque "Farmácia DrogaFoz")</span></span>
+                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3">
+                            <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Destinatário:</span>
+                            <span class="flex-1"><strong>O SEU Nome Completo</strong> <span class="block sm:inline text-[10px] sm:text-xs text-white sm:ml-2 font-sans font-bold bg-vermelho px-2 py-1 rounded mt-1 sm:mt-0 w-fit">(Nunca coloque "Farmácia DrogaFoz")</span></span>
                         </li>
-                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3">
-                            <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">CEP:</span>
-                            <span class="flex-1 text-gray-800"><strong>85865-370</strong></span>
+                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3">
+                            <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">CEP:</span>
+                            <span class="flex-1"><strong>85865-370</strong></span>
                         </li>
-                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3">
-                            <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">Rua:</span>
-                            <span class="flex-1 text-gray-800"><strong>Santo Rafagnin</strong></span>
+                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3">
+                            <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Rua:</span>
+                            <span class="flex-1"><strong>Santo Rafagnin</strong></span>
                         </li>
-                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3">
-                            <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">Número:</span>
-                            <span class="flex-1 text-gray-800"><strong>40</strong></span>
+                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3">
+                            <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Número:</span>
+                            <span class="flex-1"><strong>40</strong></span>
                         </li>
-                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3 bg-blue-50 -mx-4 px-4 py-3 rounded-lg shadow-sm border border-blue-100">
-                            <span class="w-full sm:w-40 font-bold text-azul mb-1 sm:mb-0">Complemento:</span>
+                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3 bg-white/20 -mx-4 px-4 py-3 rounded-lg shadow-sm border border-white/30">
+                            <span class="w-full sm:w-40 font-bold text-white mb-1 sm:mb-0">Complemento:</span>
                             <span class="flex-1 text-vermelho font-bold text-sm sm:text-base lg:text-lg">#ID + seus 4 últimos números do CPF (Ex: #ID1234)</span>
                         </li>
-                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-gray-200 pb-3 pt-3">
-                            <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">Bairro:</span>
-                            <span class="flex-1 text-gray-800"><strong>Vila Portes</strong></span>
+                        <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3 pt-3">
+                            <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Bairro:</span>
+                            <span class="flex-1"><strong>Vila Portes</strong></span>
                         </li>
                         <li class="flex flex-col sm:flex-row sm:items-center">
-                            <span class="w-full sm:w-40 text-gray-500 mb-1 sm:mb-0">Cidade/Estado:</span>
-                            <span class="flex-1 text-gray-800"><strong>Foz do Iguaçu - PR</strong></span>
+                            <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Cidade/Estado:</span>
+                            <span class="flex-1"><strong>Foz do Iguaçu - PR</strong></span>
                         </li>
                     </ul>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 bg-white p-4 sm:p-5 rounded-xl border border-gray-200">
-                    <i class="fa-solid fa-lightbulb text-azul text-2xl mt-1 hidden sm:block"></i>
-                    <p class="text-sm text-gray-700 leading-relaxed">
-                        <strong class="text-azul block mb-1"><i class="fa-solid fa-lightbulb text-azul sm:hidden mr-1"></i>Por que pedimos isso?</strong> 
+                <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 bg-azul-hover p-4 sm:p-5 rounded-xl border border-white/10">
+                    <i class="fa-solid fa-lightbulb text-yellow-400 text-2xl mt-1 hidden sm:block"></i>
+                    <p class="text-sm text-blue-100 leading-relaxed">
+                        <strong class="text-white block mb-1"><i class="fa-solid fa-lightbulb text-yellow-400 sm:hidden mr-1"></i>Por que pedimos isso?</strong> 
                         A farmácia recebe dezenas de encomendas diariamente. O campo Complemento, quando preenchido com o seu número de identificação (#ID + 4 últimos digitos do CPF) garante um controle exato de quem é o titular da encomenda, evitando recusas na entrega, devoluções para a loja ou extravios.
                     </p>
                 </div>
@@ -886,10 +909,11 @@
         </div>
     </footer>
 
-    <!-- BOTÕES FLUTUANTES -->
+    <!-- BOTÕES FLUTUANTES COM ANIMAÇÃO PING DE VOLTA -->
     <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col gap-3 z-50">
         <!-- WhatsApp -->
         <a href="https://wa.me/5545999145151" target="_blank" title="Fale conosco no WhatsApp" class="w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-md transform hover:scale-110 hover:-translate-y-2 transition-all duration-300 relative group">
+            <span class="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-75"></span>
             <i class="fa-brands fa-whatsapp relative z-10"></i>
         </a>
         <!-- Instagram -->
@@ -933,7 +957,7 @@
                 }
             }
 
-            // 2. Desce suavemente até a seção
+            // 2. Desce suavemente até a seção (compensando o header mobile e desktop)
             const sectionComoFunciona = document.getElementById('como-funciona');
             if(sectionComoFunciona) {
                 const headerHeight = document.querySelector('header').offsetHeight;

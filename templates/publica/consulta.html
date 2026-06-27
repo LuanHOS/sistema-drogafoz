@@ -1,353 +1,126 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Encomendas - Drogafoz</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}">
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        azul: {
+                            DEFAULT: '#123C65',
+                            hover: '#0d2c4a',
+                            light: '#1e5b96'
+                        },
+                        vermelho: {
+                            DEFAULT: '#E83A43', /* Atualizado para a cor padrão do sistema (era #C51625 no antigo) */
+                            hover: '#a0121e',
+                        },
+                        cinza: {
+                            DEFAULT: '#F8F9FA',
+                            escuro: '#444444'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                        display: ['Montserrat', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
 
     <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
 
     <style>
-        /* Variáveis de Cores e Estilos Globais da Home */
+        /* CSS Personalizado Base */
         :root {
             --azul-drogafoz: #123C65;
-            --vermelho-drogafoz: #C51625;
-            --vermelho-hover: #a0121e;
-            --azul-hover: #0d2c4a;
-            --cor-texto: #444444;
-            --cor-fundo-alt: #F8F9FA;
-            --branco: #ffffff;
-            --borda-suave: #e2e8f0;
-            --transicao: all 0.3s ease;
+            --vermelho-drogafoz: #E83A43;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body { 
-            font-family: 'Roboto', sans-serif; 
-            background-color: var(--cor-fundo-alt); 
-            color: var(--cor-texto);
-            margin: 0; 
-            padding: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh; 
-        }
-
-        h1, h2, h3, h4 {
-            font-family: 'Montserrat', sans-serif;
-            color: var(--azul-drogafoz);
-        }
-        
-        /* --- CABEÇALHO NOVO (Apenas Logo Centralizada) --- */
-        header { 
-            background-color: var(--azul-drogafoz); 
-            width: 100%; 
-            padding: 15px 0; 
-            text-align: center; 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.25); 
+        body {
+            color: #444444;
+            background-color: #F8F9FA; /* Fundo Cinza base */
+            overflow-x: hidden;
             display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        header img {
-            width: 180px;
-            height: auto;
-            display: block;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        /* --- CONTAINER PRINCIPAL --- */
-        .container { 
-            width: 90%; 
-            max-width: 800px; 
-            margin: 40px auto 60px auto; 
-            background: var(--branco); 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-top: 4px solid var(--azul-drogafoz);
-            flex-grow: 1; /* Empurra o footer para baixo */
+        /* --- BACKGROUND DO HERO (Herdado da Home) --- */
+        .bg-hero-parallax {
+            background-image: linear-gradient(135deg, rgba(18, 60, 101, 0.95) 0%, rgba(13, 44, 74, 0.98) 100%), url('{% static "banner_background.avif" %}');
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
         }
 
-        /* --- BUSCA E FORMULÁRIO --- */
-        .search-box { text-align: center; margin-bottom: 40px; }
-        .search-box h2 { font-size: 1.8rem; margin-bottom: 15px; }
-        .search-box p { font-size: 1rem; color: #555; margin-bottom: 25px; line-height: 1.6; }
-        
-        .input-group { 
-            display: flex; 
-            flex-direction: column; /* Deixa os itens separados como solicitado */
-            align-items: center; 
-            gap: 15px; 
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
+        /* --- ANIMAÇÃO DE BRILHO (SHINE) --- */
+        @keyframes shine {
+            100% { left: 125%; }
         }
-        
-        /* Input estilizado padrão Home */
-        .search-box input[type="text"] { 
-            width: 100%; 
-            padding: 16px 20px; 
-            font-size: 1.1rem; 
-            border: 2px solid var(--borda-suave); 
-            border-radius: 8px; 
-            outline: none; 
-            text-align: center; 
-            letter-spacing: 1px; 
-            font-family: 'Roboto', sans-serif;
-            color: var(--cor-texto);
-            transition: var(--transicao);
-        }
-        
-        .search-box input[type="text"]:focus { 
-            border-color: var(--azul-drogafoz); 
-            box-shadow: 0 0 0 4px rgba(18, 60, 101, 0.1);
-        }
-        
-        /* Botão estilizado padrão Home */
-        .search-box button { 
-            width: 100%;
-            padding: 16px; 
-            background-color: var(--vermelho-drogafoz); 
-            color: var(--branco); 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1.1rem; 
-            font-weight: 600; 
-            font-family: 'Montserrat', sans-serif;
-            cursor: pointer; 
-            transition: var(--transicao); 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
-        }
-        
-        .search-box button:hover { 
-            background-color: var(--vermelho-hover); 
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.35);
-        }
-
-        /* --- BOTAO AVALIAÇÃO TOPO --- */
-        .btn-avaliacao-topo {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background-color: #ffffff;
-            color: var(--azul-drogafoz);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            text-decoration: none;
-            border: 1px solid var(--borda-suave);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
-            transition: var(--transicao);
-        }
-        
-        .btn-avaliacao-topo:hover {
-            background-color: #f8f9fa;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
-            border-color: #ffc107;
-            color: #333;
-        }
-
-        /* --- RESPONSIVIDADE PARA A TABELA --- */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* --- TABELA DE RESULTADOS (Estrutura original com estilo novo) --- */
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 30px; 
-            border: 1px solid var(--borda-suave);
-            border-radius: 8px;
+        .btn-shine {
+            position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
-        
-        th { 
-            background-color: var(--azul-drogafoz); 
-            color: var(--branco); 
-            padding: 15px; 
-            text-align: center; 
-            font-size: 0.95rem; 
-            text-transform: uppercase; 
-            font-family: 'Montserrat', sans-serif;
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-20deg);
         }
-        
-        td { 
-            padding: 18px 15px; 
-            border-bottom: 1px solid var(--borda-suave); 
-            color: #555; 
-            font-size: 1rem; 
-            text-align: center; 
-        }
-        
-        tr:nth-child(even) { background-color: #f8f9fa; }
-        tr:last-child td { border-bottom: none; }
-        
-        .total-row { 
-            background-color: var(--azul-drogafoz) !important; 
-            color: var(--branco) !important; 
-        }
-        .total-row td {
-            color: var(--branco);
-            font-weight: 700;
-            font-size: 1.1rem;
+        .btn-shine:hover::after {
+            animation: shine 0.8s ease-in-out;
         }
 
-        .obs-text { 
-            font-size: 0.85rem; 
-            color: #888; 
-            margin-top: 15px; 
-            text-align: right; 
-            font-style: italic; 
-        }
-
-        /* --- MENSAGENS E ALERTAS --- */
-        .empty-msg { 
-            text-align: center; 
-            margin-top: 25px; 
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-        }
-        
-        .problemas-contato {
-            text-align: center;
-            margin-top: 40px;
-        }
-        
-        .empty-msg p { margin-bottom: 8px; }
-
-        /* --- CAIXA DE AJUDA E WHATSAPP --- */
-        .help-box { 
-            margin-top: 50px; 
-            padding: 30px; 
-            background: var(--cor-fundo-alt); 
-            border-radius: 8px; 
-            text-align: center; 
-            border: 1px solid var(--borda-suave);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        
-        .help-box h3 { 
-            margin: 0 0 15px; 
-            font-size: 1.2rem; 
-        }
-        
-        .help-box p { 
-            font-size: 1rem; 
-            color: #555; 
-            margin-bottom: 20px; 
-        }
-        
-        /* Botão do WhatsApp reestilizado para a Home */
-        .btn-whatsapp { 
-            background-color: #25D366; 
-            color: var(--branco); 
-            text-decoration: none; 
-            padding: 14px 24px; 
-            border-radius: 6px; 
-            font-weight: 600; 
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: var(--transicao); 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        }
-        
-        .btn-whatsapp:hover { 
-            background-color: #128C7E; 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
-        }
-
-        /* --- FOOTER E CONTATOS (Novo Padrão) --- */
-        footer {
-            background-color: var(--azul-drogafoz);
-            color: var(--branco);
-            padding: 60px 0 20px;
-            font-size: 0.95rem;
+        /* Shape Divider (Onda Perfeita e Corrigida) */
+        .shape-divider {
+            position: absolute;
+            bottom: -2px;
+            left: 0;
             width: 100%;
+            overflow: hidden;
+            line-height: 0;
+            z-index: 10;
+        }
+        .shape-divider svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 60px;
+        }
+        @media (min-width: 1024px) {
+            .shape-divider svg { height: 80px; }
         }
 
-        .footer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 0 20px;
-        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #F8F9FA; }
+        ::-webkit-scrollbar-thumb { background: #123C65; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #E83A43; }
 
-        .footer-box h3 {
-            margin-bottom: 15px;
-            color: var(--vermelho-drogafoz);
-            font-size: 1.2rem;
-        }
-
-        .footer-box p, .footer-box a {
-            color: #e2e8f0;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .footer-box a:hover {
-            color: var(--branco);
-        }
-
-        .btn-whatsapp-footer {
-            background-color: #25D366;
-            color: white !important;
-            padding: 10px 18px;
-            border-radius: 6px;
-            display: inline-flex;
-            text-decoration: none !important;
-            width: fit-content;
-            margin-top: 10px;
-            font-weight: 600;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            transition: var(--transicao);
-        }
-
-        .btn-whatsapp-footer:hover {
-            background-color: #128C7E;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
-        }
-
-        .copyright {
-            text-align: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 20px;
-            color: #9ca3af;
-            font-size: 0.85rem;
-        }
-
-        /* --- CORREÇÃO DO POP-UP DO RECAPTCHA --- */
-        /* Força o container do desafio do reCAPTCHA a ficar fixo e centralizado na tela */
+        /* --- CORREÇÃO DO POP-UP DO RECAPTCHA (INTOCADA E MANTIDA) --- */
         div[style*="z-index: 2000000000"] {
             position: fixed !important;
             top: 50% !important;
@@ -356,147 +129,273 @@
         }
 
         @media (max-width: 600px) {
-            body { zoom: 0.8; }
-            th, td { font-size: 13px; padding: 12px 8px; }
-            .container { padding: 25px; width: 95%; margin-top: 30px;}
-            table { min-width: 500px; } /* Força a tabela a manter tamanho para ativar o scroll na div */
-            
-            /* Ajuste extra de escala no mobile para garantir que o pop-up caiba perfeitamente na tela */
             div[style*="z-index: 2000000000"] {
                 transform: translate(-50%, -50%) scale(0.9) !important;
             }
         }
     </style>
 </head>
-<body>
+<body class="antialiased selection:bg-vermelho selection:text-white relative">
 
-    <header>
-        <a href="{% url 'home' %}">
-            <img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas">
-        </a>
+    <header class="fixed top-0 w-full z-50 bg-azul/95 backdrop-blur-md shadow-glass border-b border-white/10 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="{% url 'home' %}" class="transform hover:scale-105 transition-transform duration-300">
+                        <img src="{% static 'logo.png' %}" alt="DrogaFoz Encomendas" class="h-10 sm:h-12 w-auto">
+                    </a>
+                </div>
+                
+                <nav class="flex items-center">
+                    <a href="{% url 'home' %}" class="text-white hover:text-vermelho px-3 py-2 rounded-md text-sm font-display font-semibold transition-all duration-300 flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left text-xs"></i> <span class="hidden sm:inline">Voltar ao Início</span><span class="sm:hidden">Voltar</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
     </header>
 
-    <div class="container">
-        <div class="search-box">
+    <section class="relative pt-32 pb-16 lg:pt-40 lg:pb-24 flex items-center justify-center bg-hero-parallax">
+        
+        <div class="w-full max-w-2xl mx-auto px-4 sm:px-6 relative z-10" data-aos="fade-up" data-aos-duration="1000">
             
-            <a href="https://g.page/r/CSeSfzwSYYu5EAE/review" target="_blank" class="btn-avaliacao-topo">
-                <i class="fas fa-star" style="color: #ffc107;"></i>Avaliar
-            </a>
+            <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.2)] p-6 sm:p-10 border-t-8 border-vermelho relative overflow-hidden">
+                <div class="text-center mb-6">
+                    <a href="https://g.page/r/CSeSfzwSYYu5EAE/review" target="_blank" class="inline-flex items-center gap-2 bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 hover:border-yellow-400 px-5 py-2 rounded-full font-bold text-sm transition-all duration-300 shadow-sm transform hover:-translate-y-0.5">
+                        <i class="fas fa-star text-yellow-500"></i> Avaliar Serviço
+                    </a>
+                </div>
 
-            <h2>Consulte suas Encomendas</h2>
-            <p>Digite no campo abaixo o Documento informado no momento do cadastro
-            <br>(CPF, RG, CNPJ, CNH ou Documento de Identificação Extrangeiro).</p>
-            
-            <form method="post" class="input-group">
-                {% csrf_token %}
-                <input 
-                    type="text" 
-                    name="q" 
-                    placeholder="Digite o Documento aqui..." 
-                    value="{{ query|default:'' }}" 
-                    required
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    maxlength="14"
-                >
-                <button type="submit"><i class="fas fa-search"></i> Consultar</button>
+                <div class="text-center mb-8">
+                    <h2 class="font-display font-bold text-2xl sm:text-3xl text-azul mb-3">Consulte suas Encomendas</h2>
+                    <p class="text-gray-500 text-sm sm:text-base leading-relaxed">
+                        Digite no campo abaixo o Documento informado no momento do cadastro 
+                        <br class="hidden sm:block"> (CPF, RG, CNPJ, CNH ou Documento Estrangeiro).
+                    </p>
+                </div>
                 
-                <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-action="LOGIN" data-size="compact"></div>
-            </form>
-        </div>
+                <form method="post" class="flex flex-col items-center gap-5 w-full max-w-md mx-auto">
+                    {% csrf_token %}
+                    
+                    <div class="w-full relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-id-card text-gray-400 text-lg"></i>
+                        </div>
+                        <input 
+                            type="text" 
+                            name="q" 
+                            placeholder="Apenas números..." 
+                            value="{{ query|default:'' }}" 
+                            required
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                            maxlength="14"
+                            class="w-full pl-12 pr-4 py-4 text-center text-lg sm:text-xl font-bold tracking-widest text-azul bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-azul focus:ring-4 focus:ring-azul/10 transition-all placeholder-gray-400 font-mono"
+                        >
+                    </div>
 
-        {% if erro_recaptcha %}
-            <div class="empty-msg" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb;">
-                <p>⚠️ Verificação de segurança falhou. Por favor, marque a caixa "Não sou um robô".</p>
+                    <button type="submit" class="btn-shine w-full bg-vermelho hover:bg-vermelho-hover text-white font-display font-bold text-lg py-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex justify-center items-center gap-3">
+                        <i class="fas fa-search"></i> Consultar
+                    </button>
+                    
+                    <div class="mt-2 flex justify-center w-full">
+                        <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-action="LOGIN" data-size="compact"></div>
+                    </div>
+                </form>
+
             </div>
-        {% elif query %}
-            {% if resultados %}
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Chegada</th>
-                                <th>Tempo</th>
-                                <th>Taxa</th>
-                                <th>Valor Final</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in resultados %}
-                            <tr>
-                                <td>#{{ forloop.counter }}</td>
-                                <td>{{ item.data_chegada|date:"d/m/Y" }}</td>
-                                
-                                <td {% if item.is_atrasado %}style="color: #C51625; font-weight: bold;"{% endif %}>
-                                    {{ item.dias_display }} dias
-                                </td>
-                                
-                                <td>R$ {{ item.valor_base|floatformat:2 }}</td>
-                                <td>R$ {{ item.valor_final_display|floatformat:2 }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td colspan="4" style="text-align: right;">TOTAL A PAGAR:</td>
-                                <td>R$ {{ total_geral|floatformat:2 }}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
+        </div>
+        
+        <div class="shape-divider">
+            <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+                <path fill="#F8F9FA" fill-opacity="1" d="M0,128L48,138.7C96,149,192,171,288,170.7C384,171,480,149,576,133.3C672,117,768,107,864,117.3C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+        </div>
+    </section>
+
+    <main class="flex-grow bg-cinza pb-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+
+            {% if erro_recaptcha %}
+                <div class="bg-red-50 border-l-8 border-vermelho p-6 rounded-r-2xl shadow-md mb-8 flex items-start sm:items-center gap-4 animate-pulse">
+                    <i class="fas fa-shield-alt text-vermelho text-3xl"></i>
+                    <div>
+                        <h3 class="text-vermelho font-display font-bold text-lg mb-1">Atenção à Segurança</h3>
+                        <p class="text-gray-700 text-sm sm:text-base">A verificação de segurança falhou. Por favor, marque a caixa <strong>"Não sou um robô"</strong> e tente novamente.</p>
+                    </div>
                 </div>
-                <div class="obs-text">
-                    * Observação: A taxa é cobrada novamente a cada 10 dias de armazenamento.
-                </div>
-            {% else %}
-                <div class="empty-msg">
+
+            {% elif query %}
+                
+                {% if resultados %}
+                    
+                    <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-gray-200 overflow-hidden mb-4" data-aos="fade-up">
+                        <div class="w-full overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[600px]">
+                                <thead>
+                                    <tr class="bg-azul text-white font-display text-sm uppercase tracking-wide border-b border-azul-hover">
+                                        <th class="px-6 py-5 text-center font-bold">Item</th>
+                                        <th class="px-6 py-5 text-center font-bold">Chegada</th>
+                                        <th class="px-6 py-5 text-center font-bold">Tempo</th>
+                                        <th class="px-6 py-5 text-center font-bold">Taxa</th>
+                                        <th class="px-6 py-5 text-center font-bold">Valor Final</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 bg-white">
+                                    {% for item in resultados %}
+                                    <tr class="hover:bg-blue-50/50 transition-colors duration-200">
+                                        <td class="px-6 py-4 text-center font-semibold text-gray-500">#{{ forloop.counter }}</td>
+                                        <td class="px-6 py-4 text-center text-gray-700">{{ item.data_chegada|date:"d/m/Y" }}</td>
+                                        
+                                        <td class="px-6 py-4 text-center {% if item.is_atrasado %}text-vermelho font-bold bg-red-50 rounded-lg{% else %}text-gray-700{% endif %}">
+                                            {{ item.dias_display }} dias
+                                        </td>
+                                        
+                                        <td class="px-6 py-4 text-center text-gray-600">R$ {{ item.valor_base|floatformat:2 }}</td>
+                                        <td class="px-6 py-4 text-center font-bold text-azul text-lg">R$ {{ item.valor_final_display|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-blue-50 border-t-2 border-azul/20">
+                                        <td colspan="4" class="px-6 py-5 text-right font-display font-bold text-azul uppercase text-sm sm:text-base">
+                                            TOTAL A PAGAR:
+                                        </td>
+                                        <td class="px-6 py-5 text-center font-black text-vermelho text-xl sm:text-2xl whitespace-nowrap">
+                                            R$ {{ total_geral|floatformat:2 }}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right mb-10 px-2" data-aos="fade-in" data-aos-delay="200">
+                        <p class="text-gray-500 text-xs sm:text-sm italic"><i class="fa-solid fa-circle-info text-blue-300"></i> Observação: A taxa é cobrada novamente a cada 10 dias de armazenamento.</p>
+                    </div>
+
+                {% else %}
+                    
                     {% if cliente_existe %}
-                        <p style="color: #28a745; font-weight: bold;"><i class="fas fa-check-circle"></i> Cliente encontrado em nosso sistema.</p>
-                        <p style="font-size: 14px; color: #666; font-weight: normal; margin-top: 8px;">No entanto, para este cliente, não há nenhuma encomenda para retirada no momento.</p>
+                        <div class="bg-white border-l-8 border-green-500 p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-100 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6" data-aos="zoom-in">
+                            <div class="w-16 h-16 rounded-full bg-green-50 flex justify-center items-center flex-shrink-0">
+                                <i class="fas fa-check-circle text-green-500 text-4xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-green-700 font-display font-bold text-xl mb-2">Cliente encontrado no sistema!</h3>
+                                <p class="text-gray-600 text-sm sm:text-base leading-relaxed">Seu cadastro está ativo. No entanto, para o documento digitado, <strong>não há nenhuma encomenda aguardando retirada</strong> no momento.</p>
+                            </div>
+                        </div>
                     {% else %}
-                        <p style="color: #C51625; font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> CPF/RG não cadastrado em nosso sistema.</p>
-                        <p style="font-size: 14px; color: #666; font-weight: normal; margin-top: 8px;">Instruímos você a entrar em contato através do botão do WhatsApp logo abaixo para cadastrar seus dados no sistema.</p>
+                        <div class="bg-white border-l-8 border-yellow-400 p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-100 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6" data-aos="zoom-in">
+                            <div class="w-16 h-16 rounded-full bg-yellow-50 flex justify-center items-center flex-shrink-0 animate-pulse">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-yellow-600 font-display font-bold text-xl mb-2">Documento não cadastrado</h3>
+                                <p class="text-gray-600 text-sm sm:text-base leading-relaxed mb-4">Este CPF/RG não foi encontrado em nosso sistema de segurança.</p>
+                                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                    <p class="text-sm text-gray-700">Instruímos você a entrar em contato através do botão do WhatsApp logo abaixo para <strong>cadastrar seus dados de forma rápida</strong> antes de nos enviar encomendas.</p>
+                                </div>
+                            </div>
+                        </div>
                     {% endif %}
-                </div>
+
+                {% endif %}
+
             {% endif %}
-        {% endif %}
 
-        <p class="problemas-contato">
-            <strong>Problemas?</strong> Entre em contato conosco pelo WhatsApp.
-        </p>
-
-    </div>
-
-    <footer id="contato">
-        <div class="footer-grid">
-            <div class="footer-box">
-                <h3>FARMÁCIA DROGA<span>FOZ</span></h3>
-                <p>Farmácia e Ponto de Retirada de encomendas em Foz do Iguaçu.</p>
-            </div>
-
-            <div class="footer-box">
-                <h3 style="font-size: 1.1rem;">Endereço</h3>
-                <p><i class="fa-solid fa-location-dot"></i> Rua Santo Rafagnin, 40</p>
-                <p style="padding-left: 20px;">Vila Portes, Foz do Iguaçu - PR</p>
-                <p style="padding-left: 20px;">CEP: 85865-370</p>
-                <a href="https://maps.google.com/?q=Rua+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Iguacu" target="_blank" style="margin-top: 10px; color: #90caf9;">
-                    <i class="fa-solid fa-map-location-dot"></i> Ver no Google Maps
+            <div class="mt-16 text-center" data-aos="fade-up">
+                <p class="text-gray-500 font-medium mb-4 text-sm sm:text-base">Encontrou algum problema ou tem dúvidas?</p>
+                <a href="https://wa.me/5545999145151" target="_blank" class="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#128C7E] text-white px-8 py-3.5 rounded-xl font-display font-bold shadow-[0_8px_20px_rgba(37,211,102,0.3)] hover:shadow-[0_12px_25px_rgba(37,211,102,0.4)] transition-all transform hover:-translate-y-1">
+                    <i class="fab fa-whatsapp text-2xl"></i> Fale com nossa equipe
                 </a>
             </div>
 
-            <div class="footer-box">
-                <h3 style="font-size: 1.1rem;">Horários de Retirada</h3>
-                <p><i class="fa-solid fa-clock"></i> Seg a Sex: 8h00 - 18h00</p>
-                <p><i class="fa-solid fa-clock"></i> Sábados: 8h00 - 17h00</p>
-                <p><i class="fa-solid fa-door-closed"></i> Domingo: Fechado</p>
-                <a href="https://wa.me/5545999145151" target="_blank" class="btn-whatsapp-footer">
-                    <i class="fa-brands fa-whatsapp"></i> (45) 99914-5151
-                </a>
-            </div>
         </div>
-        <div class="copyright">
-            <p>© 2026 Farmácia DrogaFoz. Todos os direitos reservados.</p>
+    </main>
+
+    <footer id="contato" class="bg-azul pt-16 lg:pt-20 pb-8 text-white relative overflow-hidden">
+        
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-vermelho via-blue-400 to-azul"></div>
+        <div class="absolute -right-20 -bottom-20 w-72 h-72 lg:w-96 lg:h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12 lg:mb-16">
+                
+                <div>
+                    <img src="{% static 'logo.png' %}" alt="DrogaFoz Logo" class="h-16 sm:h-20 w-auto mb-6">
+                    <p class="text-blue-100 text-sm leading-relaxed">A Farmácia DrogaFoz é sua parceira de confiança na fronteira. Recebemos e armazenamos suas encomendas com total segurança até que você possa retirá-las na comodidade do seu tempo.</p>
+                </div>
+
+                <div>
+                    <h3 class="font-display font-bold text-lg text-vermelho mb-6">Endereço</h3>
+                    <ul class="space-y-3 text-blue-100 text-sm">
+                        <li class="flex gap-3">
+                            <i class="fa-solid fa-location-dot mt-1 text-white"></i>
+                            <span>Rua Santo Rafagnin, 40<br>Vila Portes, Foz do Iguaçu - PR<br>CEP: 85865-370</span>
+                        </li>
+                    </ul>
+                    <a href="https://maps.google.com/?q=Rua+Santo+Rafagnin,+40+-+Vila+Portes,+Foz+do+Iguacu" target="_blank" class="inline-flex items-center gap-2 mt-4 text-blue-300 hover:text-white transition-colors text-sm font-medium">
+                        <i class="fa-solid fa-map-location-dot"></i> Ver no Google Maps
+                    </a>
+                </div>
+
+                <div>
+                    <h3 class="font-display font-bold text-lg text-vermelho mb-6">Horários de retirada</h3>
+                    <ul class="space-y-3 text-blue-100 text-sm">
+                        <li class="flex items-center gap-3">
+                            <i class="fa-solid fa-clock text-white"></i> Seg a Sex: 8h00 - 18h00
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fa-solid fa-clock text-white"></i> Sábados: 8h00 - 17h00
+                        </li>
+                        <li class="flex items-center gap-3 text-gray-400">
+                            <i class="fa-solid fa-door-closed"></i> Domingo: Fechado
+                        </li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-display font-bold text-lg text-vermelho mb-6">Fale conosco</h3>
+                    <p class="text-blue-100 text-sm mb-4">Dúvidas? Entre em contato com a nossa equipe agora mesmo pelo WhatsApp.</p>
+                    <a href="https://wa.me/5545999145151" target="_blank" class="inline-flex items-center justify-center w-full sm:w-fit gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3 px-5 rounded-lg shadow-md transition-all duration-300">
+                        <i class="fa-brands fa-whatsapp text-xl"></i> (45) 99914-5151
+                    </a>
+                </div>
+
+            </div>
+            
+            <div class="border-t border-white/10 pt-8 text-center text-blue-200/60 text-sm">
+                <p>© 2026 Farmácia DrogaFoz. Todos os direitos reservados.</p>
+            </div>
         </div>
     </footer>
 
+    <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col gap-3 z-50">
+        <a href="https://wa.me/5545999145151" target="_blank" title="Fale conosco no WhatsApp" class="w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-md transform hover:scale-110 hover:-translate-y-2 transition-all duration-300 relative group">
+            <span class="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-75"></span>
+            <i class="fa-brands fa-whatsapp relative z-10"></i>
+        </a>
+        <a href="https://www.instagram.com/drogafoz/" target="_blank" title="Siga no Instagram" class="w-12 h-12 sm:w-14 sm:h-14 text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-md transform hover:scale-110 hover:-translate-y-2 transition-all duration-300" style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);">
+            <i class="fa-brands fa-instagram"></i>
+        </a>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            once: true,
+            offset: 50, 
+            duration: 800,
+            easing: 'ease-out-cubic',
+        });
+        
+        // Fecha o menu mobile ao clicar (se for incluído links no futuro)
+        document.querySelectorAll('#menu-mobile a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('menu-toggle').checked = false;
+            });
+        });
+    </script>
 </body>
 </html>

@@ -72,6 +72,15 @@
             background-attachment: fixed;
         }
 
+        /* --- ANIMAÇÃO DE ENTRADA NATIVA (Substitui o AOS no Topo para evitar Bug de Scroll) --- */
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in-scale {
+            animation: fadeInScale 0.6s ease-out forwards;
+        }
+
         /* --- ANIMAÇÃO DE BRILHO (SHINE) --- */
         @keyframes shine {
             100% { left: 125%; }
@@ -167,7 +176,7 @@
 
     <section class="relative pt-32 pb-24 lg:pt-40 lg:pb-32 flex flex-col items-center justify-center bg-hero-parallax">
         
-        <div class="w-full max-w-2xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col gap-6" data-aos="zoom-in" data-aos-duration="1000">
+        <div class="w-full max-w-2xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col gap-6 animate-fade-in-scale">
             
             {% if erro_recaptcha %}
                 <div class="bg-red-50 border-l-8 border-vermelho p-4 sm:p-6 rounded-r-2xl shadow-lg flex items-start sm:items-center gap-4 animate-pulse">
@@ -246,7 +255,7 @@
                         <i class="fas fa-search"></i> Consultar
                     </button>
                     
-                    <div class="mt-2 flex justify-center w-full">
+                    <div class="mt-2 flex justify-center w-full" style="min-height: 78px;">
                         <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-action="LOGIN"></div>
                     </div>
                 </form>
@@ -403,6 +412,11 @@
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
+        // Trava para evitar que o navegador "restaure" um scroll bugado de outra sessão
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
         AOS.init({
             once: true,
             offset: 50, 
@@ -430,15 +444,15 @@
             }
         });
 
-        // Lógica de Auto-Scroll Absoluta e Forçada
+        // Lógica de Auto-Scroll Absoluta e Forçada para a Tabela
         document.addEventListener("DOMContentLoaded", function() {
             setTimeout(function() {
                 const tituloResultados = document.getElementById('titulo-resultados');
                 if(tituloResultados) {
-                    // Pegamos a posição exata do elemento baseada no documento inteiro
+                    // Posição exata do elemento
                     const elementPosition = tituloResultados.getBoundingClientRect().top + window.scrollY;
                     
-                    // Subtraímos 180 pixels inteiros (80px do Header fixo + 100px puros de respiro)
+                    // -80px do Cabeçalho Fixo, -100px de Respiro = -180px absolutos
                     const offsetPosition = elementPosition - 180;
                     
                     window.scrollTo({

@@ -385,21 +385,21 @@
             <tfoot>
                 {% if desconto_geral > 0 %}
                 <tr>
-                    <td colspan="3" style="text-align: right; font-size: 14px; padding-top: 15px; color: #555;">TOTAL GERAL SUGERIDO</td>
-                    <td colspan="2" style="text-align: right; font-size: 14px; padding-top: 15px; color: #555;">R$ {{ sugerido_geral|floatformat:2 }}</td>
+                    <td colspan="3" style="text-align: right; font-size: 15px; font-weight: bold; padding-top: 40px; color: #333;">SOMA GERAL SUGERIDA</td>
+                    <td colspan="2" style="text-align: right; font-size: 15px; font-weight: bold; padding-top: 40px; color: #333;">R$ {{ sugerido_geral|floatformat:2 }}</td>
                 </tr>
                 <tr>
-                    <td colspan="3" style="text-align: right; font-size: 14px; padding-top: 5px; color: #28a745;">DESCONTO GERAL CONCEDIDO</td>
-                    <td colspan="2" style="text-align: right; font-size: 14px; padding-top: 5px; color: #28a745;">- R$ {{ desconto_geral|floatformat:2 }}</td>
+                    <td colspan="3" style="text-align: right; font-size: 15px; font-weight: bold; padding-top: 5px; color: #28a745;">DESCONTO GERAL CONCEDIDO</td>
+                    <td colspan="2" style="text-align: right; font-size: 15px; font-weight: bold; padding-top: 5px; color: #28a745;">- R$ {{ desconto_geral|floatformat:2 }}</td>
                 </tr>
                 <tr>
-                    <td colspan="3" style="text-align: right; font-size: 18px; font-weight: bold; padding-top: 10px; border-top: 2px solid #000;">TOTAL GERAL COBRADO</td>
-                    <td colspan="2" style="text-align: right; font-size: 18px; font-weight: bold; padding-top: 10px; border-top: 2px solid #000;">R$ {{ retirada.valor_total|floatformat:2 }}</td>
+                    <td colspan="3" style="text-align: right; font-size: 20px; font-weight: bold; padding-top: 15px; border-top: 2px solid #000;">TOTAL GERAL COBRADO</td>
+                    <td colspan="2" style="text-align: right; font-size: 20px; font-weight: bold; padding-top: 15px; border-top: 2px solid #000;">R$ {{ retirada.valor_total|floatformat:2 }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="3" class="total-label">TOTAL GERAL COBRADO</td>
-                    <td colspan="2" class="total-value receipt-total-value">R$ {{ retirada.valor_total|floatformat:2 }}</td>
+                    <td colspan="3" class="total-label" style="padding-top: 40px; font-size: 20px;">TOTAL GERAL COBRADO</td>
+                    <td colspan="2" class="total-value receipt-total-value" style="padding-top: 40px; font-size: 20px;">R$ {{ retirada.valor_total|floatformat:2 }}</td>
                 </tr>
                 {% endif %}
             </tfoot>

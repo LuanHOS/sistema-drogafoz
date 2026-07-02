@@ -185,7 +185,7 @@
         .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px; table-layout: fixed; }
         .receipt-table th { border-bottom: 2px solid #000; padding: 8px 5px; text-align: left; text-transform: uppercase; }
         .receipt-table td { border-bottom: 1px dashed #ccc; padding: 8px 5px; vertical-align: top; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; white-space: normal; }
-        .col-desc { width: 40%; } .col-dias { width: 15%; text-align: center; } .col-base { width: 20%; text-align: right; } .col-valor { width: 25%; text-align: right; }
+        .col-desc { width: 38%; } .col-dias { width: 12%; text-align: center; } .col-base { width: 15%; text-align: right; } .col-sugerido { width: 17%; text-align: right; } .col-cobrado { width: 18%; text-align: right; }
         .total-label { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
         .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
         .receipt-note { font-size: 11px; font-style: italic; margin-top: 5px; margin-bottom: 40px; }
@@ -279,7 +279,7 @@
                         </div>
                     </div>
                     <div style="text-align: right; color: #555;">
-                        <div style="font-size: 12px;">Valor Base: R$ {{ item.valor_base|floatformat:2 }}</div>
+                        <div style="font-size: 12px;">V. Base: R$ {{ item.valor_base|floatformat:2 }} | V. Sugerido: R$ {{ item.valor_sugerido|floatformat:2 }}</div>
                         <div style="font-weight: bold; font-size: 15px; color: #333; margin-top: 4px;">
                             Cobrado: R$ {{ item.valor_cobrado|floatformat:2 }}
                         </div>
@@ -330,15 +330,16 @@
             <thead>
                 <tr>
                     <th class="col-desc">Descrição</th>
-                    <th class="col-dias">Dias Armaz.</th>
-                    <th class="col-base">Valor Base</th>
-                    <th class="col-valor">Valor Final</th>
+                    <th class="col-dias">Dias</th>
+                    <th class="col-base">V. Base</th>
+                    <th class="col-sugerido">V. Sugerido</th>
+                    <th class="col-cobrado">V. Cobrado</th>
                 </tr>
             </thead>
             <tbody class="receipt-items-body">
                 {% for grupo in resumo_agrupado %}
                     <tr style="background-color: #f0f0f0;">
-                        <td colspan="4" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
+                        <td colspan="5" style="font-weight: bold; border-top: 1px solid #000; padding: 5px 5px;">
                             CLIENTE: {{ grupo.cliente.nome }}
                             {% if grupo.cliente.cpf or grupo.cliente.rg %}
                                 - {{ grupo.cliente.cpf|default:grupo.cliente.rg }}
@@ -354,45 +355,49 @@
                             {% endif %}
                             <br><small style="color: #666; margin-left: 10px;">Chegada: {{ item.data_chegada|date:"d/m/Y H:i" }}</small>
                         </td>
-                        <td style="text-align: center;">{{ item.dias_estoque_calculado }} dias</td>
-                        <td style="text-align: right;">R$ {{ item.valor_base|floatformat:2 }}</td>
-                        <td style="text-align: right;">R$ {{ item.valor_cobrado|floatformat:2 }}</td>
+                        <td style="text-align: center; vertical-align: middle;">{{ item.dias_estoque_calculado }}</td>
+                        <td style="text-align: right; vertical-align: middle;">R$ {{ item.valor_base|floatformat:2 }}</td>
+                        <td style="text-align: right; vertical-align: middle;">R$ {{ item.valor_sugerido|floatformat:2 }}</td>
+                        <td style="text-align: right; vertical-align: middle; font-weight: bold;">R$ {{ item.valor_cobrado|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
+                    <tr>
+                        <td colspan="3" style="text-align: right; font-size: 12px; color: #555; padding-top: 10px;">Valor Total Sugerido:</td>
+                        <td colspan="2" style="text-align: right; font-size: 13px; color: #555; padding-top: 10px;">R$ {{ grupo.sugerido|floatformat:2 }}</td>
+                    </tr>
                     {% if grupo.desconto > 0 %}
                     <tr>
-                        <td colspan="3" style="text-align: right; font-size: 12px; color: #555; padding-top: 10px;">Desconto Concedido:</td>
-                        <td style="text-align: right; font-size: 13px; color: #555; padding-top: 10px;">- R$ {{ grupo.desconto|floatformat:2 }}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3" style="text-align: right; font-size: 12px; font-weight: bold;">Subtotal do Cliente:</td>
-                        <td style="text-align: right; font-size: 13px; font-weight: bold;">R$ {{ grupo.subtotal|floatformat:2 }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="3" style="text-align: right; font-size: 12px; font-weight: bold; padding-top: 10px;">Subtotal do Cliente:</td>
-                        <td style="text-align: right; font-size: 13px; font-weight: bold; padding-top: 10px;">R$ {{ grupo.subtotal|floatformat:2 }}</td>
+                        <td colspan="3" style="text-align: right; font-size: 12px; color: #28a745;">Desconto Concedido:</td>
+                        <td colspan="2" style="text-align: right; font-size: 13px; color: #28a745;">- R$ {{ grupo.desconto|floatformat:2 }}</td>
                     </tr>
                     {% endif %}
                     <tr>
-                        <td colspan="4" style="border-bottom: 1px solid #000;"></td>
+                        <td colspan="3" style="text-align: right; font-size: 13px; font-weight: bold;">Total Cobrado do Cliente:</td>
+                        <td colspan="2" style="text-align: right; font-size: 14px; font-weight: bold;">R$ {{ grupo.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="border-bottom: 1px solid #000; padding-top: 10px;"></td>
                     </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 {% if desconto_geral > 0 %}
                 <tr>
-                    <td colspan="3" style="text-align: right; font-size: 14px; padding-top: 15px; color: #555;">Desconto Geral Concedido</td>
-                    <td style="text-align: right; font-size: 14px; padding-top: 15px; color: #555;">- R$ {{ desconto_geral|floatformat:2 }}</td>
+                    <td colspan="3" style="text-align: right; font-size: 14px; padding-top: 15px; color: #555;">SOMA TOTAL SUGERIDA</td>
+                    <td colspan="2" style="text-align: right; font-size: 14px; padding-top: 15px; color: #555;">R$ {{ sugerido_geral|floatformat:2 }}</td>
                 </tr>
                 <tr>
-                    <td colspan="3" style="text-align: right; font-size: 18px; font-weight: bold; padding-top: 5px; border-top: 2px solid #000;">TOTAL GERAL</td>
-                    <td style="text-align: right; font-size: 18px; font-weight: bold; padding-top: 5px; border-top: 2px solid #000;">R$ {{ retirada.valor_total|floatformat:2 }}</td>
+                    <td colspan="3" style="text-align: right; font-size: 14px; padding-top: 5px; color: #28a745;">DESCONTO GERAL CONCEDIDO</td>
+                    <td colspan="2" style="text-align: right; font-size: 14px; padding-top: 5px; color: #28a745;">- R$ {{ desconto_geral|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="text-align: right; font-size: 18px; font-weight: bold; padding-top: 10px; border-top: 2px solid #000;">TOTAL GERAL COBRADO</td>
+                    <td colspan="2" style="text-align: right; font-size: 18px; font-weight: bold; padding-top: 10px; border-top: 2px solid #000;">R$ {{ retirada.valor_total|floatformat:2 }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="3" class="total-label">TOTAL GERAL</td>
-                    <td class="total-value receipt-total-value">R$ {{ retirada.valor_total|floatformat:2 }}</td>
+                    <td colspan="3" class="total-label">TOTAL GERAL COBRADO</td>
+                    <td colspan="2" class="total-value receipt-total-value">R$ {{ retirada.valor_total|floatformat:2 }}</td>
                 </tr>
                 {% endif %}
             </tfoot>

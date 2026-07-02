@@ -500,6 +500,7 @@ class RetiradaAdmin(admin.ModelAdmin):
         
         resumo_agrupado = {}
         desconto_geral = 0.0
+        sugerido_geral = 0.0
         
         for enc in encomendas:
             c_id = enc.cliente.id
@@ -520,18 +521,20 @@ class RetiradaAdmin(admin.ModelAdmin):
             if enc.valor_cobrado:
                 resumo_agrupado[c_id]['subtotal'] += float(enc.valor_cobrado)
                 
-        # Calcula o desconto final por cliente
+        # Calcula o desconto final por cliente e os totais globais
         for grupo in resumo_agrupado.values():
             grupo['desconto'] = grupo['sugerido'] - grupo['subtotal']
             # Evitar mostrar desconto negativo caso tenha sido cobrado a mais por algum motivo
             if grupo['desconto'] < 0: 
                 grupo['desconto'] = 0.0
             desconto_geral += grupo['desconto']
+            sugerido_geral += grupo['sugerido']
                 
         extra_context = extra_context or {}
         extra_context['retirada'] = retirada
         extra_context['resumo_agrupado'] = resumo_agrupado.values()
         extra_context['desconto_geral'] = desconto_geral
+        extra_context['sugerido_geral'] = sugerido_geral
         extra_context['show_save'] = False
         extra_context['show_save_and_continue'] = False
         extra_context['show_delete'] = False

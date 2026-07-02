@@ -108,6 +108,7 @@ def marcar_entregue(modeladmin, request, queryset):
     # --- GARANTE A PERSISTÊNCIA DOS IDs SUBMETIDOS EM TODAS AS ETAPAS ---
     selected = request.POST.getlist(admin.helpers.ACTION_CHECKBOX_NAME)
     if selected:
+        # AQUI FOI ADICIONADA A TRAVA: Ao buscar, ignora as encomendas descartadas
         queryset = Encomenda.objects.filter(pk__in=selected, descartado=False)
     elif 'post' in request.POST:
         # TRAVA 1: Impede que o Django dê baixa no queryset inteiro se a lista de IDs sumir (Lista Fantasma)
@@ -499,22 +500,39 @@ class RetiradaAdmin(admin.ModelAdmin):
         encomendas = retirada.encomendas.all().select_related('cliente').order_by('cliente__nome', 'data_chegada')
         
         resumo_agrupado = {}
+        desconto_geral = 0.0
+        
         for enc in encomendas:
             c_id = enc.cliente.id
             if c_id not in resumo_agrupado:
-                resumo_agrupado[c_id] = {'cliente': enc.cliente, 'itens': [], 'subtotal': 0.0}
+                resumo_agrupado[c_id] = {'cliente': enc.cliente, 'itens': [], 'subtotal': 0.0, 'sugerido': 0.0, 'desconto': 0.0}
             
             dias_estoque = (enc.data_entrega - enc.data_chegada).days if enc.data_entrega else 0
             if dias_estoque < 0: dias_estoque = 0
             enc.dias_estoque_calculado = dias_estoque
             
+            # Cálculo do valor Sugerido/Esperado (Multiplicador de ciclos de 10 dias * Valor Base)
+            multiplicador = max(1, dias_estoque // 10)
+            enc.valor_sugerido = float(enc.valor_base) * multiplicador
+            
             resumo_agrupado[c_id]['itens'].append(enc)
+            resumo_agrupado[c_id]['sugerido'] += enc.valor_sugerido
+            
             if enc.valor_cobrado:
                 resumo_agrupado[c_id]['subtotal'] += float(enc.valor_cobrado)
+                
+        # Calcula o desconto final por cliente
+        for grupo in resumo_agrupado.values():
+            grupo['desconto'] = grupo['sugerido'] - grupo['subtotal']
+            # Evitar mostrar desconto negativo caso tenha sido cobrado a mais por algum motivo
+            if grupo['desconto'] < 0: 
+                grupo['desconto'] = 0.0
+            desconto_geral += grupo['desconto']
                 
         extra_context = extra_context or {}
         extra_context['retirada'] = retirada
         extra_context['resumo_agrupado'] = resumo_agrupado.values()
+        extra_context['desconto_geral'] = desconto_geral
         extra_context['show_save'] = False
         extra_context['show_save_and_continue'] = False
         extra_context['show_delete'] = False

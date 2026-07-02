@@ -48,8 +48,8 @@
         .panel h4 { margin-top: 0; color: #444; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
 
         .mini-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .mini-table th { text-align: left; color: #888; padding: 8px 0; border-bottom: 1px solid #eee; }
-        .mini-table td { padding: 10px 0; border-bottom: 1px solid #f9f9f9; color: #333; }
+        .mini-table th { text-align: left; color: #888; padding: 8px 10px; border-bottom: 1px solid #eee; }
+        .mini-table td { padding: 10px 10px; border-bottom: 1px solid #f9f9f9; color: #333; }
         
         .badge-alert { background: #ffeeba; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .badge-crit { background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
@@ -157,14 +157,14 @@
                 <thead>
                     <tr>
                         <th>Cliente</th>
-                        <th style="text-align: right;">Gasto</th>
+                        <th style="text-align: right; white-space: nowrap; width: 110px;">Gasto</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for c in top_clientes %}
                     <tr>
-                        <td>{{ c.cliente__nome }}{% if c.cliente__observacao %} ({{ c.cliente__observacao }}){% endif %} <br> <small style="color:#999">{{ c.qtd }} retiradas</small></td>
-                        <td style="text-align: right; font-weight: bold;">R$ {{ c.total_gasto|floatformat:2 }}</td>
+                        <td style="word-break: break-word;">{{ c.cliente__nome }}{% if c.cliente__observacao %} ({{ c.cliente__observacao }}){% endif %} <br> <small style="color:#999">{{ c.qtd }} retiradas</small></td>
+                        <td style="text-align: right; font-weight: bold; white-space: nowrap;">R$ {{ c.total_gasto|floatformat:2 }}</td>
                     </tr>
                     {% empty %}
                     <tr><td colspan="2" style="text-align: center;">Sem dados no período</td></tr>
@@ -180,16 +180,16 @@
                     <thead style="position: sticky; top: 0; background: #fff; z-index: 1; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);">
                         <tr>
                             <th>Cliente</th>
-                            <th style="text-align: center; white-space: nowrap;">+ Antiga</th>
-                            <th style="text-align: right;">Qtd</th>
+                            <th style="text-align: center; white-space: nowrap; width: 80px;">+ Antiga</th>
+                            <th style="text-align: right; white-space: nowrap; width: 60px;">Qtd</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for c in clientes_pendentes_list %}
                         <tr>
-                            <td>{{ c.nome }}</td>
-                            <td style="text-align: center; color: #888; font-size: 11px;">{{ c.dias_mais_antiga }} dias</td>
-                            <td style="text-align: right; font-weight: bold; color: #17a2b8;">{{ c.qtd }}</td>
+                            <td style="word-break: break-word;">{{ c.nome }}</td>
+                            <td style="text-align: center; color: #888; font-size: 11px; white-space: nowrap;">{{ c.dias_mais_antiga }} dias</td>
+                            <td style="text-align: right; font-weight: bold; color: #17a2b8; white-space: nowrap;">{{ c.qtd }}</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="3" style="text-align: center; color: #888;">Nenhuma encomenda pendente no momento</td></tr>

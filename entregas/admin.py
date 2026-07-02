@@ -108,7 +108,6 @@ def marcar_entregue(modeladmin, request, queryset):
     # --- GARANTE A PERSISTÊNCIA DOS IDs SUBMETIDOS EM TODAS AS ETAPAS ---
     selected = request.POST.getlist(admin.helpers.ACTION_CHECKBOX_NAME)
     if selected:
-        # AQUI FOI ADICIONADA A TRAVA: Ao buscar, ignora as encomendas descartadas
         queryset = Encomenda.objects.filter(pk__in=selected, descartado=False)
     elif 'post' in request.POST:
         # TRAVA 1: Impede que o Django dê baixa no queryset inteiro se a lista de IDs sumir (Lista Fantasma)

@@ -108,7 +108,7 @@ def marcar_entregue(modeladmin, request, queryset):
     # --- GARANTE A PERSISTÊNCIA DOS IDs SUBMETIDOS EM TODAS AS ETAPAS ---
     selected = request.POST.getlist(admin.helpers.ACTION_CHECKBOX_NAME)
     if selected:
-        queryset = Encomenda.objects.filter(pk__in=selected)
+        queryset = Encomenda.objects.filter(pk__in=selected, descartado=False)
     elif 'post' in request.POST:
         # TRAVA 1: Impede que o Django dê baixa no queryset inteiro se a lista de IDs sumir (Lista Fantasma)
         messages.error(request, "ERRO CRÍTICO: Nenhuma encomenda válida selecionada para a baixa.")
@@ -144,11 +144,13 @@ def marcar_entregue(modeladmin, request, queryset):
                 total_cobrado = 0.0
                 
                 # TRAVA 2: Bloqueio de Concorrência Real no Banco de Dados
-                encomendas_lock = Encomenda.objects.select_for_update().filter(pk__in=selected)
+                encomendas_lock = Encomenda.objects.select_for_update().filter(pk__in=selected, descartado=False)
                 
-                # NOVA TRAVA: Verificação contra exclusão de pacotes durante a operação
+                # NOVA TRAVA: Verificação contra exclusão de pacotes durante a operação.
+                # Se len(encomendas_lock) não for igual a len(selected), significa que alguém 
+                # apagou ou "descartou" uma encomenda via pop-up enquanto essa tela estava aberta.
                 if len(encomendas_lock) != len(selected):
-                    raise ValueError("Algumas encomendas selecionadas foram apagadas do sistema por outro utilizador. Operação abortada por segurança.")
+                    raise ValueError("Algumas encomendas selecionadas foram descartadas ou apagadas do sistema. Operação abortada por segurança.")
                 
                 for encomenda in encomendas_lock:
                     if encomenda.status == 'ENTREGUE':
@@ -216,7 +218,7 @@ def marcar_entregue(modeladmin, request, queryset):
             # Em vez de redirecionar e apagar a tela, disparamos o erro e deixamos re-renderizar
             messages.error(request, f"Ação Revertida de forma atómica (Rollback executado). Corrija e tente novamente. Detalhes: {str(e)}")
             # TRAVA 4: Limpa o cache de objetos corrompidos na memória Python após o Rollback do banco
-            queryset = Encomenda.objects.filter(pk__in=selected)
+            queryset = Encomenda.objects.filter(pk__in=selected, descartado=False)
 
     tem_duplicata = queryset.filter(status='ENTREGUE').exists()
     encomendas_ordenadas = queryset.select_related('cliente').order_by('cliente__nome', 'data_chegada')

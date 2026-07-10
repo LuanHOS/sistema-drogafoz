@@ -564,7 +564,7 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     form = ClienteAdminForm # Aplica o formulário criado acima
     actions = None
     list_display = ('id', 'get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
-    search_fields = ('=id', 'nome', 'cpf', 'rg', 'observacao')
+    search_fields = ('=id', 'nome', 'cpf', 'rg', 'observacao', 'telefone', 'email')
     list_per_page = 25
     list_max_show_all = 10000
     readonly_fields = ('id',)

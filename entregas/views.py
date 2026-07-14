@@ -321,7 +321,7 @@ def consulta_publica(request):
                     item.valor_final_display = valor_final
                     
                     # Flag para destacar SOMENTE se ultrapassar 10 dias
-                    item.is_atrasado = (dias_estoque > 10) 
+                    item.is_atrasado = (dias_estoque > 19) 
                     
                     resultados.append(item)
                     total_geral += valor_final

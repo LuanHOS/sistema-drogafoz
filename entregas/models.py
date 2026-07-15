@@ -36,7 +36,8 @@ class Cliente(models.Model):
     rg = models.CharField(max_length=20, blank=True, null=True, validators=[apenas_numeros])
     
     genero = models.CharField(max_length=20, choices=[('M', 'Masculino'), ('F', 'Feminino'), ('O', 'Outro')], blank=True, null=True)
-    telefone = models.CharField(max_length=20, blank=True, null=True)
+    telefone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Telefone 1")
+    telefone2 = models.CharField(max_length=20, blank=True, null=True, verbose_name="Telefone 2")
     email = models.EmailField(blank=True, null=True)
     data_cadastro = models.DateTimeField(auto_now_add=True)
 

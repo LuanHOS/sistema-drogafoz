@@ -295,6 +295,7 @@ def marcar_entregue(modeladmin, request, queryset):
             'cpf': c.cpf or '',
             'rg': c.rg or '',
             'telefone': c.telefone or '',
+            'telefone2': c.telefone2 or '',
             'email': c.email or ''
         } for c in Cliente.objects.all()
     }
@@ -563,12 +564,12 @@ class ClienteAdminForm(forms.ModelForm):
 class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     form = ClienteAdminForm # Aplica o formulário criado acima
     actions = None
-    list_display = ('id', 'get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'email')
-    search_fields = ('=id', 'nome', 'cpf', 'rg', 'observacao', 'telefone', 'email')
+    list_display = ('id', 'get_nome_status', 'cpf', 'rg', 'genero', 'telefone', 'telefone2', 'email')
+    search_fields = ('=id', 'nome', 'cpf', 'rg', 'observacao', 'telefone', 'telefone2', 'email')
     list_per_page = 25
     list_max_show_all = 10000
     readonly_fields = ('id',)
-    fields = ('id', 'nome', 'observacao', 'cpf', 'rg', 'genero', 'telefone', 'email')
+    fields = ('id', 'nome', 'observacao', 'cpf', 'rg', 'genero', 'telefone', 'telefone2', 'email')
 
     def get_ordering(self, request):
         if request.resolver_match and request.resolver_match.url_name == 'autocomplete':
@@ -579,7 +580,7 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     def get_nome_status(self, obj):
         nome_exibicao = f"{obj.nome} ({obj.observacao})" if obj.observacao else obj.nome
         tem_documento = obj.cpf or obj.rg
-        tem_contato = obj.telefone or obj.email
+        tem_contato = obj.telefone or obj.telefone2 or obj.email
         if not tem_documento or not tem_contato:
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', nome_exibicao)
         return nome_exibicao
@@ -743,7 +744,7 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         cliente = obj.cliente
         nome_exibicao = f"{cliente.nome} ({cliente.observacao})" if cliente.observacao else cliente.nome
         tem_documento = cliente.cpf or cliente.rg
-        tem_contato = cliente.telefone or cliente.email
+        tem_contato = cliente.telefone or cliente.telefone2 or cliente.email
         if not tem_documento or not tem_contato:
             return format_html('<span style="color: #C51625; font-weight: bold;">{}</span>', nome_exibicao)
         return self._get_colored_text(obj, nome_exibicao)

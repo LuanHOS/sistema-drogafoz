@@ -428,19 +428,25 @@
                     <div class="absolute -right-10 -top-10 text-red-50 opacity-50 pointer-events-none">
                         <i class="fa-solid fa-hand-holding-dollar text-[150px]"></i>
                     </div>
-                    <div class="relative z-10">
+                    <div class="relative z-10 flex flex-col h-full">
                         <h3 class="font-display font-bold text-xl sm:text-2xl text-azul mb-4 flex items-center gap-3">
                             <span class="bg-red-100 text-vermelho w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-hand-holding-dollar text-xl"></i></span>
                             Taxa de Armazenamento
                         </h3>
                         <p class="text-gray-500 mb-6 text-sm sm:text-base">Cobramos uma taxa pelo recebimento e segurança da sua encomenda.</p>
-                        <ul class="lista-check space-y-4 text-gray-600 text-sm sm:text-base">
+                        <ul class="lista-check space-y-4 text-gray-600 text-sm sm:text-base flex-grow">
                             <li><strong class="text-gray-800">Valor base a partir de R$ 10,00</strong> por encomenda (pode variar conforme tamanho e peso).</li>
                             <li>A taxa base é válida por um ciclo de 10 dias.</li>
                             <li>A cada 10 dias adicionais, é cobrado novamente o valor base.</li>
                             <li>O pagamento é efetuado presencialmente na hora da retirada.</li>
                             <li>Encomendas grandes (móveis, pneus) exigem aviso prévio para reserva de espaço.</li>
                         </ul>
+                        
+                        <div class="mt-6 pt-4 border-t border-gray-100">
+                            <a href="#faq-cobranca" onclick="document.getElementById('faq-cobranca').open = true;" class="inline-flex items-center justify-center gap-2 bg-white text-azul hover:bg-azul hover:text-white border border-azul font-semibold py-2.5 px-5 rounded-lg transition-all text-sm shadow-sm w-full sm:w-auto text-center">
+                                <i class="fa-solid fa-plus"></i> Saiba Mais
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -448,13 +454,13 @@
                     <div class="absolute -right-10 -top-10 text-blue-50 opacity-50 pointer-events-none">
                         <i class="fa-solid fa-clipboard-list text-[150px]"></i>
                     </div>
-                    <div class="relative z-10">
+                    <div class="relative z-10 flex flex-col h-full">
                         <h3 class="font-display font-bold text-xl sm:text-2xl text-azul mb-4 flex items-center gap-3">
                             <span class="bg-blue-100 text-azul w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-clipboard-list text-xl"></i></span>
                             Regras de Retirada
                         </h3>
                         <p class="text-gray-500 mb-6 text-sm sm:text-base">Mantenha a segurança da sua encomenda seguindo nossas diretrizes.</p>
-                        <ul class="lista-check space-y-4 text-gray-600 text-sm sm:text-base">
+                        <ul class="lista-check space-y-4 text-gray-600 text-sm sm:text-base flex-grow">
                             <li>Apresentação obrigatória de um <strong class="text-gray-800">documento de identificação</strong> (documento físico ou foto no celular).</li>
                             <li>Paciência no Balcão: Os atendimentos de saúde da farmácia são prioritários.</li>
                             <li>Prazo limite: Encomendas esquecidas por <strong class="text-vermelho">mais de 120 dias serão descartadas</strong>.</li>
@@ -720,7 +726,7 @@
                     </div>
                 </details>
 
-                <details class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                <details id="faq-cobranca" class="group bg-white rounded-2xl border border-gray-200 shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden scroll-mt-24">
                     <summary class="flex justify-between items-center font-display font-bold text-azul cursor-pointer p-5 sm:p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg pr-4 leading-snug">Como funciona a cobrança pelos dias guardados?</span>
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-vermelho">
@@ -728,8 +734,43 @@
                         </span>
                     </summary>
                     <div class="p-5 sm:p-6 pt-2 text-gray-600 bg-white border-t border-gray-100 space-y-3 text-sm sm:text-base">
-                        <p>A taxa de armazenamento é cobrada por encomenda e por <strong class="text-azul">ciclos exatos de 10 dias</strong>. O valor base começa a partir de R$ 10,00 (podendo variar de acordo com o tamanho e o peso da encomenda). Funciona da seguinte forma:</p>
-                        <ul class="lista-check space-y-2 mb-4">
+                        <p>A taxa de armazenamento é cobrada por encomenda e por <strong class="text-azul">ciclos exatos de 10 dias</strong>. O valor base é definido de acordo com o volume e tamanho do pacote:</p>
+                        
+                        <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4 sm:p-5 my-4">
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0 text-azul mt-0.5">
+                                        <i class="fa-solid fa-cube text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Objetos menores que uma caixa de sapato</p>
+                                        <p class="text-green-700 font-bold flex items-center gap-1.5 mt-0.5"><i class="fa-solid fa-money-bill-wave"></i> R$ 10,00</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0 text-azul mt-0.5">
+                                        <i class="fa-solid fa-box text-base"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Objetos maiores que uma caixa de sapato</p>
+                                        <p class="text-green-700 font-bold flex items-center gap-1.5 mt-0.5"><i class="fa-solid fa-money-bill-wave"></i> De R$ 20,00 até R$ 50,00 <span class="text-xs text-gray-500 font-normal ml-1">(dependendo do tamanho e peso)</span></p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0 text-azul mt-0.5">
+                                        <i class="fa-solid fa-boxes-stacked text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Objetos muito grandes <span class="text-xs text-gray-500 font-normal">(ex: Móveis, Pneus, Espelhos grandes, etc.)</span></p>
+                                        <p class="text-green-700 font-bold flex items-center gap-1.5 mt-0.5"><i class="fa-solid fa-money-bill-wave"></i> De R$ 70,00 até R$ 100,00 <span class="text-xs text-gray-500 font-normal ml-1">(dependendo do tamanho e peso)</span></p>
+                                        <p class="text-xs text-vermelho font-semibold mt-1"><i class="fa-solid fa-tag"></i> Desconto concedido caso a retirada ocorra no mesmo dia ou no dia seguinte à chegada.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <p class="mt-4">A contagem dos ciclos de dias funciona da seguinte forma:</p>
+                        <ul class="lista-check space-y-2 mb-4 mt-2">
                             <li>Se você retirar a encomenda <strong>entre o dia 1 e o dia 19</strong> (ou seja, não completou 20 dias): Você paga apenas <strong class="text-azul">1 taxa base</strong>.</li>
                             <li>Se você retirar no <strong>dia 20</strong> (início do segundo ciclo exato): A taxa é cobrada <strong class="text-azul">2 vezes</strong>.</li>
                             <li>Se você retirar no <strong>dia 30</strong> (início do terceiro ciclo): A taxa é cobrada <strong class="text-azul">3 vezes</strong>, e assim sucessivamente.</li>

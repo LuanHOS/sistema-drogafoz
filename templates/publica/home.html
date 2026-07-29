@@ -295,8 +295,8 @@
                     <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-vermelho transition-all duration-300">
                         <i class="fa-brands fa-whatsapp text-4xl text-vermelho group-hover:text-white transition-colors"></i>
                     </div>
-                    <h3 class="font-display font-bold text-lg lg:text-xl text-azul mb-3">1. Faça seu Cadastro pelo WhatsApp</h3>
-                    <p class="text-gray-500 text-sm flex-grow mb-6">Primeiramente, chame a nossa equipe no WhatsApp para que eles criem seu cadastro.</p>
+                    <h3 class="font-display font-bold text-lg lg:text-xl text-azul mb-3">1. Faça seu Cadastro pelo Site</h3>
+                    <p class="text-gray-500 text-sm flex-grow mb-6">Primeiramente, preencha seus dados em nosso formulário online para gerar o cadastro via WhatsApp.</p>
                     <a href="#" onclick="abrirModalCadastro(event)" class="btn-pulse-soft w-full bg-vermelho hover:bg-vermelho-hover text-white py-3 rounded-lg font-semibold text-sm transition-colors shadow-sm inline-block">Criar Cadastro</a>
                 </div>
 
@@ -345,7 +345,7 @@
                                 O cadastro inicial (Para sua segurança)
                             </h4>
                             <div class="pl-0 sm:pl-11 space-y-3 text-gray-600 text-sm sm:text-base leading-relaxed">
-                                <p>O primeiro passo de todos é nos chamar no WhatsApp. Nossa equipe vai pedir o seu Nome Completo, um Documento (CPF, RG ou Documento Estrangeiro) e Número de Telefone.</p> 
+                                <p>O primeiro passo de todos é preencher o nosso formulário de cadastro diretamente pelo site (clicando no botão "Criar Cadastro"). O sistema formatará seus dados e abrirá o nosso WhatsApp com a mensagem pronta para envio à nossa equipe.</p> 
                                 <p><strong class="text-azul font-semibold">Por que isso é necessário?</strong> Porque precisamos garantir que a encomenda que chegará na Farmácia DrogaFoz é realmente sua. Com o cadastro feito, o seu nome já existirá no nosso sistema de controle e estaremos prontos para receber a sua encomenda sem nenhum problema.</p>
                                 <p><strong class="text-azul font-semibold">Sou estrangeiro e não tenho documento brasileiro, como faço?</strong> Não tem problema! Você pode se cadastrar informando o seu documento estrangeiro oficial.</p>
                                 <a href="#" onclick="abrirModalCadastro(event)" class="btn-pulse-soft inline-block mt-3 bg-vermelho hover:bg-vermelho-hover text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-all transform hover:-translate-y-0.5 w-full sm:w-auto text-center">Criar Cadastro</a>
@@ -677,8 +677,8 @@
                         </span>
                     </summary>
                     <div class="p-5 sm:p-6 pt-2 text-gray-600 bg-white border-t border-gray-100 space-y-3 text-sm sm:text-base">
-                        <p><strong class="text-vermelho">Não é possível fazer o cadastro sozinho pelo site.</strong> A única maneira de se cadastrar é entrando em contato com a nossa equipe pelo <strong class="text-green-600"><i class="fa-brands fa-whatsapp"></i> WhatsApp</strong>.</p>
-                        <p>Você precisará enviar os seus dados básicos (Nome Completo, um Documento e Telefone) para os nossos funcionários. Eles criarão o seu cadastro diretamente no nosso <strong class="text-azul">sistema interno de controle</strong>. Só depois dessa confirmação da equipe é que você estará pronto para enviar as suas encomendas para o nosso endereço!</p>
+                        <p>Basta clicar no botão <strong class="text-azul">"Criar Cadastro"</strong> em nosso site para abrir o formulário interativo de cadastro.</p>
+                        <p>Preencha os seus dados diretamente no formulário. Ao clicar em enviar, o sistema organizará suas informações e abrirá o nosso <strong class="text-green-600"><i class="fa-brands fa-whatsapp"></i> WhatsApp oficial</strong> com a mensagem pronta para você enviar à nossa equipe e finalizar o registro no sistema interno!</p>
                     </div>
                 </details>
 
@@ -968,11 +968,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="cad_nome" class="block text-sm font-semibold text-gray-700 mb-1">Nome</label>
-                            <input type="text" id="cad_nome" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
+                            <input type="text" id="cad_nome" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
                         </div>
                         <div>
                             <label for="cad_sobrenome" class="block text-sm font-semibold text-gray-700 mb-1">Sobrenome</label>
-                            <input type="text" id="cad_sobrenome" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
+                            <input type="text" id="cad_sobrenome" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
                         </div>
                     </div>
                     
@@ -982,15 +982,15 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label for="cad_cpf" class="block text-xs font-semibold text-gray-700 mb-1">CPF</label>
-                                <input type="text" id="cad_cpf" placeholder="000.000.000-00" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
+                                <input type="text" id="cad_cpf" maxlength="14" placeholder="000.000.000-00" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
                             </div>
                             <div>
                                 <label for="cad_rg" class="block text-xs font-semibold text-gray-700 mb-1">RG</label>
-                                <input type="text" id="cad_rg" placeholder="Apenas números" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
+                                <input type="text" id="cad_rg" maxlength="50" placeholder="Apenas números" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
                             </div>
                             <div>
                                 <label for="cad_estrangeiro" class="block text-xs font-semibold text-gray-700 mb-1">Doc. Estrangeiro <small class="text-gray-500 font-normal">(Se tiver)</small></label>
-                                <input type="text" id="cad_estrangeiro" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
+                                <input type="text" id="cad_estrangeiro" maxlength="50" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
                             </div>
                         </div>
                     </div>
@@ -1013,16 +1013,16 @@
                                 <label for="cad_tel1" class="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
                                     Telefone 1 <i class="fa-brands fa-whatsapp text-green-500 text-sm"></i> <span class="text-[10px] font-normal text-gray-500">(Com DDI e DDD)</span>
                                 </label>
-                                <input type="text" id="cad_tel1" placeholder="Brasileiro ou Estrangeiro" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
+                                <input type="text" id="cad_tel1" maxlength="50" placeholder="Brasileiro ou Estrangeiro" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
                             </div>
                             <div>
                                 <label for="cad_tel2" class="block text-xs font-semibold text-gray-700 mb-1">Telefone 2</label>
-                                <input type="text" id="cad_tel2" placeholder="Brasileiro ou Estrangeiro" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
+                                <input type="text" id="cad_tel2" maxlength="50" placeholder="Brasileiro ou Estrangeiro" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
                             </div>
                         </div>
                         <div>
                             <label for="cad_email" class="block text-xs font-semibold text-gray-700 mb-1">E-mail</label>
-                            <input type="email" id="cad_email" placeholder="seu@email.com" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
+                            <input type="email" id="cad_email" maxlength="50" placeholder="seu@email.com" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
                         </div>
                     </div>
 
@@ -1167,6 +1167,29 @@
             e.target.value = e.target.value.replace(/\D/g, "");
         });
 
+        // Validação de CPF (Algoritmo padrão)
+        function validarCPF(cpf) {
+            cpf = cpf.replace(/\D/g, '');
+            if (cpf.length !== 11) return false;
+            if (/^([0-9])\1+$/.test(cpf)) return false;
+            let soma = 0;
+            let resto;
+            for (let i = 1; i <= 9; i++) {
+                soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+            }
+            resto = (soma * 10) % 11;
+            if ((resto === 10) || (resto === 11)) resto = 0;
+            if (resto !== parseInt(cpf.substring(9, 10))) return false;
+            soma = 0;
+            for (let i = 1; i <= 10; i++) {
+                soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+            }
+            resto = (soma * 10) % 11;
+            if ((resto === 10) || (resto === 11)) resto = 0;
+            if (resto !== parseInt(cpf.substring(10, 11))) return false;
+            return true;
+        }
+
         // Tratamento de Erro Visual Inline
         function showInputError(inputId, msgErro) {
             const input = document.getElementById(inputId);
@@ -1224,6 +1247,14 @@
 
             if (!nome) { showInputError('cad_nome', 'Obrigatório'); hasError = true; }
             if (!sobrenome) { showInputError('cad_sobrenome', 'Obrigatório'); hasError = true; }
+
+            if (cpf) {
+                const cpfLimpo = cpf.replace(/\D/g, '');
+                if (cpfLimpo.length !== 11 || !validarCPF(cpf)) {
+                    showInputError('cad_cpf', 'CPF inválido');
+                    hasError = true;
+                }
+            }
 
             if (!cpf && !rg && !estrangeiro) {
                 showInputError('cad_cpf', 'Faltando');

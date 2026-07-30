@@ -119,7 +119,7 @@
     </div>
 </div>
 
-<!-- MODAL DE ANOTAÇÕES DE CLIENTES (ESTILO POST-IT) -->
+<!-- MODAL DE ANOTAÇÕES DE CLIENTES (ESTILO POST-IT COM AJAX SELECT2) -->
 <div id="modal-anotacoes" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
     <div class="modal-box-anotacoes" style="background: #fff9c4; width: 600px; max-width: 90%; padding: 25px; border-radius: 4px; border: 1px solid #f0e68c; position: relative; box-shadow: 2px 2px 15px rgba(0,0,0,0.2); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
         <button id="btn-close-anotacoes" style="position: absolute; top: 12px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #856404; line-height: 1; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
@@ -160,10 +160,7 @@
                 
                 <div class="custom-select2-container">
                     <select name="cliente_anotacao" id="select-cliente-anotacao" required style="width: 100%;">
-                        <option value="">Selecione o Cliente...</option>
-                        {% for cli in stats.clientes_lista %}
-                            <option value="{{ cli.id }}">{{ cli.nome }}</option>
-                        {% endfor %}
+                        <!-- As options serão puxadas pelo AJAX nativo do Django -->
                     </select>
                 </div>
 
@@ -228,7 +225,7 @@
         const btnCloseAnotacoes = document.getElementById('btn-close-anotacoes');
         const inputDataAnotacao = document.getElementById('index-anotacao-data');
 
-        if(inputDataAnotacao) {
+        if(inputDataAnotacao && !inputDataAnotacao.value) {
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             inputDataAnotacao.value = now.toISOString().slice(0,16);
@@ -269,36 +266,42 @@
             sessionStorage.removeItem('reopen_anotacoes_modal');
         }
 
-        // --- INICIALIZAÇÃO SELECT2 COM BUSCA INTELIGENTE ---
+        // --- INICIALIZAÇÃO SELECT2 COM BUSCA AJAX (IGUAL NOVA ENCOMENDA) ---
         if (typeof django !== 'undefined' && django.jQuery && django.jQuery.fn.select2) {
             django.jQuery('#select-cliente-anotacao').select2({
-                placeholder: "Pesquisar Cliente...",
+                placeholder: "🔎 Digite para pesquisar o cliente...",
                 allowClear: true,
                 width: '100%',
-                matcher: function(params, data) {
-                    if (django.jQuery.trim(params.term) === '') {
-                        return data;
+                dropdownParent: django.jQuery('#modal-anotacoes'),
+                ajax: {
+                    url: "{% url 'admin:autocomplete' %}?app_label=entregas&model_name=encomenda&field_name=cliente",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            term: params.term,
+                            page: params.page || 1
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.results,
+                            pagination: data.pagination
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0,
+                language: {
+                    inputTooShort: function() {
+                        return "Digite para buscar...";
+                    },
+                    noResults: function() {
+                        return "Nenhum cliente encontrado";
+                    },
+                    searching: function() {
+                        return "Buscando...";
                     }
-                    if (typeof data.text === 'undefined') {
-                        return null;
-                    }
-                    
-                    // Permite pesquisa independente da ordem (ex: "Joao Silva" ou "Silva Joao")
-                    const termos = params.term.toLowerCase().split(' ').filter(t => t.trim() !== '');
-                    const texto = data.text.toLowerCase();
-                    
-                    let correspondeTodos = true;
-                    for (let i = 0; i < termos.length; i++) {
-                        if (texto.indexOf(termos[i]) === -1) {
-                            correspondeTodos = false;
-                            break;
-                        }
-                    }
-                    
-                    if (correspondeTodos) {
-                        return data;
-                    }
-                    return null;
                 }
             });
         }
@@ -306,23 +309,27 @@
 </script>
 
 <style>
-    /* Correção visual do Select2 para não truncar (cortar) o nome do cliente */
+    /* Correção visual do Select2 para não truncar (cortar) o nome do cliente na caixa */
     .custom-select2-container .select2-container .select2-selection--single {
-        height: 42px !important;
+        height: auto !important;
+        min-height: 42px !important;
         border: 1px solid #ccc !important;
         border-radius: 4px !important;
         display: flex !important;
         align-items: center !important;
         background-color: #fff !important;
+        padding: 4px 0 !important;
     }
     .custom-select2-container .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: normal !important;
+        line-height: 1.4 !important;
         font-size: 14px !important;
         padding-left: 10px !important;
         color: #333 !important;
+        white-space: normal !important; /* IMPORTANTE: Permite quebra de linha do nome */
     }
     .custom-select2-container .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 40px !important;
+        height: 100% !important;
+        top: 0 !important;
     }
 
     .dashboard-wrapper { display: flex; gap: 20px; align-items: flex-start; width: 100%; }

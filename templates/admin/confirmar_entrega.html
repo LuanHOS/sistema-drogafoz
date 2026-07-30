@@ -16,7 +16,7 @@
             background: #fff;
             border: 1px dashed #123C65;
             border-radius: 6px;
-            display: none; /* Escondido por padrão */
+            display: none;
         }
         .resumo-retirante p { margin: 5px 0; font-size: 13px; color: #333; }
         .resumo-retirante strong { color: #123C65; }
@@ -68,7 +68,6 @@
         .total-value { font-size: 18px; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #000; }
         .receipt-note { font-size: 11px; font-style: italic; margin-top: 5px; margin-bottom: 40px; text-align: justify; }
 
-        /* Mudar a cor da setinha do container minimizável */
         details summary { outline: none; }
         details summary::-webkit-details-marker { display: none; }
     </style>
@@ -824,6 +823,7 @@
         const form = btnElement.closest('form');
         const formData = new FormData(form);
         formData.append('acao', 'del');
+        formData.append('anotacao_id', id);
         
         fetch("{% url 'admin:entregas_encomenda_api_anotacoes' %}", {
             method: 'POST',
@@ -837,6 +837,8 @@
             } else {
                 alert("Erro ao tentar deletar a anotação.");
             }
+        }).catch(err => {
+            alert("Erro de conexão ao tentar deletar.");
         });
     }
 

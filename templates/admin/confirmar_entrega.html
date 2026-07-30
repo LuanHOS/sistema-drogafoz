@@ -300,26 +300,26 @@
         
         <div id="lista-anotacoes" style="max-height: 200px; overflow-y: auto; padding-right: 5px;">
             {% for a in anotacoes_destaque %}
-            <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px dashed #e6da7a;">
-                <div style="font-size: 12px; line-height: 1.4;">
-                    <strong style="color: #C51625;">{{ a.cliente.nome }}</strong> - <span style="color: #333;">{{ a.anotacao }}</span>
-                    <br><span style="color: #888; font-size: 11px;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
+            <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px; background-color: #f8d7da; border-left: 5px solid #C51625; border-radius: 4px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 13px; line-height: 1.4;">
+                    <strong style="color: #C51625; font-size: 14px; text-transform: uppercase;">{{ a.cliente.nome }}</strong> - <span style="color: #721c24; font-weight: bold; font-size: 13px;">{{ a.anotacao }}</span>
+                    <br><span style="color: #a71d2a; font-size: 11px; font-weight: bold;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
                 </div>
                 <form action="{% url 'admin:entregas_encomenda_api_anotacoes' %}" method="post" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}', this)" style="background: none; border: none; color: #C51625; cursor: pointer; font-size: 13px; padding: 2px 5px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Excluir Lembrete"><i class="fas fa-times"></i></button>
+                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}', this)" style="background: none; border: none; color: #C51625; cursor: pointer; font-size: 15px; padding: 2px 5px; opacity: 0.8; transition: 0.2s;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.1)'" onmouseout="this.style.opacity='0.8'; this.style.transform='none'" title="Excluir Lembrete"><i class="fas fa-trash-alt"></i></button>
                 </form>
             </div>
             {% endfor %}
             {% for a in anotacoes_outros %}
-            <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px dashed #e6da7a;">
+            <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 10px; background-color: rgba(255,255,255,0.6); border: 1px dashed #e6da7a; border-radius: 4px; margin-bottom: 6px;">
                 <div style="font-size: 12px; line-height: 1.4;">
                     <strong style="color: #555;">{{ a.cliente.nome }}</strong> - <span style="color: #555;">{{ a.anotacao }}</span>
                     <br><span style="color: #999; font-size: 11px;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
                 </div>
                 <form action="{% url 'admin:entregas_encomenda_api_anotacoes' %}" method="post" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}', this)" style="background: none; border: none; color: #888; cursor: pointer; font-size: 13px; padding: 2px 5px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'; this.style.color='#C51625';" onmouseout="this.style.opacity='0.7'; this.style.color='#888';" title="Excluir Lembrete"><i class="fas fa-times"></i></button>
+                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}', this)" style="background: none; border: none; color: #888; cursor: pointer; font-size: 14px; padding: 2px 5px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'; this.style.color='#C51625';" onmouseout="this.style.opacity='0.7'; this.style.color='#888';" title="Excluir Lembrete"><i class="fas fa-trash-alt"></i></button>
                 </form>
             </div>
             {% endfor %}

@@ -63,6 +63,10 @@
             <i class="fas fa-key" style="color: #C51625; font-size: 18px;"></i> Palavras-Chave de Liberação
         </button>
 
+        <button id="btn-open-anotacoes" style="width: 100%; padding: 15px; margin-top: 15px; background: #fff; color: #123C65; border: 3px solid #123C65; border-radius: 8px; font-size: 15px; font-weight: 900; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <i class="fas fa-sticky-note" style="color: #C51625; font-size: 18px;"></i> Anotações de Clientes
+        </button>
+
     </div>
 
 </div>
@@ -112,32 +116,90 @@
     </div>
 </div>
 
+<!-- MODAL DE ANOTAÇÕES DE CLIENTES -->
+<div id="modal-anotacoes" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="modal-box-keywords" style="background: #fff; width: 550px; max-width: 90%; padding: 25px; border-radius: 8px; border: 4px solid #123C65; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+        <button id="btn-close-anotacoes" style="position: absolute; top: 12px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #aaa; line-height: 1;">&times;</button>
+        
+        <h2 style="margin: 0 0 20px 0; color: #123C65; text-align: center; font-weight: 800; text-transform: uppercase; font-size: 20px;">
+            <i class="fas fa-sticky-note" style="margin-right: 8px; color: #C51625;"></i> Anotações de Clientes
+        </h2>
+        
+        <div style="max-height: 250px; overflow-y: auto; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <tbody>
+                    {% for an in stats.anotacoes %}
+                    <tr>
+                        <td style="padding: 10px 5px; font-size: 13px; border-bottom: 1px dashed #eee; width: 35%; color: #333; word-break: break-word;">
+                            <strong>{{ an.cliente.nome }}</strong>
+                            <br><small style="color: #888;">{{ an.data_hora|date:"d/m/Y H:i" }}</small>
+                        </td>
+                        <td style="padding: 10px 5px; font-size: 13px; border-bottom: 1px dashed #eee; width: 55%; color: #C51625; font-weight: bold; word-break: break-word;">{{ an.anotacao }}</td>
+                        <td style="padding: 10px 5px; font-size: 13px; border-bottom: 1px dashed #eee; width: 10%; text-align: right;">
+                            <form action="{% url 'gerenciar_anotacoes' %}" method="post" class="form-anotacoes" style="margin: 0; display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="del_anotacao" value="1">
+                                <input type="hidden" name="anotacao_id" value="{{ an.id }}">
+                                <button type="submit" style="background: #C51625; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;" title="Remover">-</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align: center; padding: 20px; color: #888;">Nenhuma anotação cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
+            <form action="{% url 'gerenciar_anotacoes' %}" method="post" class="form-anotacoes" style="margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                {% csrf_token %}
+                <input type="hidden" name="add_anotacao" value="1">
+                
+                <select name="cliente_anotacao" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <option value="">Selecione o Cliente...</option>
+                    {% for cli in stats.clientes_lista %}
+                        <option value="{{ cli.id }}">{{ cli.nome }}</option>
+                    {% endfor %}
+                </select>
+
+                <input type="text" name="texto_anotacao" placeholder="Anotação..." required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="datetime-local" id="index-anotacao-data" name="data_hora_anotacao" required style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <button type="submit" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">+</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const modal = document.getElementById('modal-palavras');
-        const btnOpen = document.getElementById('btn-open-keywords');
-        const btnClose = document.getElementById('btn-close-keywords');
+        const modalPalavras = document.getElementById('modal-palavras');
+        const btnOpenPalavras = document.getElementById('btn-open-keywords');
+        const btnClosePalavras = document.getElementById('btn-close-keywords');
 
-        if(btnOpen) {
-            btnOpen.addEventListener('click', function(e) {
+        if(btnOpenPalavras) {
+            btnOpenPalavras.addEventListener('click', function(e) {
                 e.preventDefault();
-                modal.style.display = 'flex';
+                modalPalavras.style.display = 'flex';
                 document.body.style.overflow = 'hidden';
-                sessionStorage.setItem('reopen_keywords_modal', 'true');
-                window.location.reload();
             });
         }
-        if(btnClose) {
-            btnClose.addEventListener('click', function(e) {
+        if(btnClosePalavras) {
+            btnClosePalavras.addEventListener('click', function(e) {
                 e.preventDefault();
-                modal.style.display = 'none';
+                modalPalavras.style.display = 'none';
                 document.body.style.overflow = '';
             });
         }
-        if(modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) modal.style.display = 'none';
-                if (e.target === modal) document.body.style.overflow = '';
+        if(modalPalavras) {
+            modalPalavras.addEventListener('click', function(e) {
+                if (e.target === modalPalavras) {
+                    modalPalavras.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
             });
         }
 
@@ -148,9 +210,56 @@
         });
 
         if (sessionStorage.getItem('reopen_keywords_modal') === 'true') {
-            if(modal) modal.style.display = 'flex';
-            if(modal) document.body.style.overflow = 'hidden';
+            if(modalPalavras) modalPalavras.style.display = 'flex';
+            if(modalPalavras) document.body.style.overflow = 'hidden';
             sessionStorage.removeItem('reopen_keywords_modal');
+        }
+
+        // --- LÓGICA DO MODAL DE ANOTAÇÕES ---
+        const modalAnotacoes = document.getElementById('modal-anotacoes');
+        const btnOpenAnotacoes = document.getElementById('btn-open-anotacoes');
+        const btnCloseAnotacoes = document.getElementById('btn-close-anotacoes');
+        const inputDataAnotacao = document.getElementById('index-anotacao-data');
+
+        if(inputDataAnotacao) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            inputDataAnotacao.value = now.toISOString().slice(0,16);
+        }
+
+        if(btnOpenAnotacoes) {
+            btnOpenAnotacoes.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalAnotacoes.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
+        }
+        if(btnCloseAnotacoes) {
+            btnCloseAnotacoes.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalAnotacoes.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+        if(modalAnotacoes) {
+            modalAnotacoes.addEventListener('click', function(e) {
+                if (e.target === modalAnotacoes) {
+                    modalAnotacoes.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        document.querySelectorAll('.form-anotacoes').forEach(form => {
+            form.addEventListener('submit', () => {
+                sessionStorage.setItem('reopen_anotacoes_modal', 'true');
+            });
+        });
+
+        if (sessionStorage.getItem('reopen_anotacoes_modal') === 'true') {
+            if(modalAnotacoes) modalAnotacoes.style.display = 'flex';
+            if(modalAnotacoes) document.body.style.overflow = 'hidden';
+            sessionStorage.removeItem('reopen_anotacoes_modal');
         }
     });
 </script>

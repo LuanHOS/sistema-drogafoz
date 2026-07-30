@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from entregas.views import relatorio_entregas, consulta_publica, home
-from entregas.views import gerenciar_palavras
+from entregas.views import gerenciar_palavras, gerenciar_anotacoes
 
 urlpatterns = [
     # Rota Raiz (Home Page)
@@ -14,6 +14,7 @@ urlpatterns = [
     path('admin/relatorio/', relatorio_entregas, name='relatorio_entregas'),
     
     path('admin/gerenciar-palavras/', gerenciar_palavras, name='gerenciar_palavras'),
+    path('admin/gerenciar-anotacoes/', gerenciar_anotacoes, name='gerenciar_anotacoes'),
     
     path('admin/', admin.site.urls),
 ]

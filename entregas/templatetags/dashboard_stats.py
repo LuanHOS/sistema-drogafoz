@@ -1,7 +1,7 @@
 from django import template
 from django.db.models import Sum
 from django.utils import timezone
-from entregas.models import Encomenda, PalavraChave
+from entregas.models import Encomenda, PalavraChave, AnotacaoCliente, Cliente
 
 register = template.Library()
 
@@ -21,9 +21,15 @@ def get_stats():
     
     # Busca as palavras-chave para o Post-it
     palavras = PalavraChave.objects.all().order_by('-id')
+
+    # Busca as anotações e os clientes para o modal de anotações da tela inicial
+    anotacoes = AnotacaoCliente.objects.select_related('cliente').order_by('-data_hora')
+    clientes_lista = Cliente.objects.all().order_by('nome')
     
     return {
         'lucro': lucro,
         'estoque': estoque,
         'palavras': palavras,
+        'anotacoes': anotacoes,
+        'clientes_lista': clientes_lista,
     }

@@ -147,7 +147,7 @@ def marcar_entregue(modeladmin, request, queryset):
                 encomendas_lock = Encomenda.objects.select_for_update().filter(pk__in=selected, descartado=False)
                 
                 # NOVA TRAVA: Verificação contra exclusão de pacotes durante a operação.
-                # Se len(encomendas_lock) não for igual a len(selected), significa que alguém 
+                # Se len(encomendas_lock) != len(selected), significa que alguém 
                 # apagou ou "descartou" uma encomenda via pop-up enquanto essa tela estava aberta.
                 if len(encomendas_lock) != len(selected):
                     raise ValueError("Algumas encomendas selecionadas foram descartadas ou apagadas do sistema. Operação abortada por segurança.")
@@ -621,7 +621,6 @@ class ClienteAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
         return super().has_delete_permission(request, obj)
 
     def save_model(self, request, obj, form, change):
-        # REMOVIDO try/except perigoso. A validação nativa do Django é mais segura.
         super().save_model(request, obj, form, change)
 
 @admin.register(Encomenda)

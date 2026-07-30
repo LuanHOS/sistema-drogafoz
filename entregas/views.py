@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from django.conf import settings
-from .models import Encomenda, Cliente
+from .models import Encomenda, Cliente, AnotacaoCliente
 from .models import PalavraChave
 from django.shortcuts import redirect
 import json
@@ -353,4 +353,31 @@ def gerenciar_palavras(request):
             palavra_id = request.POST.get('palavra_id')
             if palavra_id:
                 PalavraChave.objects.filter(id=palavra_id).delete()
+    return redirect('admin:index')
+
+@staff_member_required
+def gerenciar_anotacoes(request):
+    if request.method == 'POST':
+        if 'add_anotacao' in request.POST:
+            cliente_id = request.POST.get('cliente_anotacao')
+            texto_input = request.POST.get('texto_anotacao')
+            data_hora_str = request.POST.get('data_hora_anotacao')
+            
+            if cliente_id and texto_input:
+                try:
+                    cliente_obj = Cliente.objects.get(id=cliente_id)
+                    if data_hora_str:
+                        try:
+                            dt = make_aware(datetime.strptime(data_hora_str, '%Y-%m-%dT%H:%M'))
+                        except ValueError:
+                            dt = timezone.now()
+                    else:
+                        dt = timezone.now()
+                    AnotacaoCliente.objects.create(cliente=cliente_obj, anotacao=texto_input, data_hora=dt)
+                except Cliente.DoesNotExist:
+                    pass
+        elif 'del_anotacao' in request.POST:
+            anotacao_id = request.POST.get('anotacao_id')
+            if anotacao_id:
+                AnotacaoCliente.objects.filter(id=anotacao_id).delete()
     return redirect('admin:index')

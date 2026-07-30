@@ -284,6 +284,53 @@
             <span id="display-total-geral">R$ 0,00</span>
         </div>
 
+        <!-- BLOCO DE NOTAS DE CLIENTES -->
+        <div style="background: #fff; border: 2px solid #C51625; padding: 20px; border-radius: 8px; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <h3 style="color: #C51625; margin-top: 0; margin-bottom: 15px;"><i class="fas fa-sticky-note"></i> Anotações de Clientes</h3>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex-grow: 1; min-width: 200px;">
+                    <label style="font-weight: bold; font-size: 13px; color: #123C65; display: block; margin-bottom: 5px;">Cliente</label>
+                    <select id="anotacao-cliente" style="width: 100%;">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <div style="flex-grow: 2; min-width: 250px;">
+                    <label style="font-weight: bold; font-size: 13px; color: #123C65; display: block; margin-bottom: 5px;">Anotação</label>
+                    <input type="text" id="anotacao-texto" placeholder="Ex: Fulano pagou 20 reais adiantado" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;">
+                </div>
+                <div style="min-width: 180px;">
+                    <label style="font-weight: bold; font-size: 13px; color: #123C65; display: block; margin-bottom: 5px;">Data/Hora</label>
+                    <input type="datetime-local" id="anotacao-data" style="width: 100%; padding: 7px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <button type="button" onclick="salvarAnotacao()" style="background: #123C65; color: white; border: none; padding: 9px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s;"><i class="fas fa-plus"></i> Adicionar</button>
+                </div>
+            </div>
+
+            <div id="lista-anotacoes" style="max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 4px; background: #fafafa;">
+                {% for a in anotacoes_destaque %}
+                <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: center; background: #ffeeba; border-left: 5px solid #C51625; padding: 10px; margin-bottom: 8px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div>
+                        <strong style="color: #C51625; font-size: 15px;">{{ a.cliente.nome }}</strong> <span style="margin: 0 8px;">-</span> <span style="font-size: 14px; color: #333;">{{ a.anotacao }}</span>
+                        <br><small style="color: #666;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}')" style="background: none; border: none; color: #C51625; cursor: pointer; font-size: 16px; padding: 5px;"><i class="fas fa-trash-alt"></i></button>
+                </div>
+                {% endfor %}
+                {% for a in anotacoes_outros %}
+                <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #ddd; border-left: 5px solid #6c757d; padding: 10px; margin-bottom: 8px; border-radius: 4px;">
+                    <div>
+                        <strong style="color: #333; font-size: 14px;">{{ a.cliente.nome }}</strong> <span style="margin: 0 8px;">-</span> <span style="font-size: 14px; color: #555;">{{ a.anotacao }}</span>
+                        <br><small style="color: #888;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}')" style="background: none; border: none; color: #dc3545; cursor: pointer; font-size: 15px; padding: 5px;"><i class="fas fa-trash-alt"></i></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- FIM DO BLOCO DE NOTAS -->
+
         <div class="submit-row">
             <a href="{% url 'admin:entregas_encomenda_changelist' %}" class="btn-cancelar">Cancelar</a>
             <input type="submit" value="Confirmar Entrega" class="btn-confirmar" id="btn-confirmar-entrega" disabled>
@@ -776,6 +823,66 @@
         form.submit();
     }
 
+    // --- FUNÇÕES DO NOVO BLOCO DE ANOTAÇÕES ---
+    function salvarAnotacao() {
+        const clienteId = document.getElementById('anotacao-cliente').value;
+        const texto = document.getElementById('anotacao-texto').value;
+        const dataHora = document.getElementById('anotacao-data').value;
+        
+        if(!clienteId || !texto) {
+            alert("Selecione o cliente e digite a anotação para adicionar.");
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('acao', 'add');
+        formData.append('cliente_id', clienteId);
+        formData.append('anotacao', texto);
+        formData.append('data_hora', dataHora);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch("{% url 'admin:entregas_encomenda_api_anotacoes' %}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'ok') {
+                safeToLeaveConfirm = true;
+                salvarEstadoCheckboxes();
+                salvarEstadoRetirante();
+                location.reload();
+            } else {
+                alert("Ocorreu um erro ao salvar a anotação do cliente.");
+            }
+        }).catch(err => {
+            alert("Erro de conexão ao salvar.");
+        });
+    }
+
+    function deletarAnotacao(id) {
+        if(!confirm("Tem certeza que deseja apagar esta anotação? Esta ação não pode ser desfeita.")) return;
+        
+        const formData = new FormData();
+        formData.append('acao', 'del');
+        formData.append('anotacao_id', id);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch("{% url 'admin:entregas_encomenda_api_anotacoes' %}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'ok') {
+                const div = document.getElementById('anotacao-' + id);
+                if(div) div.remove();
+            } else {
+                alert("Erro ao tentar deletar a anotação.");
+            }
+        });
+    }
+
     // --- CÁLCULOS ---
     function recalcularTudo(clientId) {
         let inputsCliente = document.querySelectorAll(`.valor-cliente-${clientId}`);
@@ -888,6 +995,30 @@
             }
         });
 
+        // --- PREENCHIMENTO DO SELECT DE ANOTAÇÕES E CAMPO DE DATA ---
+        const dateInput = document.getElementById('anotacao-data');
+        if(dateInput) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            dateInput.value = now.toISOString().slice(0,16);
+        }
+        
+        const selectAnotacaoCli = document.getElementById('anotacao-cliente');
+        if (selectAnotacaoCli && typeof clientesData !== 'undefined') {
+            const sortedClients = Object.entries(clientesData).sort((a, b) => a[1].nome.localeCompare(b[1].nome));
+            for (const [id, cli] of sortedClients) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = cli.nome;
+                selectAnotacaoCli.appendChild(opt);
+            }
+            django.jQuery('#anotacao-cliente').select2({
+                placeholder: "Selecione o cliente...",
+                width: '100%',
+                allowClear: true
+            });
+        }
+
         // --- LIBERAR SAÍDA SE FOR CONFIRMAR ENTREGA ---
         const formEntrega = document.getElementById('form-entrega');
         if (formEntrega) {
@@ -976,7 +1107,7 @@
 
 <style>
     /* ==========================================
-        CSS DOS MODAIS (POP-UPS)
+        CSS DOS MODAIS E BOTÕES
        ========================================== */
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -1109,9 +1240,5 @@
         cursor: not-allowed !important;
         opacity: 0.65;
     }
-
-    /* Mudar a cor da setinha do container minimizável */
-    details summary { outline: none; }
-    details summary::-webkit-details-marker { display: none; }
 </style>
 {% endblock %}

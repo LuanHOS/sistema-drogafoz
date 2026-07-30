@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 # --- VALIDADOR DE CPF ---
 def validar_cpf_algoritmo(value):
@@ -195,3 +196,16 @@ class PalavraChave(models.Model):
         ordering = ['-id']
         verbose_name = 'Palavra-Chave'
         verbose_name_plural = 'Palavras-Chaves'
+
+class AnotacaoCliente(models.Model):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, verbose_name="Cliente")
+    anotacao = models.TextField(verbose_name="Anotação")
+    data_hora = models.DateTimeField(default=timezone.now, verbose_name="Data e Hora")
+
+    def __str__(self):
+        return f"{self.cliente.nome} - {self.anotacao}"
+
+    class Meta:
+        ordering = ['-data_hora']
+        verbose_name = 'Anotação de Cliente'
+        verbose_name_plural = 'Anotações de Clientes'

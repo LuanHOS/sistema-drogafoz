@@ -15,7 +15,7 @@ from django.db import connection, IntegrityError, transaction
 from django.core.exceptions import ValidationError
 from django import forms
 from django.contrib.admin.widgets import AutocompleteSelect
-from .models import Cliente, Encomenda, Retirada
+from .models import Cliente, Encomenda, Retirada, AnotacaoCliente
 import re 
 import json
 
@@ -300,6 +300,17 @@ def marcar_entregue(modeladmin, request, queryset):
         } for c in Cliente.objects.all()
     }
 
+    # --- BLOCO DE NOTAS DE CLIENTES ---
+    anotacoes_todas = AnotacaoCliente.objects.select_related('cliente').order_by('-data_hora')
+    anotacoes_destaque = []
+    anotacoes_outros = []
+    
+    for a in anotacoes_todas:
+        if a.cliente_id in clientes_ids:
+            anotacoes_destaque.append(a)
+        else:
+            anotacoes_outros.append(a)
+
     # Mantém o form preenchido caso tenha ocorrido falha no atomic rollback
     retirante_form = RetiranteForm(request.POST if 'post' in request.POST else None)
 
@@ -315,6 +326,9 @@ def marcar_entregue(modeladmin, request, queryset):
         'todas_pendentes': todas_pendentes,
         'retirante_form': retirante_form,
         'clientes_dados_json': json.dumps(clientes_dados),
+        'anotacoes_destaque': anotacoes_destaque,
+        'anotacoes_outros': anotacoes_outros,
+        'clientes_na_tela': clientes_ids,
     }
     return render(request, 'admin/confirmar_entrega.html', context)
 
@@ -689,7 +703,6 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if obj.status == 'ENTREGUE' and not obj.data_entrega:
             obj.data_entrega = timezone.now()
-        # REMOVIDO try/except com "pass" que causava falhas silenciosas no ecrã.
         super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
@@ -767,8 +780,47 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
-        my_urls = [path('exportar-xml/', self.exportar_xml)]
+        my_urls = [
+            path('exportar-xml/', self.exportar_xml),
+            path('api-anotacoes/', self.admin_site.admin_view(self.api_anotacoes), name='entregas_encomenda_api_anotacoes'),
+        ]
         return my_urls + urls
+
+    def api_anotacoes(self, request):
+        from django.http import JsonResponse
+        from django.utils.timezone import make_aware
+        from datetime import datetime
+        
+        if request.method == 'POST':
+            acao = request.POST.get('acao')
+            if acao == 'add':
+                cliente_id = request.POST.get('cliente_id')
+                texto = request.POST.get('anotacao')
+                data_hora_str = request.POST.get('data_hora')
+                
+                if cliente_id and texto:
+                    try:
+                        cliente = Cliente.objects.get(id=cliente_id)
+                        if data_hora_str:
+                            try:
+                                dt = make_aware(datetime.strptime(data_hora_str, '%Y-%m-%dT%H:%M'))
+                            except ValueError:
+                                dt = timezone.now()
+                        else:
+                            dt = timezone.now()
+                            
+                        AnotacaoCliente.objects.create(cliente=cliente, anotacao=texto, data_hora=dt)
+                        return JsonResponse({'status': 'ok'})
+                    except Cliente.DoesNotExist:
+                        return JsonResponse({'status': 'error'}, status=400)
+                        
+            elif acao == 'del':
+                anotacao_id = request.POST.get('anotacao_id')
+                if anotacao_id:
+                    AnotacaoCliente.objects.filter(id=anotacao_id).delete()
+                    return JsonResponse({'status': 'ok'})
+                    
+        return JsonResponse({'status': 'error'}, status=400)
 
     def exportar_xml(self, request):
         queryset = Encomenda.objects.all()

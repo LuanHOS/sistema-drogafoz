@@ -83,247 +83,254 @@
 {% block content %}
 <div style="max-width: 950px; margin: 40px auto;">
 
-<div style="background: #fff; padding: 25px; border-radius: 8px; border-top: 5px solid #28a745; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-    
-    <div style="margin-bottom: 25px;">
-        <h2 style="margin: 0 0 15px 0; color: #333; text-align: center; width: 100%; font-weight: 800;">Confirmar Entrega e Valores</h2>
-    </div>
-    
-    {% if tem_duplicata %}
-        <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffeeba; font-size: 14px;">
-            <strong>⚠ Atenção:</strong> Alguns dos itens selecionados já constam como entregues. Prossiga apenas se for uma correção.
-        </div>
-    {% endif %}
-
-    <form action="" method="post" id="form-entrega">
-        {% csrf_token %}
+    <!-- CAIXA PRINCIPAL DA ENTREGA -->
+    <div style="background: #fff; padding: 25px; border-radius: 8px; border-top: 5px solid #28a745; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
         
-        {% for obj in encomendas %}
-            <input type="hidden" id="hidden_item_{{ obj.pk|unlocalize }}" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}">
-        {% endfor %}
-        <input type="hidden" name="action" value="marcar_entregue">
-        <input type="hidden" name="post" value="yes">
-
-        <div style="background: #f8f9fa; border: 5px solid #123C65; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-            {{ retirante_form.media }}
-            <div style="margin-bottom: 10px;">
-                <label for="id_retirante" style="font-weight: bold; color: #123C65; font-size: 18px; display: block;">
-                    <i class="fas fa-user-check"></i> Quem está retirando essas encomendas no balcão?
-                </label>
-            </div>
-            <div>
-                {{ retirante_form.retirante }}
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button type="button" class="btn-cliente-acao btn-cliente-add" onclick="abrirPopupNovoCliente();">
-                    <i class="fas fa-plus-circle"></i> Novo Cliente/Retirante
-                </button>
-                <button type="button" id="btn-editar-retirante" class="btn-cliente-acao btn-cliente-edit" style="display: none;" onclick="editarRetiranteSelecionado();">
-                    <i class="fas fa-edit"></i> Alterar Dados
-                </button>
-            </div>
-            
-            <div id="resumo-retirante" class="resumo-retirante">
-                <p><strong id="label-nome">Nome:</strong> <span id="resumo-nome">-</span></p>
-                <p><strong id="label-doc">Documento:</strong> <span id="resumo-doc">-</span></p>
-                <p><strong id="label-contato">Contato:</strong> <span id="resumo-contato">-</span></p>
-            </div>
-            
-            <p style="font-size: 12px; color: #666; margin-top: 8px; margin-bottom: 0;">Dica: Verifique se os dados do retirante estão atualizados.</p>
+        <div style="margin-bottom: 25px;">
+            <h2 style="margin: 0 0 15px 0; color: #333; text-align: center; width: 100%; font-weight: 800;">Confirmar Entrega e Valores</h2>
         </div>
+        
+        {% if tem_duplicata %}
+            <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffeeba; font-size: 14px;">
+                <strong>⚠ Atenção:</strong> Alguns dos itens selecionados já constam como entregues. Prossiga apenas se for uma correção.
+            </div>
+        {% endif %}
 
-    <p style="margin-bottom: 20px; color: #666; text-align: center;">Verifique os dias em estoque e ajuste os valores se necessário:</p>
+        <form action="" method="post" id="form-entrega">
+            {% csrf_token %}
+            
+            {% for obj in encomendas %}
+                <input type="hidden" id="hidden_item_{{ obj.pk|unlocalize }}" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}">
+            {% endfor %}
+            <input type="hidden" name="action" value="marcar_entregue">
+            <input type="hidden" name="post" value="yes">
 
-    <div style="display: flex; justify-content: center; margin-bottom: 25px;">
-        <button type="button" class="btn-acao-topo" onclick="gerarRelatorio()">
-            <i class="fas fa-file-pdf"></i> Gerar Relatório de Encomendas
-        </button>
-    </div>
+            <div style="background: #f8f9fa; border: 5px solid #123C65; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                {{ retirante_form.media }}
+                <div style="margin-bottom: 10px;">
+                    <label for="id_retirante" style="font-weight: bold; color: #123C65; font-size: 18px; display: block;">
+                        <i class="fas fa-user-check"></i> Quem está retirando essas encomendas no balcão?
+                    </label>
+                </div>
+                <div>
+                    {{ retirante_form.retirante }}
+                </div>
 
-        <details style="margin-bottom: 25px; border: 1px solid #28a745; border-radius: 8px; background: #fff; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <summary style="background: #d4edda; color: #155724; padding: 15px; font-weight: bold; cursor: pointer; font-size: 15px; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-plus-circle" style="color: #28a745; font-size: 18px;"></i> Adicionar Encomenda
-            </summary>
-            <div style="padding: 20px; border-top: 1px solid #c3e6cb;">
-                <label for="select-encomendas-extras" style="font-weight: bold; color: #123C65; margin-bottom: 10px; display: block;">Selecione as encomendas extras (Pesquise por ID ou Nome do Cliente):</label>
-                
-                <select id="select-encomendas-extras" multiple="multiple" style="width: 100%;">
-                    {% for enc in todas_pendentes %}
-                        <option value="{{ enc.id }}" data-id="{{ enc.id }}" data-nome="{{ enc.cliente.nome }} {% if enc.cliente.observacao %}({{ enc.cliente.observacao }}){% endif %}">
-                            📦 ID: #{{ enc.id }} | Cliente: {{ enc.cliente.nome }}{% if enc.cliente.observacao %} ({{ enc.cliente.observacao }}){% endif %} | Desc: {{ enc.descricao }} | Remetente: {{ enc.remetente|default:'-' }} | Obs: {{ enc.observacao|default:'-' }}
-                        </option>
-                    {% endfor %}
-                </select>
-                
-                <div style="margin-top: 15px; text-align: right;">
-                    <button type="button" class="btn-confirmar" style="background: #28a745; padding: 8px 20px;" onclick="adicionarExtras()">
-                        <i class="fas fa-plus" style="color: white; margin-right: 5px;"></i> Adicionar Selecionadas
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-cliente-acao btn-cliente-add" onclick="abrirPopupNovoCliente();">
+                        <i class="fas fa-plus-circle"></i> Novo Cliente/Retirante
+                    </button>
+                    <button type="button" id="btn-editar-retirante" class="btn-cliente-acao btn-cliente-edit" style="display: none;" onclick="editarRetiranteSelecionado();">
+                        <i class="fas fa-edit"></i> Alterar Dados
                     </button>
                 </div>
+                
+                <div id="resumo-retirante" class="resumo-retirante">
+                    <p><strong id="label-nome">Nome:</strong> <span id="resumo-nome">-</span></p>
+                    <p><strong id="label-doc">Documento:</strong> <span id="resumo-doc">-</span></p>
+                    <p><strong id="label-contato">Contato:</strong> <span id="resumo-contato">-</span></p>
+                </div>
+                
+                <p style="font-size: 12px; color: #666; margin-top: 8px; margin-bottom: 0;">Dica: Verifique se os dados do retirante estão atualizados.</p>
             </div>
-        </details>
 
-        <div id="lista-clientes-wrapper">
-            {% for grupo in resumo_agrupado %}
-                <div class="cliente-card" id="card-cliente-{{ grupo.cliente.id }}" 
-                     data-client-id="{{ grupo.cliente.id }}"
-                     data-client-name="#{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}{% if grupo.cliente.observacao %} ({{ grupo.cliente.observacao }}){% endif %}" 
-                     data-client-clean-name="#{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}"
-                     data-client-cpf="{{ grupo.cliente.cpf|default:'' }}"
-                     data-client-rg="{{ grupo.cliente.rg|default:'' }}"
-                     data-client-tel="{{ grupo.cliente.telefone|default:'' }}"
-                     data-client-email="{{ grupo.cliente.email|default:'' }}"
-                     data-item-count="{{ grupo.itens|length }}">
+        <p style="margin-bottom: 20px; color: #666; text-align: center;">Verifique os dias em estoque e ajuste os valores se necessário:</p>
+
+        <div style="display: flex; justify-content: center; margin-bottom: 25px;">
+            <button type="button" class="btn-acao-topo" onclick="gerarRelatorio()">
+                <i class="fas fa-file-pdf"></i> Gerar Relatório de Encomendas
+            </button>
+        </div>
+
+            <details style="margin-bottom: 25px; border: 1px solid #28a745; border-radius: 8px; background: #fff; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <summary style="background: #d4edda; color: #155724; padding: 15px; font-weight: bold; cursor: pointer; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-plus-circle" style="color: #28a745; font-size: 18px;"></i> Adicionar Encomenda
+                </summary>
+                <div style="padding: 20px; border-top: 1px solid #c3e6cb;">
+                    <label for="select-encomendas-extras" style="font-weight: bold; color: #123C65; margin-bottom: 10px; display: block;">Selecione as encomendas extras (Pesquise por ID ou Nome do Cliente):</label>
                     
-                    <div class="cliente-header">
-                        <div style="display: flex; align-items: center;">
-                            {% if not grupo.cliente.cpf and not grupo.cliente.rg or not grupo.cliente.telefone and not grupo.cliente.email %}
-                                <i class="fas fa-user" style="color: #C51625; margin-right: 8px;" title="Cadastro Incompleto (Falta Documento ou Contato)"></i> 
-                            {% else %}
-                                <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> 
-                            {% endif %}
-                            
-                            <a href="{% url 'admin:entregas_cliente_change' grupo.cliente.id %}?_popup=1" 
-                               onclick="return abrirPopupCliente(this.href);"
-                               style="color: white; text-decoration: none;"
-                               title="Editar Cliente">
-                                #{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}{% if grupo.cliente.observacao %} ({{ grupo.cliente.observacao }}){% endif %} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
-                            </a>
+                    <select id="select-encomendas-extras" multiple="multiple" style="width: 100%;">
+                        {% for enc in todas_pendentes %}
+                            <option value="{{ enc.id }}" data-id="{{ enc.id }}" data-nome="{{ enc.cliente.nome }} {% if enc.cliente.observacao %}({{ enc.cliente.observacao }}){% endif %}">
+                                📦 ID: #{{ enc.id }} | Cliente: {{ enc.cliente.nome }}{% if enc.cliente.observacao %} ({{ enc.cliente.observacao }}){% endif %} | Desc: {{ enc.descricao }} | Remetente: {{ enc.remetente|default:'-' }} | Obs: {{ enc.observacao|default:'-' }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <div style="margin-top: 15px; text-align: right;">
+                        <button type="button" class="btn-confirmar" style="background: #28a745; padding: 8px 20px;" onclick="adicionarExtras()">
+                            <i class="fas fa-plus" style="color: white; margin-right: 5px;"></i> Adicionar Selecionadas
+                        </button>
+                    </div>
+                </div>
+            </details>
 
-                            <span id="header-count-{{ grupo.cliente.id }}" style="font-size: 13px; font-weight: normal; margin-left: 10px; color: rgba(255,255,255,0.8); border-left: 1px solid rgba(255,255,255,0.3); padding-left: 10px;">
-                                {{ grupo.itens|length }} encomenda(s)
-                            </span>
+            <div id="lista-clientes-wrapper">
+                {% for grupo in resumo_agrupado %}
+                    <div class="cliente-card" id="card-cliente-{{ grupo.cliente.id }}" 
+                         data-client-id="{{ grupo.cliente.id }}"
+                         data-client-name="#{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}{% if grupo.cliente.observacao %} ({{ grupo.cliente.observacao }}){% endif %}" 
+                         data-client-clean-name="#{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}"
+                         data-client-cpf="{{ grupo.cliente.cpf|default:'' }}"
+                         data-client-rg="{{ grupo.cliente.rg|default:'' }}"
+                         data-client-tel="{{ grupo.cliente.telefone|default:'' }}"
+                         data-client-email="{{ grupo.cliente.email|default:'' }}"
+                         data-item-count="{{ grupo.itens|length }}">
+                        
+                        <div class="cliente-header">
+                            <div style="display: flex; align-items: center;">
+                                {% if not grupo.cliente.cpf and not grupo.cliente.rg or not grupo.cliente.telefone and not grupo.cliente.email %}
+                                    <i class="fas fa-user" style="color: #C51625; margin-right: 8px;" title="Cadastro Incompleto (Falta Documento ou Contato)"></i> 
+                                {% else %}
+                                    <i class="fas fa-user" style="color: white; margin-right: 8px;"></i> 
+                                {% endif %}
+                                
+                                <a href="{% url 'admin:entregas_cliente_change' grupo.cliente.id %}?_popup=1" 
+                                   onclick="return abrirPopupCliente(this.href);"
+                                   style="color: white; text-decoration: none;"
+                                   title="Editar Cliente">
+                                    #{{ grupo.cliente.id }} - {{ grupo.cliente.nome }}{% if grupo.cliente.observacao %} ({{ grupo.cliente.observacao }}){% endif %} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
+                                </a>
+
+                                <span id="header-count-{{ grupo.cliente.id }}" style="font-size: 13px; font-weight: normal; margin-left: 10px; color: rgba(255,255,255,0.8); border-left: 1px solid rgba(255,255,255,0.3); padding-left: 10px;">
+                                    {{ grupo.itens|length }} encomenda(s)
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <ul class="itens-lista">
+                            {% for item in grupo.itens %}
+                                <li class="item-linha" 
+                                    data-desc="#{{ item.id }} - {{ item.descricao }}" 
+                                    data-dias="{{ item.dias_estoque }}"
+                                    data-base-val="{{ item.valor_base|unlocalize }}"
+                                    data-remetente="{{ item.remetente|default:'' }}"
+                                    data-obs="{{ item.observacao|default:'' }}">
+                                    
+                                    <div class="item-info">
+                                        <div class="desc">
+                                            <input type="checkbox" class="check-encontrado" data-id="{{ item.id|unlocalize }}" title="Marcar como encontrado no estoque" style="width: 18px; height: 18px; cursor: pointer; vertical-align: middle; margin-right: 8px; position: relative; top: -2px;">
+                                            
+                                            <a href="{% url 'admin:entregas_encomenda_change' item.id %}?_popup=1" 
+                                               onclick="return abrirPopupEncomenda(this.href);"
+                                               style="color: inherit; text-decoration: none;"
+                                               title="Editar Encomenda">
+                                                📦 #{{ item.id }} - {{ item.descricao|linebreaksbr }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
+                                            </a>
+                                            
+                                            {% if item.status == 'ENTREGUE' %}
+                                                <span class="badge-entregue">(JÁ ENTREGUE)</span>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if item.remetente and item.remetente != '-' %}
+                                            <div style="font-size: 13.5px; color: #444; margin-top: 2px;">
+                                                <strong>Remetente:</strong> {{ item.remetente }}
+                                            </div>
+                                        {% endif %}
+
+                                        {% if item.observacao %}
+                                            <div style="font-size: 12px; color: #666; font-style: italic; margin-top: 2px;">
+                                                <strong>Obs:</strong> {{ item.observacao }}
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="meta-info" style="margin-top: 4px;">
+                                            <span class="data-chegada-extrato" style="font-size: 12.5px; color: #555;">
+                                                <strong>Chegada:</strong> {{ item.data_chegada|date:"d/m/Y H:i" }}
+                                            </span>
+                                            
+                                            <span style="margin-left: 8px;" class="badge-dias {% if item.alerta_prazo %}atrasado{% endif %}">
+                                                <i class="far fa-clock"></i> {{ item.dias_estoque }} dias
+                                            </span>
+                                            
+                                            {% if item.alerta_prazo %}
+                                                <span class="aviso-taxa">Taxa aplicada (x{{ item.multiplicador }})</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 100%;">
+                                            <span style="font-size: 12px; color: #888; font-weight: 600;">
+                                                Valor Base: R$ {{ item.valor_base|floatformat:2 }}
+                                            </span>
+                                            <button type="button" class="btn-remover-item" onclick="removerItemLista(this, '{{ item.id|unlocalize }}', '{{ grupo.cliente.id }}')" title="Remover da lista de confirmação">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                        <div class="item-valor-editavel">
+                                            <span class="moeda">R$</span>
+                                            <input type="number" step="0.01" 
+                                                   name="valor_{{ item.id }}" 
+                                                   class="input-valor valor-cliente-{{ grupo.cliente.id }} input-calculo-global" 
+                                                   value="{{ item.valor_sugerido|unlocalize }}" 
+                                                   oninput="recalcularTudo('{{ grupo.cliente.id }}')">
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                        <div class="cliente-total">
+                            <span id="footer-count-{{ grupo.cliente.id }}">Total ({{ grupo.itens|length }} itens):</span>
+                            <strong id="total-display-{{ grupo.cliente.id }}">R$ {{ grupo.total_sugerido|floatformat:2 }}</strong>
                         </div>
                     </div>
-                    
-                    <ul class="itens-lista">
-                        {% for item in grupo.itens %}
-                            <li class="item-linha" 
-                                data-desc="#{{ item.id }} - {{ item.descricao }}" 
-                                data-dias="{{ item.dias_estoque }}"
-                                data-base-val="{{ item.valor_base|unlocalize }}"
-                                data-remetente="{{ item.remetente|default:'' }}"
-                                data-obs="{{ item.observacao|default:'' }}">
-                                
-                                <div class="item-info">
-                                    <div class="desc">
-                                        <input type="checkbox" class="check-encontrado" data-id="{{ item.id|unlocalize }}" title="Marcar como encontrado no estoque" style="width: 18px; height: 18px; cursor: pointer; vertical-align: middle; margin-right: 8px; position: relative; top: -2px;">
-                                        
-                                        <a href="{% url 'admin:entregas_encomenda_change' item.id %}?_popup=1" 
-                                           onclick="return abrirPopupEncomenda(this.href);"
-                                           style="color: inherit; text-decoration: none;"
-                                           title="Editar Encomenda">
-                                            📦 #{{ item.id }} - {{ item.descricao|linebreaksbr }} <i class="fas fa-pen" style="font-size: 12px; opacity: 0.7; margin-left: 5px;"></i>
-                                        </a>
-                                        
-                                        {% if item.status == 'ENTREGUE' %}
-                                            <span class="badge-entregue">(JÁ ENTREGUE)</span>
-                                        {% endif %}
-                                    </div>
-
-                                    {% if item.remetente and item.remetente != '-' %}
-                                        <div style="font-size: 13.5px; color: #444; margin-top: 2px;">
-                                            <strong>Remetente:</strong> {{ item.remetente }}
-                                        </div>
-                                    {% endif %}
-
-                                    {% if item.observacao %}
-                                        <div style="font-size: 12px; color: #666; font-style: italic; margin-top: 2px;">
-                                            <strong>Obs:</strong> {{ item.observacao }}
-                                        </div>
-                                    {% endif %}
-
-                                    <div class="meta-info" style="margin-top: 4px;">
-                                        <span class="data-chegada-extrato" style="font-size: 12.5px; color: #555;">
-                                            <strong>Chegada:</strong> {{ item.data_chegada|date:"d/m/Y H:i" }}
-                                        </span>
-                                        
-                                        <span style="margin-left: 8px;" class="badge-dias {% if item.alerta_prazo %}atrasado{% endif %}">
-                                            <i class="far fa-clock"></i> {{ item.dias_estoque }} dias
-                                        </span>
-                                        
-                                        {% if item.alerta_prazo %}
-                                            <span class="aviso-taxa">Taxa aplicada (x{{ item.multiplicador }})</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                
-                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 100%;">
-                                        <span style="font-size: 12px; color: #888; font-weight: 600;">
-                                            Valor Base: R$ {{ item.valor_base|floatformat:2 }}
-                                        </span>
-                                        <button type="button" class="btn-remover-item" onclick="removerItemLista(this, '{{ item.id|unlocalize }}', '{{ grupo.cliente.id }}')" title="Remover da lista de confirmação">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
-                                    <div class="item-valor-editavel">
-                                        <span class="moeda">R$</span>
-                                        <input type="number" step="0.01" 
-                                               name="valor_{{ item.id }}" 
-                                               class="input-valor valor-cliente-{{ grupo.cliente.id }} input-calculo-global" 
-                                               value="{{ item.valor_sugerido|unlocalize }}" 
-                                               oninput="recalcularTudo('{{ grupo.cliente.id }}')">
-                                    </div>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-
-                    <div class="cliente-total">
-                        <span id="footer-count-{{ grupo.cliente.id }}">Total ({{ grupo.itens|length }} itens):</span>
-                        <strong id="total-display-{{ grupo.cliente.id }}">R$ {{ grupo.total_sugerido|floatformat:2 }}</strong>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-
-        <div class="total-geral-bar">
-            <span id="total-geral-text">TOTAL GERAL ({{ encomendas.count }} itens):</span>
-            <span id="display-total-geral">R$ 0,00</span>
-        </div>
-
-        <!-- BLOCO DE NOTAS DE CLIENTES (Apenas Visualização e Exclusão) -->
-        <div style="background: #fff9c4; border: 1px solid #f0e68c; padding: 15px; border-radius: 4px; margin-top: 25px; margin-bottom: 25px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-            <h3 style="color: #856404; margin-top: 0; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #f0e68c; padding-bottom: 5px;">
-                <i class="fas fa-sticky-note"></i> Lembretes dos Clientes
-            </h3>
-            
-            <div id="lista-anotacoes" style="max-height: 200px; overflow-y: auto; padding-right: 5px;">
-                {% for a in anotacoes_destaque %}
-                <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px dashed #e6da7a;">
-                    <div style="font-size: 12px; line-height: 1.4;">
-                        <strong style="color: #C51625;">{{ a.cliente.nome }}</strong> - <span style="color: #333;">{{ a.anotacao }}</span>
-                        <br><span style="color: #888; font-size: 11px;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
-                    </div>
-                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}')" style="background: none; border: none; color: #C51625; cursor: pointer; font-size: 13px; padding: 2px 5px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Excluir Lembrete"><i class="fas fa-times"></i></button>
-                </div>
                 {% endfor %}
-                {% for a in anotacoes_outros %}
-                <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px dashed #e6da7a;">
-                    <div style="font-size: 12px; line-height: 1.4;">
-                        <strong style="color: #555;">{{ a.cliente.nome }}</strong> - <span style="color: #555;">{{ a.anotacao }}</span>
-                        <br><span style="color: #999; font-size: 11px;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
-                    </div>
-                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}')" style="background: none; border: none; color: #888; cursor: pointer; font-size: 13px; padding: 2px 5px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'; this.style.color='#C51625';" onmouseout="this.style.opacity='0.7'; this.style.color='#888';" title="Excluir Lembrete"><i class="fas fa-times"></i></button>
-                </div>
-                {% endfor %}
-                {% if not anotacoes_destaque and not anotacoes_outros %}
-                <div style="font-size: 12px; color: #856404; text-align: center; padding: 10px 0; font-style: italic;">
-                    Nenhum lembrete no momento.
-                </div>
-                {% endif %}
             </div>
-        </div>
-        <!-- FIM DO BLOCO DE NOTAS -->
 
-        <div class="submit-row">
-            <a href="{% url 'admin:entregas_encomenda_changelist' %}" class="btn-cancelar">Cancelar</a>
-            <input type="submit" value="Confirmar Entrega" class="btn-confirmar" id="btn-confirmar-entrega" disabled>
+            <div class="total-geral-bar">
+                <span id="total-geral-text">TOTAL GERAL ({{ encomendas.count }} itens):</span>
+                <span id="display-total-geral">R$ 0,00</span>
+            </div>
+
+            <div class="submit-row">
+                <a href="{% url 'admin:entregas_encomenda_changelist' %}" class="btn-cancelar">Cancelar</a>
+                <input type="submit" value="Confirmar Entrega" class="btn-confirmar" id="btn-confirmar-entrega" disabled>
+            </div>
+        </form>
+    </div> <!-- FIM DA CAIXA PRINCIPAL DA ENTREGA -->
+
+    <!-- BLOCO DE NOTAS DE CLIENTES (Apenas Visualização e Exclusão - SEPARADO) -->
+    <div style="background: #fff9c4; border: 1px solid #f0e68c; padding: 15px; border-radius: 4px; margin-top: 25px; margin-bottom: 25px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <h3 style="color: #856404; margin-top: 0; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #f0e68c; padding-bottom: 5px;">
+            <i class="fas fa-sticky-note"></i> Lembretes dos Clientes
+        </h3>
+        
+        <div id="lista-anotacoes" style="max-height: 200px; overflow-y: auto; padding-right: 5px;">
+            {% for a in anotacoes_destaque %}
+            <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px dashed #e6da7a;">
+                <div style="font-size: 12px; line-height: 1.4;">
+                    <strong style="color: #C51625;">{{ a.cliente.nome }}</strong> - <span style="color: #333;">{{ a.anotacao }}</span>
+                    <br><span style="color: #888; font-size: 11px;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
+                </div>
+                <form action="{% url 'admin:entregas_encomenda_api_anotacoes' %}" method="post" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}', this)" style="background: none; border: none; color: #C51625; cursor: pointer; font-size: 13px; padding: 2px 5px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Excluir Lembrete"><i class="fas fa-times"></i></button>
+                </form>
+            </div>
+            {% endfor %}
+            {% for a in anotacoes_outros %}
+            <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px dashed #e6da7a;">
+                <div style="font-size: 12px; line-height: 1.4;">
+                    <strong style="color: #555;">{{ a.cliente.nome }}</strong> - <span style="color: #555;">{{ a.anotacao }}</span>
+                    <br><span style="color: #999; font-size: 11px;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
+                </div>
+                <form action="{% url 'admin:entregas_encomenda_api_anotacoes' %}" method="post" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="button" onclick="deletarAnotacao('{{ a.id|unlocalize }}', this)" style="background: none; border: none; color: #888; cursor: pointer; font-size: 13px; padding: 2px 5px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'; this.style.color='#C51625';" onmouseout="this.style.opacity='0.7'; this.style.color='#888';" title="Excluir Lembrete"><i class="fas fa-times"></i></button>
+                </form>
+            </div>
+            {% endfor %}
+            {% if not anotacoes_destaque and not anotacoes_outros %}
+            <div style="font-size: 12px; color: #856404; text-align: center; padding: 10px 0; font-style: italic;">
+                Nenhum lembrete no momento.
+            </div>
+            {% endif %}
         </div>
-    </form>
-</div>
+    </div>
+    <!-- FIM DO BLOCO DE NOTAS -->
 
 </div> 
 
@@ -811,13 +818,12 @@
     }
 
     // --- FUNÇÕES DO NOVO BLOCO DE ANOTAÇÕES ---
-    function deletarAnotacao(id) {
+    function deletarAnotacao(id, btnElement) {
         if(!confirm("Tem certeza que deseja apagar este lembrete?")) return;
         
-        const formData = new FormData();
+        const form = btnElement.closest('form');
+        const formData = new FormData(form);
         formData.append('acao', 'del');
-        formData.append('anotacao_id', id);
-        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
         
         fetch("{% url 'admin:entregas_encomenda_api_anotacoes' %}", {
             method: 'POST',

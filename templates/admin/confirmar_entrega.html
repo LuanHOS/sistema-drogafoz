@@ -301,7 +301,7 @@
             {% for a in anotacoes_destaque %}
             <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; background-color: #f8d7da; border-left: 5px solid #C51625; border-radius: 4px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <div style="font-size: 13px; line-height: 1.4;">
-                    <strong style="color: #C51625; font-size: 16px; text-transform: uppercase;">{{ a.cliente.nome }}</strong> - <span style="color: #721c24; font-weight: 900; font-size: 18px;">{{ a.anotacao }}</span>
+                    <strong style="color: #C51625; font-size: 16px; text-transform: uppercase;">{{ a.cliente.nome }}</strong> - <span style="color: #333; font-weight: 900; font-size: 18px;">{{ a.anotacao }}</span>
                     <br><span style="color: #a71d2a; font-size: 12px; font-weight: bold; margin-top: 5px; display: inline-block;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
                 </div>
                 <form action="{% url 'admin:entregas_encomenda_api_anotacoes' %}" method="post" style="margin: 0;">
@@ -313,7 +313,7 @@
             {% for a in anotacoes_outros %}
             <div class="anotacao-item" id="anotacao-{{ a.id }}" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px; background-color: rgba(255,255,255,0.6); border: 1px dashed #e6da7a; border-radius: 4px; margin-bottom: 8px;">
                 <div style="font-size: 13px; line-height: 1.4;">
-                    <strong style="color: #555; font-size: 14px;">{{ a.cliente.nome }}</strong> - <span style="color: #333; font-size: 15px; font-weight: bold;">{{ a.anotacao }}</span>
+                    <strong style="color: #222; font-size: 14px;">{{ a.cliente.nome }}</strong> - <span style="color: #555; font-size: 15px; font-weight: bold;">{{ a.anotacao }}</span>
                     <br><span style="color: #999; font-size: 11px; margin-top: 3px; display: inline-block;"><i class="far fa-clock"></i> {{ a.data_hora|date:"d/m/Y H:i" }}</span>
                 </div>
                 <form action="{% url 'admin:entregas_encomenda_api_anotacoes' %}" method="post" style="margin: 0;">

@@ -230,8 +230,9 @@
                 </nav>
 
                 <input type="checkbox" id="menu-toggle" class="menu-toggle hidden peer">
-                <label for="menu-toggle" class="lg:hidden text-white hover:text-vermelho cursor-pointer p-2 transition-colors">
-                    <i class="fa-solid fa-bars text-3xl"></i>
+                <label for="menu-toggle" class="lg:hidden relative text-white hover:text-vermelho cursor-pointer p-2 transition-colors">
+                    <span id="hamburguer-pulse" class="absolute inset-0 rounded-md bg-vermelho animate-ping opacity-75"></span>
+                    <i class="fa-solid fa-bars text-3xl relative z-10"></i>
                 </label>
 
                 <nav id="menu-mobile" class="absolute top-20 left-0 w-full border-t border-white/10 shadow-2xl max-h-0 opacity-0 overflow-hidden lg:hidden flex flex-col items-center gap-2 text-center z-50">
@@ -938,7 +939,6 @@
 
     <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col gap-3 z-50">
         <a href="https://wa.me/5545999145151" target="_blank" title="Fale conosco no WhatsApp" class="w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-md transform hover:scale-110 hover:-translate-y-2 transition-all duration-300 relative group">
-            <span class="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-75"></span>
             <i class="fa-brands fa-whatsapp relative z-10"></i>
         </a>
         <a href="https://www.instagram.com/drogafoz/" target="_blank" title="Siga no Instagram" class="w-12 h-12 sm:w-14 sm:h-14 text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-md transform hover:scale-110 hover:-translate-y-2 transition-all duration-300" style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);">
@@ -1435,6 +1435,23 @@
                     btnCopiar.classList.add('bg-azul', 'hover:bg-azul-hover');
                 }, 2000);
             });
+        }
+
+        // --- SISTEMA DA ANIMAÇÃO DO MENU HAMBURGUER ---
+        const hamburguerPulse = document.getElementById('hamburguer-pulse');
+        const menuToggleInput = document.getElementById('menu-toggle');
+        
+        if (hamburguerPulse) {
+            const timeoutId = setTimeout(() => {
+                hamburguerPulse.classList.add('hidden');
+            }, 5000);
+
+            if (menuToggleInput) {
+                menuToggleInput.addEventListener('change', function() {
+                    hamburguerPulse.classList.add('hidden');
+                    clearTimeout(timeoutId);
+                });
+            }
         }
 
     </script>

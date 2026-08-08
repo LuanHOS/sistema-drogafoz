@@ -451,7 +451,7 @@
 
     <!-- MODAL DE AJUDA -->
     <div id="modal-ajuda" class="fixed inset-0 bg-black/60 z-[60] flex justify-center items-center opacity-0 pointer-events-none transition-opacity duration-300 px-4 py-6">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl relative transform scale-95 transition-transform duration-300" id="modal-ajuda-box">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl relative" id="modal-ajuda-box">
             <!-- Botão Fechar -->
             <button onclick="fecharModalAjuda()" class="absolute top-4 right-4 text-gray-400 hover:text-vermelho transition-colors text-2xl w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-red-50 z-10">
                 <i class="fa-solid fa-xmark"></i>
@@ -546,24 +546,14 @@
         // Lógica do Modal de Ajuda
         function abrirModalAjuda() {
             const modal = document.getElementById('modal-ajuda');
-            const box = document.getElementById('modal-ajuda-box');
             modal.classList.remove('opacity-0', 'pointer-events-none');
             document.body.style.overflow = 'hidden';
-            setTimeout(() => {
-                box.classList.remove('scale-95');
-                box.classList.add('scale-100');
-            }, 10);
         }
 
         function fecharModalAjuda() {
             const modal = document.getElementById('modal-ajuda');
-            const box = document.getElementById('modal-ajuda-box');
-            box.classList.remove('scale-100');
-            box.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('opacity-0', 'pointer-events-none');
-                document.body.style.overflow = '';
-            }, 300);
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = '';
         }
     </script>
 </body>

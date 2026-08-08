@@ -520,7 +520,7 @@
                 
                 <p class="text-blue-100 mb-8 text-sm sm:text-base lg:text-lg">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados <strong class="text-white">exatamente desta forma:</strong></p>
                 
-                <div class="bg-white/10 rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20 mb-8 shadow-inner font-mono text-xs sm:text-sm lg:text-base w-full overflow-x-auto text-white">
+                <div class="bg-white/10 rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20 shadow-inner font-mono text-xs sm:text-sm lg:text-base w-full overflow-x-auto text-white">
                     <ul class="space-y-4 min-w-min">
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3">
                             <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Destinatário:</span>
@@ -540,7 +540,12 @@
                         </li>
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3 bg-white/20 -mx-4 px-4 py-3 rounded-lg shadow-sm border border-white/30">
                             <span class="w-full sm:w-40 font-bold text-white mb-1 sm:mb-0">Complemento:</span>
-                            <span class="flex-1"><span class="inline-block text-white font-sans font-bold bg-vermelho px-2 sm:px-3 py-1 rounded shadow-sm text-xs sm:text-sm lg:text-base mt-1 sm:mt-0">#ID + os 4 últimos dígitos do seu documento cadastrado (Ex: Se o final do seu documento for 1234, ficará #ID1234)</span></span>
+                            <span class="flex-1 flex flex-col items-start gap-3">
+                                <span class="inline-block text-white font-sans font-bold bg-vermelho px-2 sm:px-3 py-1 rounded shadow-sm text-xs sm:text-sm lg:text-base mt-1 sm:mt-0">#ID + os 4 últimos dígitos do seu documento cadastrado</span>
+                                <button onclick="abrirModalDescobrirId()" type="button" class="bg-white text-vermelho hover:bg-gray-100 font-bold py-2 px-4 rounded-lg shadow-md transition-all text-sm flex items-center gap-2 transform hover:-translate-y-0.5">
+                                    <i class="fa-solid fa-magnifying-glass"></i> Descobrir meu #ID
+                                </button>
+                            </span>
                         </li>
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3 pt-3">
                             <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Bairro:</span>
@@ -551,14 +556,6 @@
                             <span class="flex-1"><strong>Foz do Iguaçu - PR</strong></span>
                         </li>
                     </ul>
-                </div>
-                
-                <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 bg-azul-hover p-4 sm:p-5 rounded-xl border border-white/10">
-                    <i class="fa-solid fa-lightbulb text-yellow-400 text-2xl mt-1 hidden sm:block"></i>
-                    <p class="text-sm text-blue-100 leading-relaxed">
-                        <strong class="text-white block mb-1"><i class="fa-solid fa-lightbulb text-yellow-400 sm:hidden mr-1"></i>Por que pedimos isso?</strong> 
-                        A farmácia recebe dezenas de encomendas diariamente. O campo Complemento, quando preenchido com o seu número de identificação (#ID + 4 últimos dígitos do documento cadastrado) garante um controle exato de quem é o titular da encomenda, evitando recusas na entrega, devoluções para a loja ou extravios.
-                    </p>
                 </div>
             </div>
 
@@ -1068,6 +1065,54 @@
         </div>
     </div>
 
+    <!-- MODAL DESCOBRIR ID -->
+    <div id="modal-descobrir-id" class="fixed inset-0 bg-black/60 z-[60] flex justify-center items-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative">
+            <button onclick="fecharModalDescobrirId()" class="absolute top-4 right-4 text-gray-400 hover:text-vermelho transition-colors text-2xl w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-red-50 z-10">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="p-6 sm:p-8 pt-12">
+                <!-- Estado 1: Formulário -->
+                <div id="estado-form-id" class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-magnifying-glass text-2xl text-vermelho"></i>
+                    </div>
+                    <h2 class="font-display font-bold text-3xl text-azul mb-3">Meu #ID</h2>
+                    <p class="text-sm text-gray-600 mb-6 text-center">Digite o seu Documento usado na hora do Cadastro (CPF, RG ou Doc. Estrangeiro).</p>
+                    
+                    <input type="text" id="input_descobrir_doc" maxlength="20" placeholder="Apenas números e letras..." class="w-full border border-gray-300 rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all text-center text-lg font-bold tracking-widest text-azul mb-6 bg-gray-50">
+                    
+                    <button id="btn_consultar_id" disabled class="w-full bg-vermelho hover:bg-vermelho-hover disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 shadow-md flex items-center justify-center gap-2">
+                        Consultar #ID <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Estado 2: Resultado -->
+                <div id="estado-resultado-id" class="hidden flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-check text-2xl text-green-500"></i>
+                    </div>
+                    <h2 class="font-display font-bold text-2xl text-azul mb-2">Seu #ID é:</h2>
+                    
+                    <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl py-5 px-8 mb-5 w-full flex flex-col items-center justify-center relative">
+                        <span id="resultado_id_texto" class="font-mono font-black text-4xl text-vermelho tracking-wider mb-3"></span>
+                        <button onclick="copiarId()" id="btn_copiar_id" class="bg-azul hover:bg-azul-hover text-white font-bold py-2 px-5 rounded-lg transition-all flex items-center gap-2 shadow-sm text-sm">
+                            <i class="fa-regular fa-copy"></i> <span>Copiar</span>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-blue-50 border-l-4 border-azul p-4 rounded-r-xl text-left w-full mb-2">
+                        <p class="text-xs text-gray-700 leading-relaxed">
+                            <strong class="text-azul block mb-1"><i class="fa-solid fa-lightbulb text-yellow-500 mr-1"></i>Por que isso é importante?</strong>
+                            A farmácia recebe dezenas de encomendas diariamente. O #ID no Complemento garante um controle exato de quem é o titular da encomenda, evitando recusas, devoluções para a loja ou extravios.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init({
@@ -1314,6 +1359,80 @@
             document.getElementById('form-cadastro').reset();
             document.getElementById('btn_enviar_cad').disabled = true;
         });
+
+        // --- SISTEMA DO MODAL DESCOBRIR ID ---
+        
+        function abrirModalDescobrirId() {
+            const modal = document.getElementById('modal-descobrir-id');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = 'hidden';
+
+            // Resetar Modal para o estado inicial
+            document.getElementById('estado-form-id').classList.remove('hidden');
+            document.getElementById('estado-form-id').classList.add('flex');
+            
+            document.getElementById('estado-resultado-id').classList.add('hidden');
+            document.getElementById('estado-resultado-id').classList.remove('flex');
+            
+            const inputDoc = document.getElementById('input_descobrir_doc');
+            inputDoc.value = '';
+            document.getElementById('btn_consultar_id').disabled = true;
+            
+            // Resetar botão de copiar
+            const btnCopiar = document.getElementById('btn_copiar_id');
+            btnCopiar.innerHTML = '<i class="fa-regular fa-copy"></i> <span>Copiar</span>';
+            btnCopiar.classList.remove('bg-green-600', 'hover:bg-green-700');
+            btnCopiar.classList.add('bg-azul', 'hover:bg-azul-hover');
+        }
+
+        function fecharModalDescobrirId() {
+            const modal = document.getElementById('modal-descobrir-id');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('input_descobrir_doc').addEventListener('input', function(e) {
+            // Remove caracteres especiais para considerar apenas a string limpa
+            let val = this.value.replace(/[^a-zA-Z0-9]/g, '');
+            this.value = val;
+            document.getElementById('btn_consultar_id').disabled = val.length === 0;
+        });
+
+        document.getElementById('btn_consultar_id').addEventListener('click', function(e) {
+            e.preventDefault();
+            const doc = document.getElementById('input_descobrir_doc').value;
+            
+            if(doc.length > 0) {
+                // Pegar os ultimos 4 caracteres
+                const ultimos = doc.slice(-4).toUpperCase();
+                document.getElementById('resultado_id_texto').innerText = '#ID' + ultimos;
+
+                // Esconder form, Mostrar resultado
+                document.getElementById('estado-form-id').classList.add('hidden');
+                document.getElementById('estado-form-id').classList.remove('flex');
+                
+                document.getElementById('estado-resultado-id').classList.remove('hidden');
+                document.getElementById('estado-resultado-id').classList.add('flex');
+            }
+        });
+
+        function copiarId() {
+            const texto = document.getElementById('resultado_id_texto').innerText;
+            navigator.clipboard.writeText(texto).then(() => {
+                const btnCopiar = document.getElementById('btn_copiar_id');
+                btnCopiar.innerHTML = '<i class="fa-solid fa-check"></i> <span>Copiado!</span>';
+                btnCopiar.classList.remove('bg-azul', 'hover:bg-azul-hover');
+                btnCopiar.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+                // Retorna ao estado normal do botão depois de 2 segundos
+                setTimeout(() => {
+                    btnCopiar.innerHTML = '<i class="fa-regular fa-copy"></i> <span>Copiar</span>';
+                    btnCopiar.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    btnCopiar.classList.add('bg-azul', 'hover:bg-azul-hover');
+                }, 2000);
+            });
+        }
+
     </script>
 </body>
 </html>

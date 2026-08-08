@@ -518,13 +518,14 @@
                     <span class="leading-tight">Como preencher a ficha de endereço nos sites de compras</span>
                 </h3>
                 
-                <p class="text-blue-100 mb-8 text-sm sm:text-base lg:text-lg">Para que a farmácia consiga identificar a sua encomenda de forma rápida, preencha o formulário do site de compras copiando os dados <strong class="text-white">exatamente desta forma:</strong></p>
-                
                 <div class="bg-white/10 rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20 shadow-inner font-mono text-xs sm:text-sm lg:text-base w-full overflow-x-auto text-white">
                     <ul class="space-y-4 min-w-min">
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3">
                             <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">Destinatário:</span>
-                            <span class="flex-1"><strong>O SEU Nome Completo</strong> <span class="block sm:inline text-[10px] sm:text-xs text-white sm:ml-2 font-sans font-bold bg-vermelho px-2 py-1 rounded mt-1 sm:mt-0 w-fit">(Nunca coloque "Farmácia DrogaFoz")</span></span>
+                            <span class="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
+                                <span class="inline-block text-white font-sans font-bold bg-vermelho px-2 sm:px-3 py-1 rounded shadow-sm text-xs sm:text-sm lg:text-base">O SEU NOME COMPLETO</span> 
+                                <span class="text-[10px] sm:text-xs text-blue-200 font-sans font-medium mt-1 sm:mt-0">(Nunca coloque "Farmácia DrogaFoz")</span>
+                            </span>
                         </li>
                         <li class="flex flex-col sm:flex-row sm:items-center border-b border-white/20 pb-3">
                             <span class="w-full sm:w-40 text-blue-200 mb-1 sm:mb-0">CEP:</span>
@@ -1079,9 +1080,9 @@
                         <i class="fa-solid fa-magnifying-glass text-2xl text-vermelho"></i>
                     </div>
                     <h2 class="font-display font-bold text-3xl text-azul mb-3">Meu #ID</h2>
-                    <p class="text-sm text-gray-600 mb-6 text-center">Digite o seu Documento usado na hora do Cadastro (CPF, RG ou Doc. Estrangeiro).</p>
+                    <p class="text-sm text-gray-600 mb-6 text-center">Digite o seu Documento usado na hora do Cadastro.</p>
                     
-                    <input type="text" id="input_descobrir_doc" maxlength="20" placeholder="Apenas números e letras..." class="w-full border border-gray-300 rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all text-center text-lg font-bold tracking-widest text-azul mb-6 bg-gray-50">
+                    <input type="text" id="input_descobrir_doc" inputmode="numeric" maxlength="20" placeholder="CPF, RG ou Doc. Estrangeiro" class="w-full border border-gray-300 rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all text-center text-lg font-bold tracking-widest text-azul mb-6 bg-gray-50 placeholder:text-sm placeholder:tracking-normal placeholder:font-normal placeholder:text-gray-400">
                     
                     <button id="btn_consultar_id" disabled class="w-full bg-vermelho hover:bg-vermelho-hover disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 shadow-md flex items-center justify-center gap-2">
                         Consultar #ID <i class="fa-solid fa-arrow-right"></i>
@@ -1392,17 +1393,19 @@
         }
 
         document.getElementById('input_descobrir_doc').addEventListener('input', function(e) {
-            // Remove caracteres especiais para considerar apenas a string limpa
-            let val = this.value.replace(/[^a-zA-Z0-9]/g, '');
+            // Remove tudo que não for número
+            let val = this.value.replace(/\D/g, '');
             this.value = val;
-            document.getElementById('btn_consultar_id').disabled = val.length === 0;
+            
+            // Exige no mínimo 4 dígitos para liberar o botão
+            document.getElementById('btn_consultar_id').disabled = val.length < 4;
         });
 
         document.getElementById('btn_consultar_id').addEventListener('click', function(e) {
             e.preventDefault();
             const doc = document.getElementById('input_descobrir_doc').value;
             
-            if(doc.length > 0) {
+            if(doc.length >= 4) {
                 // Pegar os ultimos 4 caracteres
                 const ultimos = doc.slice(-4).toUpperCase();
                 document.getElementById('resultado_id_texto').innerText = '#ID' + ultimos;

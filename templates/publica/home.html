@@ -804,7 +804,7 @@
                         </span>
                     </summary>
                     <div class="p-5 sm:p-6 pt-2 text-gray-600 bg-white border-t border-gray-100 space-y-3 text-sm sm:text-base">
-                        <p><strong class="text-azul">Sim, é totalmente possível!</strong> Porém, o processo é rigoroso para garantir que a sua encomenda não seja entregue à pessoa errada. Para que um familiar ou amigo retire a encomenda no seu lugar, siga <strong>obrigatoriamente</strong> estes três passos:</p>
+                        <p><strong class="text-azul">Sim, é totalmente possível!</strong> Porém, o processo é rigoroso para garantir que a sua encomenda não seja entregue à pessoa errada. Para que um familiar ou amigo retirar a encomenda no seu lugar, siga <strong>obrigatoriamente</strong> estes três passos:</p>
                         <ol class="list-decimal pl-5 space-y-3 mb-4">
                             <li><strong>O aviso prévio:</strong> O titular da encomenda (quem comprou) deve nos enviar uma mensagem no WhatsApp avisando expressamente o nome da pessoa que irá buscar a encomenda.</li>
                             <li><strong>O cadastro de terceiros:</strong> A pessoa que for retirar a encomenda também precisa realizar um cadastro básico conosco no sistema para identificação (O cadastro pode ser feito na hora da retirada).</li>
@@ -964,14 +964,20 @@
                 
                 <form id="form-cadastro" class="space-y-6" novalidate>
                     <!-- Nome e Sobrenome -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="cad_nome" class="block text-sm font-semibold text-gray-700 mb-1">Nome</label>
-                            <input type="text" id="cad_nome" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
+                    <div class="space-y-3">
+                        <div class="bg-red-50 border border-red-100 p-3 rounded-lg flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation text-vermelho mt-0.5"></i>
+                            <p class="text-xs sm:text-sm text-gray-700 font-medium">É essencial informar o seu <strong class="text-vermelho">NOME COMPLETO</strong> para não ocorrerem problemas na hora de receber seus pacotes.</p>
                         </div>
-                        <div>
-                            <label for="cad_sobrenome" class="block text-sm font-semibold text-gray-700 mb-1">Sobrenome</label>
-                            <input type="text" id="cad_sobrenome" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="cad_nome" class="block text-sm font-semibold text-gray-700 mb-1">Nome</label>
+                                <input type="text" id="cad_nome" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
+                            </div>
+                            <div>
+                                <label for="cad_sobrenome" class="block text-sm font-semibold text-gray-700 mb-1">Sobrenome</label>
+                                <input type="text" id="cad_sobrenome" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
+                            </div>
                         </div>
                     </div>
                     

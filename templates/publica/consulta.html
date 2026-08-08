@@ -233,12 +233,12 @@
             <div class="bg-white rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.2)] p-6 sm:p-10 border-t-8 border-vermelho relative overflow-hidden mt-2">
                 
                 <!-- Botão de Ajuda (Pop-up) -->
-                <button onclick="abrirModalAjuda()" type="button" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 text-azul hover:bg-azul hover:text-white transition-colors shadow-sm" title="?">
+                <button onclick="abrirModalAjuda()" type="button" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 flex items-center justify-center rounded-full bg-white border-2 border-azul text-azul hover:bg-azul hover:text-white transition-colors shadow-sm" title="?">
                     <i class="fa-solid fa-question text-xl"></i>
                 </button>
 
                 <!-- Botão de Avaliação -->
-                <div class="text-center mb-6">
+                <div class="text-center mb-6 mt-2 sm:mt-0">
                     <a href="https://g.page/r/CSeSfzwSYYu5EAE/review" target="_blank" class="btn-pulse-soft inline-flex items-center gap-2 bg-white text-azul border-2 border-azul hover:bg-gray-50 px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-sm">
                         <i class="fas fa-star text-yellow-400 text-lg"></i> Avaliar Serviço
                     </a>
@@ -450,39 +450,39 @@
     </div>
 
     <!-- MODAL DE AJUDA -->
-    <div id="modal-ajuda" class="fixed inset-0 bg-black/60 z-[60] flex justify-center items-center opacity-0 pointer-events-none transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto shadow-2xl relative transform scale-95 transition-transform duration-300" id="modal-ajuda-box">
+    <div id="modal-ajuda" class="fixed inset-0 bg-black/60 z-[60] flex justify-center items-center opacity-0 pointer-events-none transition-opacity duration-300 px-4 py-6">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl relative transform scale-95 transition-transform duration-300" id="modal-ajuda-box">
             <!-- Botão Fechar -->
             <button onclick="fecharModalAjuda()" class="absolute top-4 right-4 text-gray-400 hover:text-vermelho transition-colors text-2xl w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-red-50 z-10">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
-            <div class="p-6 sm:p-8 pt-10">
+            <div class="p-6 sm:p-8 pt-12">
                 <h2 class="font-display font-bold text-2xl text-azul mb-6 flex items-center gap-3">
                     <i class="fa-solid fa-circle-question text-vermelho"></i> Como funciona a consulta?
                 </h2>
                 
                 <div class="space-y-6 text-gray-600 text-sm sm:text-base leading-relaxed">
                     <div>
-                        <h3 class="font-bold text-azul mb-2">O que esta consulta informa?</h3>
-                        <p>Esta ferramenta serve de maneira simplificada para te avisar se <strong>existe alguma encomenda pronta para ser retirada</strong> e calcular automaticamente o valor da taxa de armazenamento em tempo real, evitando que você dê uma viagem perdida até a farmácia.</p>
+                        <h3 class="font-bold text-azul mb-2">Para que serve esta página?</h3>
+                        <p>Esta ferramenta serve de maneira simples para te avisar se <strong>existe alguma encomenda pronta para ser retirada</strong> na farmácia e já calcular o valor da taxa de armazenamento. Assim, você não perde a viagem vindo até aqui sem necessidade.</p>
                     </div>
 
                     <div>
-                        <h3 class="font-bold text-azul mb-2">Por que não mostramos dados sensíveis?</h3>
-                        <p>Para garantir a sua total segurança e cumprir rigorosamente a <strong class="text-azul">Lei Geral de Proteção de Dados (LGPD)</strong>, nosso sistema de consulta pública foi desenhado para não expor informações detalhadas.</p>
-                        <p class="mt-2">É por isso que detalhes como nome do remetente, código de rastreio, descrição do pacote e dados pessoais não são exibidos aqui. Assim, evitamos que terceiros tenham acesso às informações da sua correspondência ou compra.</p>
+                        <h3 class="font-bold text-azul mb-2">Por que não mostramos todos os detalhes do pacote?</h3>
+                        <p>Para garantir a sua total segurança e respeitar a <strong>Lei Geral de Proteção de Dados (LGPD)</strong>, nosso sistema foi criado para não expor as suas informações na internet.</p>
+                        <p class="mt-2">É por isso que não mostramos o nome de quem enviou, o código de rastreio ou o que tem dentro da caixa. Dessa forma, nós evitamos que pessoas desconhecidas tentem descobrir o que você comprou.</p>
                     </div>
 
                     <div class="bg-blue-50 border-l-4 border-azul p-4 rounded-r-xl">
-                        <h3 class="font-bold text-azul mb-1">E sobre o "Não sou um robô"?</h3>
-                        <p class="text-sm">Utilizamos a verificação inteligente do reCAPTCHA para proteger nosso sistema. Isso impede que pessoas mal-intencionadas criem robôs para fazer milhares de buscas automáticas, o que poderia sobrecarregar e retirar o nosso site do ar para os clientes legítimos.</p>
+                        <h3 class="font-bold text-azul mb-1">Por que tem a caixinha "Não sou um robô"?</h3>
+                        <p class="text-sm">Nós usamos essa ferramenta de segurança do Google para proteger o nosso site. Ela impede que pessoas mal-intencionadas usem programas de computador (robôs) para fazer milhares de buscas de uma só vez. Isso poderia travar o nosso sistema e prejudicar o funcionamento da página para clientes reais como você.</p>
                     </div>
 
                     <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl text-center mt-6">
-                        <p class="font-medium mb-3 text-gray-700">Precisa de informações mais detalhadas sobre seus pacotes?</p>
-                        <a href="https://wa.me/5545999145151" target="_blank" class="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2.5 px-6 rounded-lg transition-all duration-300 shadow-sm">
-                            <i class="fa-brands fa-whatsapp text-lg"></i> Consultar suporte no WhatsApp
+                        <p class="font-medium mb-3 text-gray-700">Gostaria de saber mais detalhes sobre os seus pacotes?</p>
+                        <a href="https://wa.me/5545999145151?text=Ol%C3%A1%2C%20estou%20vindo%20atrav%C3%A9s%20da%20ferramenta%20de%20Consulta%20de%20Encomendas%20do%20site.%20Gostaria%20de%20saber%20mais%20detalhes%20sobre%20as%20minhas%20encomendas%20que%20chegaram." target="_blank" class="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2.5 px-6 rounded-lg transition-all duration-300 shadow-sm w-full sm:w-auto">
+                            <i class="fa-brands fa-whatsapp text-lg"></i> Falar com o suporte no WhatsApp
                         </a>
                     </div>
                 </div>

@@ -1241,6 +1241,12 @@
             return true;
         }
 
+        // Validação de E-mail
+        function validarEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
         // Formatação de Nome Próprio (Title Case inteligente)
         function formatarNomeProprio(nome) {
             const preposicoes = ['da', 'de', 'do', 'das', 'dos', 'e'];
@@ -1356,6 +1362,16 @@
             if (!tel1 && !email) {
                 showInputError('cad_tel1', 'Faltando');
                 showInputError('cad_email', 'Faltando');
+                
+                const contatoHeader = document.getElementById('contato_header');
+                contatoHeader.classList.remove('text-azul');
+                contatoHeader.classList.add('text-vermelho', 'group-error');
+                hasError = true;
+            }
+
+            // Validação de formato de E-mail
+            if (email && !validarEmail(email)) {
+                showInputError('cad_email', 'Digite um e-mail válido');
                 
                 const contatoHeader = document.getElementById('contato_header');
                 contatoHeader.classList.remove('text-azul');

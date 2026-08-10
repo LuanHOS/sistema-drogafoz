@@ -960,14 +960,27 @@
                 </h2>
                 
                 <form id="form-cadastro" class="space-y-6" novalidate>
-                    <!-- Nome Completo -->
-                    <div class="space-y-3">
-                        <div>
-                            <label for="cad_nome_completo" class="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                                Nome Completo<span class="text-[10px] font-normal text-gray-500">(Coloque todos os seus nomes e não abrevie)</span>
-                            </label>
-                            <input type="text" id="cad_nome_completo" maxlength="100" placeholder="Ex: Maria da Silva Santos Oliveira" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all text-sm">
-                            <p class="text-xs text-gray-500 mt-1.5 ml-1">Digite todos os Nomes e Sobrenomes exatamente como constam no seu Documento de Identidade. Não use iniciais ou abreviações.</p>
+                    
+                    <!-- Dados Pessoais -->
+                    <div class="bg-gray-50 p-4 sm:p-5 rounded-xl border border-gray-200">
+                        <h3 id="pessoais_header" class="text-sm font-bold text-azul mb-3 transition-colors"><i class="fa-solid fa-user"></i> Dados Pessoais</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="cad_nome_completo" class="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                                    Nome Completo<span class="text-[10px] font-normal text-gray-500">(Coloque todos os seus nomes e não abrevie)</span>
+                                </label>
+                                <input type="text" id="cad_nome_completo" maxlength="100" placeholder="Ex: Maria da Silva Santos Oliveira" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all text-sm">
+                                <p class="text-xs text-gray-500 mt-1.5 ml-1">Digite todos os Nomes e Sobrenomes exatamente como constam no seu Documento de Identidade. Não use iniciais ou abreviações.</p>
+                            </div>
+                            
+                            <div>
+                                <label for="cad_genero" class="block text-xs font-semibold text-gray-700 mb-1">Gênero</label>
+                                <select id="cad_genero" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul focus:border-azul outline-none bg-white transition-all text-sm">
+                                    <option value="Outro" selected>Outro</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Feminino">Feminino</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     
@@ -988,16 +1001,6 @@
                                 <input type="text" id="cad_estrangeiro" maxlength="50" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-azul outline-none text-sm transition-all">
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Gênero -->
-                    <div>
-                        <label for="cad_genero" class="block text-sm font-semibold text-gray-700 mb-1">Gênero</label>
-                        <select id="cad_genero" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none bg-white transition-all text-sm">
-                            <option value="Outro" selected>Outro</option>
-                            <option value="Masculino">Masculino</option>
-                            <option value="Feminino">Feminino</option>
-                        </select>
                     </div>
 
                     <!-- Contatos -->

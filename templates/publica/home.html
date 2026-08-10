@@ -960,24 +960,15 @@
                 </h2>
                 
                 <form id="form-cadastro" class="space-y-6" novalidate>
-                    <!-- Nome e Sobrenome -->
+                    <!-- Nome Completo -->
                     <div class="space-y-3">
-                 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="cad_nome" class="block text-sm font-semibold text-gray-700 mb-1">Nome</label>
-                                <input type="text" id="cad_nome" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
-                            </div>
-                            <div>
-                                <label for="cad_sobrenome" class="block text-sm font-semibold text-gray-700 mb-1">Sobrenome</label>
-                                <input type="text" id="cad_sobrenome" maxlength="50" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all">
-                            </div>
+                        <div>
+                            <label for="cad_nome_completo" class="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                                Nome Completo<span class="text-[10px] font-normal text-gray-500">(Coloque todos os seus nomes e não abrevie)</span>
+                            </label>
+                            <input type="text" id="cad_nome_completo" maxlength="100" placeholder="Ex: Maria da Silva Santos Oliveira" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all text-sm">
+                            <p class="text-xs text-gray-500 mt-1.5 ml-1">Digite todos os Nomes e Sobrenomes exatamente como constam no seu Documento de Identidade. Não use iniciais ou abreviações.</p>
                         </div>
-                        <div class="bg-red-50 border border-red-100 p-3 rounded-lg flex items-start gap-2">
-                            <i class="fa-solid fa-circle-exclamation text-vermelho mt-0.5"></i>
-                            <p class="text-xs sm:text-sm text-gray-700 font-medium">Informe seu <strong class="text-vermelho">NOME COMPLETO</strong> para evitar problemas no recebimento dos seus pacotes. Não abrevie.</p>
-                        </div>
-
                     </div>
                     
                     <!-- Documentos -->
@@ -1250,6 +1241,15 @@
             return true;
         }
 
+        // Formatação de Nome Próprio (Title Case inteligente)
+        function formatarNomeProprio(nome) {
+            const preposicoes = ['da', 'de', 'do', 'das', 'dos', 'e'];
+            return nome.toLowerCase().split(' ').map(palavra => {
+                if (preposicoes.includes(palavra)) return palavra;
+                return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+            }).join(' ');
+        }
+
         // Tratamento de Erro Visual Inline
         function showInputError(inputId, msgErro) {
             const input = document.getElementById(inputId);
@@ -1295,8 +1295,7 @@
             clearErrors();
             let hasError = false;
 
-            const nome = document.getElementById('cad_nome').value.trim();
-            const sobrenome = document.getElementById('cad_sobrenome').value.trim();
+            const nome_completo = document.getElementById('cad_nome_completo').value.trim();
             const cpf = document.getElementById('cad_cpf').value.trim();
             const rg = document.getElementById('cad_rg').value.trim();
             const estrangeiro = document.getElementById('cad_estrangeiro').value.trim();
@@ -1305,8 +1304,7 @@
             const tel2 = document.getElementById('cad_tel2').value.trim();
             const email = document.getElementById('cad_email').value.trim();
 
-            if (!nome) { showInputError('cad_nome', 'Obrigatório'); hasError = true; }
-            if (!sobrenome) { showInputError('cad_sobrenome', 'Obrigatório'); hasError = true; }
+            if (!nome_completo) { showInputError('cad_nome_completo', 'Obrigatório'); hasError = true; }
 
             if (cpf) {
                 const cpfLimpo = cpf.replace(/\D/g, '');
@@ -1327,10 +1325,45 @@
                 hasError = true;
             }
 
+            // Validação de Duplicidade de Documentos
+            let hasDocDuplicate = false;
+            if (cpf && rg && cpf === rg) {
+                showInputError('cad_cpf', 'Não pode ser igual ao RG');
+                showInputError('cad_rg', 'Não pode ser igual ao CPF');
+                hasDocDuplicate = true;
+            }
+            if (cpf && estrangeiro && cpf === estrangeiro) {
+                showInputError('cad_cpf', 'Não pode ser igual ao Doc. Estrangeiro');
+                showInputError('cad_estrangeiro', 'Não pode ser igual ao CPF');
+                hasDocDuplicate = true;
+            }
+            if (rg && estrangeiro && rg === estrangeiro) {
+                showInputError('cad_rg', 'Não pode ser igual ao Doc. Estrangeiro');
+                showInputError('cad_estrangeiro', 'Não pode ser igual ao RG');
+                hasDocDuplicate = true;
+            }
+
+            if (hasDocDuplicate) {
+                const docHeader = document.getElementById('doc_header');
+                docHeader.classList.remove('text-azul');
+                docHeader.classList.add('text-vermelho', 'group-error');
+                hasError = true;
+            }
+
             if (!tel1 && !email) {
                 showInputError('cad_tel1', 'Faltando');
                 showInputError('cad_email', 'Faltando');
                 
+                const contatoHeader = document.getElementById('contato_header');
+                contatoHeader.classList.remove('text-azul');
+                contatoHeader.classList.add('text-vermelho', 'group-error');
+                hasError = true;
+            }
+
+            // Validação de Duplicidade de Telefones
+            if (tel1 && tel2 && tel1 === tel2) {
+                showInputError('cad_tel1', 'Não pode ser igual ao Telefone 2');
+                showInputError('cad_tel2', 'Não pode ser igual ao Telefone 1');
                 const contatoHeader = document.getElementById('contato_header');
                 contatoHeader.classList.remove('text-azul');
                 contatoHeader.classList.add('text-vermelho', 'group-error');
@@ -1342,13 +1375,16 @@
                 return;
             }
 
+            // Formatação do nome
+            let nomeFormatado = formatarNomeProprio(nome_completo);
+
             // Geração da mensagem
             let msg = "Olá! Quero fazer meu cadastro, abaixo estão os meus dados:%0A%0A";
-            msg += "*Nome:* " + nome + " " + sobrenome + "%0A";
-            msg += "*Gênero:* " + genero + "%0A";
+            msg += "*Nome:* " + nomeFormatado + "%0A";
             if(cpf) msg += "*CPF:* " + cpf + "%0A";
             if(rg) msg += "*RG:* " + rg + "%0A";
             if(estrangeiro) msg += "*Doc. Estrangeiro:* " + estrangeiro + "%0A";
+            msg += "*Gênero:* " + genero + "%0A";
             if(tel1) msg += "*Telefone 1:* " + tel1 + "%0A";
             if(tel2) msg += "*Telefone 2:* " + tel2 + "%0A";
             if(email) msg += "*E-mail:* " + email + "%0A";

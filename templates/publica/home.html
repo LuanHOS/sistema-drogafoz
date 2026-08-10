@@ -964,10 +964,10 @@
                     <div class="space-y-3">
                         <div>
                             <label for="cad_nome_completo" class="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                                Nome Completo<span class="text-[10px] font-normal text-gray-500">(Coloque todos os seus nomes e não abrevie)</span>
+                                Nome completo (sem abreviações) <span class="text-[10px] font-normal text-gray-500">(Coloque todos os seus nomes)</span>
                             </label>
                             <input type="text" id="cad_nome_completo" maxlength="100" placeholder="Ex: Maria da Silva Santos Oliveira" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-azul focus:border-azul outline-none transition-all text-sm">
-                            <p class="text-xs text-gray-500 mt-1.5 ml-1">Digite todos os Nomes e Sobrenomes exatamente como constam no seu Documento de Identidade. Não use iniciais ou abreviações.</p>
+                            <p class="text-xs text-gray-500 mt-1.5 ml-1">Digite todos os nomes e sobrenomes exatamente como constam no seu documento de identidade. Não use iniciais ou abreviações.</p>
                         </div>
                     </div>
                     
@@ -1327,18 +1327,21 @@
 
             // Validação de Duplicidade de Documentos
             let hasDocDuplicate = false;
-            if (cpf && rg && cpf === rg) {
-                showInputError('cad_cpf', 'Não pode ser igual ao RG');
+            
+            // Desconsidera a máscara do CPF e eventuais pontuações dos outros documentos para a comparação
+            const cpfComp = cpf ? cpf.replace(/\D/g, '') : '';
+            const rgComp = rg ? rg.replace(/[\W_]/g, '') : ''; 
+            const estComp = estrangeiro ? estrangeiro.replace(/[\W_]/g, '') : '';
+
+            if (cpfComp && rgComp && cpfComp === rgComp) {
                 showInputError('cad_rg', 'Não pode ser igual ao CPF');
                 hasDocDuplicate = true;
             }
-            if (cpf && estrangeiro && cpf === estrangeiro) {
-                showInputError('cad_cpf', 'Não pode ser igual ao Doc. Estrangeiro');
+            if (cpfComp && estComp && cpfComp === estComp) {
                 showInputError('cad_estrangeiro', 'Não pode ser igual ao CPF');
                 hasDocDuplicate = true;
             }
-            if (rg && estrangeiro && rg === estrangeiro) {
-                showInputError('cad_rg', 'Não pode ser igual ao Doc. Estrangeiro');
+            if (rgComp && estComp && rgComp === estComp) {
                 showInputError('cad_estrangeiro', 'Não pode ser igual ao RG');
                 hasDocDuplicate = true;
             }
@@ -1362,7 +1365,6 @@
 
             // Validação de Duplicidade de Telefones
             if (tel1 && tel2 && tel1 === tel2) {
-                showInputError('cad_tel1', 'Não pode ser igual ao Telefone 2');
                 showInputError('cad_tel2', 'Não pode ser igual ao Telefone 1');
                 const contatoHeader = document.getElementById('contato_header');
                 contatoHeader.classList.remove('text-azul');

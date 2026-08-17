@@ -742,13 +742,15 @@ class EncomendaAdmin(BuscaSemAcentoMixin, admin.ModelAdmin):
 
     @admin.display(description='Data Chegada', ordering='data_chegada')
     def get_data_chegada_fmt(self, obj):
-        valor = obj.data_chegada.strftime('%d/%m/%Y')
-        return self._get_colored_text(obj, valor)
+        if obj.data_chegada:
+            valor = timezone.localtime(obj.data_chegada).strftime('%d/%m/%Y %H:%M')
+            return self._get_colored_text(obj, valor)
+        return "-"
 
     @admin.display(description='Data Saída', ordering='data_entrega')
     def get_data_saida_fmt(self, obj):
         if obj.data_entrega:
-            return obj.data_entrega.strftime('%d/%m/%Y')
+            return timezone.localtime(obj.data_entrega).strftime('%d/%m/%Y %H:%M')
         return "-"
 
     @admin.display(ordering='cliente__nome', description='Cliente')
